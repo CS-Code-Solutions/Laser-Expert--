@@ -18,61 +18,73 @@
 
   <style>
     body {
-      background-color: var(--deep-navy, #0B132B);
+      background-image: url('image.jpeg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
       display: flex;
       justify-content: center;
       align-items: center;
       height: 100vh;
       margin: 0;
       font-family: Arial, sans-serif;
+      overflow: hidden;
+      perspective: 1000px;
     }
     .login-card {
-      background: #FFFFFF;
-      padding: 35px 30px;
-      border-radius: 8px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+      background: rgba(11, 19, 43, 0.85); /* Vidro escuro combinando com a imagem */
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(0, 245, 212, 0.3); /* Linha subtil em ciano néon */
+      padding: 40px 30px;
+      border-radius: 12px;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.6), 0 0 20px rgba(0, 245, 212, 0.15);
       width: 100%;
       max-width: 400px;
       text-align: center;
+      transition: transform 0.1s ease-out;
+      transform-style: preserve-3d;
     }
     .login-card img.logo-login {
-      max-width: 260px; /* Logótipo maior e em destaque */
+      max-width: 260px;
       width: 100%;
       height: auto;
       margin-bottom: 25px;
+      filter: drop-shadow(0 2px 8px rgba(0, 245, 212, 0.2));
     }
     .login-card h2 {
-      color: var(--deep-navy, #0B132B);
+      color: #FFFFFF;
       margin-bottom: 25px;
       font-size: 1.25rem;
+      letter-spacing: 0.5px;
     }
     .btn-google {
       width: 100%;
-      background-color: #FFFFFF;
-      color: #334155;
+      background-color: #0B132B;
+      color: #FFFFFF;
       font-weight: bold;
-      padding: 12px;
-      border: 1px solid #CBD5E1;
-      border-radius: 4px;
+      padding: 13px;
+      border: 1px solid #00F5D4;
+      border-radius: 6px;
       font-size: 0.95rem;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 10px;
-      transition: background 0.2s, border-color 0.2s;
+      transition: background 0.2s, box-shadow 0.2s, transform 0.2s;
     }
     .btn-google:hover {
-      background-color: #F8FAFC;
-      border-color: #94A3B8;
+      background-color: rgba(0, 245, 212, 0.15);
+      box-shadow: 0 0 15px rgba(0, 245, 212, 0.4);
     }
     .login-footer {
       margin-top: 25px;
       font-size: 0.8rem;
-      color: #64748B;
+      color: #94A3B8;
     }
     .login-footer a {
-      color: #0D9488;
+      color: #00F5D4;
       text-decoration: none;
       transition: color 0.2s;
     }
@@ -80,15 +92,15 @@
       text-decoration: underline;
     }
     #loginError {
-      color: var(--danger, #EF4444);
+      color: #F87171;
       font-size: 0.85rem;
       margin-bottom: 15px;
       display: none;
       text-align: left;
-      background: #FEE2E2;
-      padding: 8px;
+      background: rgba(239, 68, 68, 0.15);
+      padding: 10px;
       border-radius: 4px;
-      border: 1px solid #FCA5A5;
+      border: 1px solid rgba(239, 68, 68, 0.4);
     }
   </style>
 </head>
@@ -111,6 +123,38 @@
   </div>
 
   <script>
+    // Efeito interativo responsivo ao rato e ao toque (Tilt 3D)
+    const card = document.querySelector('.login-card');
+
+    function handleMove(clientX, clientY) {
+      const rect = card.getBoundingClientRect();
+      const x = clientX - rect.left - rect.width / 2;
+      const y = clientY - rect.top - rect.height / 2;
+      
+      const rotateX = (-y / 15).toFixed(2);
+      const rotateY = (x / 15).toFixed(2);
+      
+      card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`;
+    }
+
+    document.addEventListener('mousemove', (e) => {
+      handleMove(e.clientX, e.clientY);
+    });
+
+    document.addEventListener('touchmove', (e) => {
+      if (e.touches.length > 0) {
+        handleMove(e.touches[0].clientX, e.touches[0].clientY);
+      }
+    }, { passive: true });
+
+    document.addEventListener('mouseleave', () => {
+      card.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)`;
+    });
+
+    document.addEventListener('touchend', () => {
+      card.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)`;
+    });
+
     function escapeHTML(str) {
       if (!str) return '';
       return String(str)

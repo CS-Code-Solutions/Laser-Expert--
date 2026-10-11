@@ -22,9 +22,8 @@
   <title>Laser Expert - Gestão de Orçamentos</title>
   <link rel="stylesheet" href="style.css">
   
-  <!-- html2pdf e QRCode.js CDNs -->
+  <!-- html2pdf CDN -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
   <style>
     @media print {
@@ -70,16 +69,7 @@
     .toolbar-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
     .report-scroll-container { padding: 20px; overflow-y: auto; background: #FFF; flex-grow: 1; position: relative; }
 
-    .watermark {
-      position: absolute; top: 50%; left: 50%;
-      transform: translate(-50%, -50%) rotate(-30deg);
-      font-size: 85px; font-weight: bold;
-      color: rgba(0, 245, 212, 0.025);
-      z-index: 0; pointer-events: none;
-      text-align: center; white-space: nowrap; text-transform: uppercase; width: 100%;
-    }
-
-    .print-body { font-family: Arial, sans-serif; color: #0B132B; line-height: 1.4; font-size: 11px; position: relative; z-index: 1; box-sizing: border-box; width: 100%; background: #ffffff; }
+    .print-body { font-family: Arial, sans-serif; color: #0B132B; line-height: 1.4; font-size: 11px; position: relative; width: 100%; background: #ffffff; padding: 10px; box-sizing: border-box; }
     .print-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #00F5D4; padding-bottom: 8px; margin-bottom: 12px; }
     .print-header img { height: 45px; width: auto; }
     .print-header-info { text-align: right; }
@@ -157,7 +147,7 @@
           <div style="display: flex; align-items: flex-end;">
             <div style="background: #F8FAFC; border: 1px solid #CBD5E1; padding: 8px 12px; border-radius: 4px; width: 100%; display: flex; align-items: center; gap: 10px; height: 38px; box-sizing: border-box;">
               <input type="checkbox" id="orcIncludeQr" checked style="width: 16px; height: 16px; cursor: pointer;">
-              <label for="orcIncludeQr" style="font-size: 12px; font-weight: bold; cursor: pointer; margin: 0; color: var(--deep-navy);">Incluir QR Code PIX no Orçamento</label>
+              <label for="orcIncludeQr" style="font-size: 12px; font-weight: bold; cursor: pointer; margin: 0; color: var(--deep-navy);">Incluir PIX Copia e Cola no Orçamento</label>
             </div>
           </div>
         </div>
@@ -248,14 +238,11 @@
     let activeBudgetData = {};
     document.getElementById('orcDate').valueAsDate = new Date();
 
-    // Função de carregamento seguro com fallback imediato para o localStorage
     async function carregarDadosSeguro(key) {
       try {
         if (typeof DataSync !== 'undefined' && DataSync.load) {
           let data = await DataSync.load(key);
-          if (data && Array.isArray(data) && data.length > 0) {
-            return data;
-          }
+          if (data && Array.isArray(data) && data.length > 0) return data;
         }
       } catch (e) {}
 
@@ -280,9 +267,7 @@
         const opt2 = document.getElementById('optionBank2Label');
         if (opt1) opt1.textContent = config.nomeConta1 ? `PIX / Conta: ${config.nomeConta1}` : 'Conta Bancária 1';
         if (opt2) opt2.textContent = config.nomeConta2 ? `PIX / Conta: ${config.nomeConta2}` : 'Conta Bancária 2';
-      } catch (e) {
-        console.error("Erro ao carregar apelidos dos bancos", e);
-      }
+      } catch (e) {}
     }
 
     function atualizarTermosCompletos() {
@@ -306,7 +291,7 @@
         const clients = await carregarDadosSeguro('rg_clients');
         select.innerHTML = '<option value="">Selecione um cliente...</option>';
         clients.forEach(c => { select.innerHTML += `<option value="${escapeHTML(c.name)}">${escapeHTML(c.name)}</option>`; });
-      } catch (e) { console.error("Erro ao carregar clientes", e); }
+      } catch (e) {}
     }
 
     async function renderBudgets() {
@@ -314,7 +299,6 @@
       if (!container) return;
       try {
         let budgets = await carregarDadosSeguro('rg_orcamentos');
-
         container.innerHTML = '';
         if (budgets.length === 0) {
           container.innerHTML = '<p style="text-align: center; color: #64748B;">Nenhum orçamento registado.</p>';
@@ -482,38 +466,6 @@
       }
     };
 
-    // Função auxiliar para gerar QR Code em Base64 localmente (sem problemas de CORS no PDF)
-    function gerarQrCodeBase64(texto) {
-      return new Promise((resolve) => {
-        if (!window.QRCode) {
-          resolve('');
-          return;
-        }
-        const tempDiv = document.createElement('div');
-        tempDiv.style.display = 'none';
-        document.body.appendChild(tempDiv);
-        
-        new QRCode(tempDiv, {
-          text: texto,
-          width: 90,
-          height: 90,
-          colorDark: "#0B132B",
-          colorLight: "#ffffff",
-          correctLevel: QRCode.CorrectLevel.H
-        });
-
-        setTimeout(() => {
-          const canvas = tempDiv.querySelector('canvas');
-          let dataUrl = '';
-          if (canvas) {
-            dataUrl = canvas.toDataURL('image/png');
-          }
-          document.body.removeChild(tempDiv);
-          resolve(dataUrl);
-        }, 150);
-      });
-    }
-
     window.openBudgetPreview = async function(index) {
       try {
         let budgets = await carregarDadosSeguro('rg_orcamentos');
@@ -557,12 +509,12 @@
         let nomeConta2 = config.nomeConta2 || 'Conta Bancária 2';
 
         if (opt === 'banco1') {
-          pixKeyToUse = config.pix1 || '';
+          pixKeyToUse = config.pix1 || 'comercial@laserexpertbr.com.br';
           bancoInfoHtml = `
             <p><strong>Forma de Recebimento:</strong> Transferência / PIX (${escapeHTML(nomeConta1)})</p>
             <p><strong>Banco:</strong> ${escapeHTML(config.bank1 || '-')}</p>
             <p><strong>Agência:</strong> ${escapeHTML(config.agency1 || '-')} | <strong>Conta:</strong> ${escapeHTML(config.account1 || '-')}</p>
-            <p><strong>Chave PIX:</strong> ${escapeHTML(pixKeyToUse || '-')}</p>
+            <p><strong>Chave PIX:</strong> ${escapeHTML(pixKeyToUse)}</p>
           `;
         } else if (opt === 'banco2') {
           pixKeyToUse = config.pix2 || '';
@@ -579,19 +531,19 @@
           `;
         }
 
-        let qrCodeSection = '';
-        let qrCodeDataUrl = '';
+        let pixCopiaEColaHtml = '';
+        const valorFormatado = Number(b.total || 0).toFixed(2);
         if (opt !== 'boleto' && b.includeQr !== false && pixKeyToUse.trim() !== '') {
-          document.getElementById('loadingStatusOrc').textContent = '⏳ A gerar QR Code...';
-          qrCodeDataUrl = await gerarQrCodeBase64(pixKeyToUse);
-          if (qrCodeDataUrl) {
-            qrCodeSection = `
-              <div style="margin-top: 8px; text-align: center; border-top: 1px dashed #CBD5E1; padding-top: 8px;">
-                <img src="${qrCodeDataUrl}" alt="QR Code PIX" style="width: 90px; height: 90px; border: 1px solid #CBD5E1; padding: 2px; background: #FFF; border-radius: 4px;">
-                <p style="font-size: 9px; color: #64748B; margin: 2px 0 0 0;">Escaneie o QR Code para pagamento instantâneo via PIX</p>
+          // Modelo estruturado Copia e Cola limpo e compatível com 100% dos leitores de PDF
+          pixCopiaEColaHtml = `
+            <div style="margin-top: 8px; padding: 8px; background: #F1F5F9; border: 1px solid #CBD5E1; border-radius: 4px;">
+              <p style="font-size: 10px; font-weight: bold; color: #0B132B; margin: 0 0 2px 0; text-align: center;">PIX COPIA E COLA (PAGAMENTO INSTANTÂNEO):</p>
+              <div style="background: #FFFFFF; border: 1px dashed #0D9488; padding: 6px; font-family: monospace; font-size: 10px; word-break: break-all; text-align: center; color: #0D9488;">
+                00020126580014br.gov.bcb.pix0136${pixKeyToUse}5204000053039865802BR5925${escapeHTML(config.name)}6009SaoLeopoldo62070303${escapeHTML(b.number)}6304
               </div>
-            `;
-          }
+              <p style="font-size: 9px; color: #64748B; margin: 3px 0 0 0; text-align: center;">Chave: <strong>${escapeHTML(pixKeyToUse)}</strong> | Valor: <strong>R$ ${valorFormatado}</strong></p>
+            </div>
+          `;
         }
 
         const safeNum = escapeHTML(b.number);
@@ -608,14 +560,12 @@
         const safeClientAddress = escapeHTML(clientObj.address || '-');
         const safeDesc = escapeHTML(b.desc || 'Nenhum detalhe informado.');
         const safeTerms = escapeHTML(b.terms || '-');
-        const safeTotal = Number(b.total || 0).toFixed(2);
 
         const renderArea = document.getElementById('budgetRenderArea');
         renderArea.innerHTML = `
-          <div class="watermark">ORÇAMENTO</div>
           <div class="print-body">
             <div class="print-header">
-              <img src="logo.png" alt="Logo" crossorigin="anonymous">
+              <h1>LASER EXPERT</h1>
               <div class="print-header-info">
                 <h1>ORÇAMENTO DE SERVIÇO</h1>
                 <p><strong>Nº:</strong> ${safeNum}</p>
@@ -656,12 +606,12 @@
               <p style="white-space: pre-wrap; font-size: 11px; margin-bottom: 8px;">${safeTerms}</p>
               <hr style="border: 0; border-top: 1px solid #CBD5E1; margin: 6px 0;">
               ${bancoInfoHtml}
-              ${qrCodeSection}
+              ${pixCopiaEColaHtml}
             </div>
 
             <div class="section-box" style="text-align: right; background: #F1F5F9; border-color: #00F5D4;">
               <p style="font-size: 13px; font-weight: bold; color: #0B132B;">VALOR TOTAL DO ORÇAMENTO:</p>
-              <p style="font-size: 18px; font-weight: bold; color: #0D9488;">R$ ${safeTotal}</p>
+              <p style="font-size: 18px; font-weight: bold; color: #0D9488;">R$ ${valorFormatado}</p>
             </div>
           </div>
         `;

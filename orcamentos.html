@@ -22,9 +22,8 @@
   <title>Laser Expert - Gestão de Orçamentos</title>
   <link rel="stylesheet" href="style.css">
   
-  <!-- html2pdf e QRCode.js CDNs -->
+  <!-- html2pdf CDN -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
   <style>
     @media print {
@@ -508,9 +507,10 @@
 
         let qrCodeSection = '';
         if (opt !== 'boleto' && b.includeQr !== false && pixKeyToUse.trim() !== '') {
+          const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=110x110&data=${encodeURIComponent(pixKeyToUse)}`;
           qrCodeSection = `
             <div style="margin-top: 8px; text-align: center; border-top: 1px dashed #CBD5E1; padding-top: 8px;">
-              <div id="qrcodeContainer" style="display: inline-block; padding: 2px; background: #FFF; border-radius: 4px;"></div>
+              <img src="${qrApiUrl}" alt="QR Code PIX" crossorigin="anonymous" style="width: 90px; height: 90px; border: 1px solid #CBD5E1; padding: 2px; background: #FFF; border-radius: 4px;">
               <p style="font-size: 9px; color: #64748B; margin: 2px 0 0 0;">Escaneie o QR Code para pagamento instantâneo via PIX</p>
             </div>
           `;
@@ -537,7 +537,7 @@
           <div class="watermark">ORÇAMENTO</div>
           <div class="print-body">
             <div class="print-header">
-              <h1>LASER EXPERT</h1>
+              <img src="logo.png" alt="Logo" crossorigin="anonymous">
               <div class="print-header-info">
                 <h1>ORÇAMENTO DE SERVIÇO</h1>
                 <p><strong>Nº:</strong> ${safeNum}</p>
@@ -588,24 +588,6 @@
           </div>
         `;
 
-        // Gera o QR Code localmente após renderizar o HTML no modal
-        if (opt !== 'boleto' && b.includeQr !== false && pixKeyToUse.trim() !== '') {
-          setTimeout(() => {
-            const qrContainer = document.getElementById('qrcodeContainer');
-            if (qrContainer) {
-              qrContainer.innerHTML = '';
-              new QRCode(qrContainer, {
-                text: pixKeyToUse,
-                width: 90,
-                height: 90,
-                colorDark: "#0B132B",
-                colorLight: "#ffffff",
-                correctLevel: QRCode.CorrectLevel.H
-              });
-            }
-          }, 50);
-        }
-
         activeBudgetData = b;
         document.getElementById('modalTitleOrc').textContent = `Orçamento - ${b.number} (${b.client})`;
         document.getElementById('loadingStatusOrc').textContent = 'Pronto';
@@ -620,8 +602,26 @@
       document.getElementById('budgetPreviewModal').style.display = 'none';
     };
 
+    // Função de salvaguarda para aguardar o carregamento completo de todas as imagens antes de gerar o PDF
+    async function garantirImagensCarregadas(container) {
+      const imagens = container.querySelectorAll('img');
+      const promessas = Array.from(imagens).map(img => {
+        if (img.complete) return Promise.resolve();
+        return new Promise(resolve => {
+          img.onload = resolve;
+          img.onerror = resolve;
+        });
+      });
+      await Promise.all(promessas);
+    }
+
     window.compartilharPDFOrcamento = async function() {
       const element = document.getElementById('budgetRenderArea');
+      document.getElementById('loadingStatusOrc').textContent = 'A carregar imagens...';
+
+      // Aguarda 100% que o logótipo e o QR Code estejam descarregados
+      await garantirImagensCarregadas(element);
+
       const filename = `Orcamento_${activeBudgetData.number || '001'}.pdf`;
       const opt = {
         margin: 10,
@@ -644,7 +644,7 @@
             title: `Orçamento ${activeBudgetData.number || ''}`,
             text: `Segue em anexo o Orçamento ${activeBudgetData.number || ''} para o cliente ${activeBudgetData.client || ''}.`
           });
-          document.getElementById('loadingStatusOrc').textContent = 'Partilhado!';
+          document.getElementById('loadingStatusOrc'].textContent = 'Partilhado!';
         } else {
           worker.save();
           document.getElementById('loadingStatusOrc').textContent = 'Guardado (Download)!';

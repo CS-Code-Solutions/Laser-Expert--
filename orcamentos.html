@@ -214,7 +214,7 @@
       <div class="action-toolbar">
         <div>
           <strong id="modalTitleOrc" style="color: var(--electric-cyan); font-size: 1rem;">Orçamento</strong>
-          <span id="loadingStatusOrc" style="font-size: 0.8rem; margin-left: 8px; color: #FCD34D;">⏳ A preparar partilha...</span>
+          <span id="loadingStatusOrc" style="font-size: 0.8rem; margin-left: 8px; color: #FCD34D;">⏳ A preparar...</span>
         </div>
         <div class="toolbar-buttons">
           <button class="btn" style="background-color: #00F5D4; color: #0B132B; font-weight: bold; padding: 6px 12px; font-size: 0.85rem;" onclick="compartilharPDFOrcamento()">📤 Partilhar PDF</button>
@@ -445,170 +445,174 @@
     };
 
     window.openBudgetPreview = async function(index) {
-      let budgets = await DataSync.load('rg_orcamentos') || [];
-      const b = budgets[index];
-      if (!b) { alert("Orçamento não encontrado."); return; }
-
-      const defaultConfig = { 
-        name: 'LASER EXPERT SERVICO E COMERCIO DE PECAS LTDA', 
-        tech: 'Otávio Barbosa',
-        doc: '48.959.536/0001-65',
-        email: 'comercial@laserexpertbr.com.br',
-        contact: '+55 51 98144-1865',
-        location: 'Rua Corte Real 487 – Scharlau – São Leopoldo – RS',
-        nomeConta1: 'Conta Principal',
-        pix1: 'comercial@laserexpertbr.com.br', bank1: '', agency1: '', account1: '',
-        nomeConta2: 'Conta Secundária',
-        pix2: '', bank2: '', agency2: '', account2: '',
-        techSignature: ''
-      };
-
-      let config = { ...defaultConfig };
       try {
-        const savedCfg = await DataSync.load('rg_config');
-        if (savedCfg) config = { ...defaultConfig, ...savedCfg };
-      } catch (e) {}
+        let budgets = await DataSync.load('rg_orcamentos') || [];
+        const b = budgets[index];
+        if (!b) { alert("Orçamento não encontrado."); return; }
 
-      let clients = [];
-      try { clients = await DataSync.load('rg_clients') || []; } catch (e) {}
-      const clientObj = clients.find(c => c.name === b.client) || {};
+        const defaultConfig = { 
+          name: 'LASER EXPERT SERVICO E COMERCIO DE PECAS LTDA', 
+          tech: 'Otávio Barbosa',
+          doc: '48.959.536/0001-65',
+          email: 'comercial@laserexpertbr.com.br',
+          contact: '+55 51 98144-1865',
+          location: 'Rua Corte Real 487 – Scharlau – São Leopoldo – RS',
+          nomeConta1: 'Conta Principal',
+          pix1: 'comercial@laserexpertbr.com.br', bank1: '', agency1: '', account1: '',
+          nomeConta2: 'Conta Secundária',
+          pix2: '', bank2: '', agency2: '', account2: '',
+          techSignature: ''
+        };
 
-      let bancoInfoHtml = '';
-      const opt = b.paymentOption || 'banco1';
-      let pixKeyToUse = '';
-      let nomeConta1 = config.nomeConta1 || 'Conta Bancária 1';
-      let nomeConta2 = config.nomeConta2 || 'Conta Bancária 2';
+        let config = { ...defaultConfig };
+        try {
+          const savedCfg = await DataSync.load('rg_config');
+          if (savedCfg) config = { ...defaultConfig, ...savedCfg };
+        } catch (e) {}
 
-      if (opt === 'banco1') {
-        pixKeyToUse = config.pix1 || '';
-        bancoInfoHtml = `
-          <p><strong>Forma de Recebimento:</strong> Transferência / PIX (${escapeHTML(nomeConta1)})</p>
-          <p><strong>Banco:</strong> ${escapeHTML(config.bank1 || '-')}</p>
-          <p><strong>Agência:</strong> ${escapeHTML(config.agency1 || '-')} | <strong>Conta:</strong> ${escapeHTML(config.account1 || '-')}</p>
-          <p><strong>Chave PIX:</strong> ${escapeHTML(pixKeyToUse || '-')}</p>
-        `;
-      } else if (opt === 'banco2') {
-        pixKeyToUse = config.pix2 || '';
-        bancoInfoHtml = `
-          <p><strong>Forma de Recebimento:</strong> Transferência / PIX (${escapeHTML(nomeConta2)})</p>
-          <p><strong>Banco:</strong> ${escapeHTML(config.bank2 || '-')}</p>
-          <p><strong>Agência:</strong> ${escapeHTML(config.agency2 || '-')} | <strong>Conta:</strong> ${escapeHTML(config.account2 || '-')}</p>
-          <p><strong>Chave PIX:</strong> ${escapeHTML(pixKeyToUse || '-')}</p>
-        `;
-      } else {
-        bancoInfoHtml = `
-          <p><strong>Forma de Recebimento:</strong> Boleto Bancário</p>
-          <p><em>Instruções: O boleto será emitido e enviado para o e-mail cadastrado conforme o prazo comercial acordado.</em></p>
-        `;
-      }
+        let clients = [];
+        try { clients = await DataSync.load('rg_clients') || []; } catch (e) {}
+        const clientObj = clients.find(c => c.name === b.client) || {};
 
-      let qrCodeSection = '';
-      if (opt !== 'boleto' && b.includeQr !== false && pixKeyToUse.trim() !== '') {
-        const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=110x110&data=${encodeURIComponent(pixKeyToUse)}`;
-        qrCodeSection = `
-          <div style="margin-top: 8px; text-align: center; border-top: 1px dashed #CBD5E1; padding-top: 8px;">
-            <img src="${qrApiUrl}" alt="QR Code PIX" style="width: 90px; height: 90px; border: 1px solid #CBD5E1; padding: 2px; background: #FFF; border-radius: 4px;">
-            <p style="font-size: 9px; color: #64748B; margin: 2px 0 0 0;">Escaneie o QR Code para pagamento instantâneo via PIX</p>
-          </div>
-        `;
-      }
+        let bancoInfoHtml = '';
+        const opt = b.paymentOption || 'banco1';
+        let pixKeyToUse = '';
+        let nomeConta1 = config.nomeConta1 || 'Conta Bancária 1';
+        let nomeConta2 = config.nomeConta2 || 'Conta Bancária 2';
 
-      const techSignature = config.techSignature || '';
-      const signatureAreaHtml = `
-        <div style="margin-top: 15px; display: flex; justify-content: center; page-break-inside: avoid;">
-          <div style="text-align: center; width: 60%;">
-            ${techSignature ? `<img src="${techSignature}" alt="Assinatura Técnico" style="max-width: 180px; height: 50px; object-fit: contain; display: block; margin: 0 auto;">` : '<div style="height: 50px;"></div>'}
-            <p style="margin: 2px 0;">________________________________________</p>
-            <p style="margin: 2px 0; font-size: 10px;"><strong>Responsável Técnico / Emissor:</strong> ${escapeHTML(config.tech || 'Otávio Barbosa')}</p>
-          </div>
-        </div>
-      `;
+        if (opt === 'banco1') {
+          pixKeyToUse = config.pix1 || '';
+          bancoInfoHtml = `
+            <p><strong>Forma de Recebimento:</strong> Transferência / PIX (${escapeHTML(nomeConta1)})</p>
+            <p><strong>Banco:</strong> ${escapeHTML(config.bank1 || '-')}</p>
+            <p><strong>Agência:</strong> ${escapeHTML(config.agency1 || '-')} | <strong>Conta:</strong> ${escapeHTML(config.account1 || '-')}</p>
+            <p><strong>Chave PIX:</strong> ${escapeHTML(pixKeyToUse || '-')}</p>
+          `;
+        } else if (opt === 'banco2') {
+          pixKeyToUse = config.pix2 || '';
+          bancoInfoHtml = `
+            <p><strong>Forma de Recebimento:</strong> Transferência / PIX (${escapeHTML(nomeConta2)})</p>
+            <p><strong>Banco:</strong> ${escapeHTML(config.bank2 || '-')}</p>
+            <p><strong>Agência:</strong> ${escapeHTML(config.agency2 || '-')} | <strong>Conta:</strong> ${escapeHTML(config.account2 || '-')}</p>
+            <p><strong>Chave PIX:</strong> ${escapeHTML(pixKeyToUse || '-')}</p>
+          `;
+        } else {
+          bancoInfoHtml = `
+            <p><strong>Forma de Recebimento:</strong> Boleto Bancário</p>
+            <p><em>Instruções: O boleto será emitido e enviado para o e-mail cadastrado conforme o prazo comercial acordado.</em></p>
+          `;
+        }
 
-      const safeNum = escapeHTML(b.number);
-      const safeDate = escapeHTML(b.date);
-      const safeCfgName = escapeHTML(config.name);
-      const safeCfgDoc = escapeHTML(config.doc);
-      const safeCfgContact = escapeHTML(config.contact);
-      const safeCfgEmail = escapeHTML(config.email);
-      const safeCfgLocation = escapeHTML(config.location);
-      const safeClientName = escapeHTML(b.client);
-      const safeClientEmail = escapeHTML(clientObj.email || '-');
-      const safeClientDoc = escapeHTML(clientObj.doc || '-');
-      const safeEquipment = escapeHTML(b.equipment || '-');
-      const safeClientAddress = escapeHTML(clientObj.address || '-');
-      const safeDesc = escapeHTML(b.desc || 'Nenhum detalhe informado.');
-      const safeTerms = escapeHTML(b.terms || '-');
-      const safeTotal = Number(b.total || 0).toFixed(2);
+        let qrCodeSection = '';
+        if (opt !== 'boleto' && b.includeQr !== false && pixKeyToUse.trim() !== '') {
+          const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=110x110&data=${encodeURIComponent(pixKeyToUse)}`;
+          qrCodeSection = `
+            <div style="margin-top: 8px; text-align: center; border-top: 1px dashed #CBD5E1; padding-top: 8px;">
+              <img src="${qrApiUrl}" alt="QR Code PIX" style="width: 90px; height: 90px; border: 1px solid #CBD5E1; padding: 2px; background: #FFF; border-radius: 4px;">
+              <p style="font-size: 9px; color: #64748B; margin: 2px 0 0 0;">Escaneie o QR Code para pagamento instantâneo via PIX</p>
+            </div>
+          `;
+        }
 
-      const renderArea = document.getElementById('budgetRenderArea');
-      renderArea.innerHTML = `
-        <div class="watermark">ORÇAMENTO</div>
-        <div class="print-body">
-          <div class="print-header">
-            <img src="logo.png" alt="Logo">
-            <div class="print-header-info">
-              <h1>ORÇAMENTO DE SERVIÇO</h1>
-              <p><strong>Nº:</strong> ${safeNum}</p>
-              <p><strong>Data:</strong> ${safeDate}</p>
+        const techSignature = config.techSignature || '';
+        const signatureAreaHtml = `
+          <div style="margin-top: 15px; display: flex; justify-content: center; page-break-inside: avoid;">
+            <div style="text-align: center; width: 60%;">
+              ${techSignature ? `<img src="${techSignature}" alt="Assinatura Técnico" style="max-width: 180px; height: 50px; object-fit: contain; display: block; margin: 0 auto;">` : '<div style="height: 50px;"></div>'}
+              <p style="margin: 2px 0;">________________________________________</p>
+              <p style="margin: 2px 0; font-size: 10px;"><strong>Responsável Técnico / Emissor:</strong> ${escapeHTML(config.tech || 'Otávio Barbosa')}</p>
             </div>
           </div>
+        `;
 
-          <div class="section-box">
-            <div class="section-title">DADOS DA EMPRESA</div>
-            <p><strong>Razão Social:</strong> ${safeCfgName}</p>
-            <p><strong>CNPJ:</strong> ${safeCfgDoc}</p>
-            <p><strong>Contato:</strong> ${safeCfgContact} | <strong>E-mail:</strong> ${safeCfgEmail}</p>
-            <p><strong>Endereço:</strong> ${safeCfgLocation}</p>
-          </div>
+        const safeNum = escapeHTML(b.number);
+        const safeDate = escapeHTML(b.date);
+        const safeCfgName = escapeHTML(config.name);
+        const safeCfgDoc = escapeHTML(config.doc);
+        const safeCfgContact = escapeHTML(config.contact);
+        const safeCfgEmail = escapeHTML(config.email);
+        const safeCfgLocation = escapeHTML(config.location);
+        const safeClientName = escapeHTML(b.client);
+        const safeClientEmail = escapeHTML(clientObj.email || '-');
+        const safeClientDoc = escapeHTML(clientObj.doc || '-');
+        const safeEquipment = escapeHTML(b.equipment || '-');
+        const safeClientAddress = escapeHTML(clientObj.address || '-');
+        const safeDesc = escapeHTML(b.desc || 'Nenhum detalhe informado.');
+        const safeTerms = escapeHTML(b.terms || '-');
+        const safeTotal = Number(b.total || 0).toFixed(2);
 
-          <div class="section-box">
-            <div class="section-title">CLIENTE & EQUIPAMENTO</div>
-            <div class="grid-2">
-              <div>
-                <p><strong>Cliente:</strong> ${safeClientName}</p>
-                <p><strong>E-mail:</strong> ${safeClientEmail}</p>
-                <p><strong>CNPJ/CPF:</strong> ${safeClientDoc}</p>
-              </div>
-              <div>
-                <p><strong>Equipamento:</strong> ${safeEquipment}</p>
-                <p><strong>Endereço:</strong> ${safeClientAddress}</p>
+        const renderArea = document.getElementById('budgetRenderArea');
+        renderArea.innerHTML = `
+          <div class="watermark">ORÇAMENTO</div>
+          <div class="print-body">
+            <div class="print-header">
+              <img src="logo.png" alt="Logo">
+              <div class="print-header-info">
+                <h1>ORÇAMENTO DE SERVIÇO</h1>
+                <p><strong>Nº:</strong> ${safeNum}</p>
+                <p><strong>Data:</strong> ${safeDate}</p>
               </div>
             </div>
+
+            <div class="section-box">
+              <div class="section-title">DADOS DA EMPRESA</div>
+              <p><strong>Razão Social:</strong> ${safeCfgName}</p>
+              <p><strong>CNPJ:</strong> ${safeCfgDoc}</p>
+              <p><strong>Contato:</strong> ${safeCfgContact} | <strong>E-mail:</strong> ${safeCfgEmail}</p>
+              <p><strong>Endereço:</strong> ${safeCfgLocation}</p>
+            </div>
+
+            <div class="section-box">
+              <div class="section-title">CLIENTE & EQUIPAMENTO</div>
+              <div class="grid-2">
+                <div>
+                  <p><strong>Cliente:</strong> ${safeClientName}</p>
+                  <p><strong>E-mail:</strong> ${safeClientEmail}</p>
+                  <p><strong>CNPJ/CPF:</strong> ${safeClientDoc}</p>
+                </div>
+                <div>
+                  <p><strong>Equipamento:</strong> ${safeEquipment}</p>
+                  <p><strong>Endereço:</strong> ${safeClientAddress}</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="section-box">
+              <div class="section-title">ESCOPO DOS SERVIÇOS</div>
+              <p style="white-space: pre-wrap; font-size: 11.5px; padding: 4px 0;">${safeDesc}</p>
+            </div>
+
+            <div class="section-box">
+              <div class="section-title">CONDIÇÕES COMERCIAIS & PAGAMENTO</div>
+              <p style="white-space: pre-wrap; font-size: 11px; margin-bottom: 8px;">${safeTerms}</p>
+              <hr style="border: 0; border-top: 1px solid #CBD5E1; margin: 6px 0;">
+              ${bancoInfoHtml}
+              ${qrCodeSection}
+            </div>
+
+            <div class="section-box" style="text-align: right; background: #F1F5F9; border-color: #00F5D4;">
+              <p style="font-size: 13px; font-weight: bold; color: #0B132B;">VALOR TOTAL DO ORÇAMENTO:</p>
+              <p style="font-size: 18px; font-weight: bold; color: #0D9488;">R$ ${safeTotal}</p>
+            </div>
+
+            ${signatureAreaHtml}
           </div>
+        `;
 
-          <div class="section-box">
-            <div class="section-title">ESCOPO DOS SERVIÇOS</div>
-            <p style="white-space: pre-wrap; font-size: 11.5px; padding: 4px 0;">${safeDesc}</p>
-          </div>
-
-          <div class="section-box">
-            <div class="section-title">CONDIÇÕES COMERCIAIS & PAGAMENTO</div>
-            <p style="white-space: pre-wrap; font-size: 11px; margin-bottom: 8px;">${safeTerms}</p>
-            <hr style="border: 0; border-top: 1px solid #CBD5E1; margin: 6px 0;">
-            ${bancoInfoHtml}
-            ${qrCodeSection}
-          </div>
-
-          <div class="section-box" style="text-align: right; background: #F1F5F9; border-color: #00F5D4;">
-            <p style="font-size: 13px; font-weight: bold; color: #0B132B;">VALOR TOTAL DO ORÇAMENTO:</p>
-            <p style="font-size: 18px; font-weight: bold; color: #0D9488;">R$ ${safeTotal}</p>
-          </div>
-
-          ${signatureAreaHtml}
-        </div>
-      `;
-
-      activeBudgetData = b;
-      document.getElementById('modalTitleOrc').textContent = `Orçamento - ${b.number} (${b.client})`;
-      document.getElementById('loadingStatusOrc').textContent = 'Pronto';
-      document.getElementById('budgetPreviewModal').style.display = 'flex';
+        activeBudgetData = b;
+        document.getElementById('modalTitleOrc').textContent = `Orçamento - ${b.number} (${b.client})`;
+        document.getElementById('loadingStatusOrc').textContent = 'Pronto';
+        document.getElementById('budgetPreviewModal').style.display = 'flex';
+      } catch (err) {
+        console.error(err);
+        alert("Erro ao abrir pré-visualização do orçamento.");
+      }
     };
 
     window.closeModal = function() {
       document.getElementById('budgetPreviewModal').style.display = 'none';
     };
 
-    // Função atualizada com Partilha Nativa (navigator.share)
     window.compartilharPDFOrcamento = async function() {
       const element = document.getElementById('budgetRenderArea');
       const filename = `Orcamento_${activeBudgetData.number || '001'}.pdf`;
@@ -616,11 +620,11 @@
         margin: 10,
         filename: filename,
         image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true },
+        html2canvas: { scale: 2, useCORS: true, allowTaint: true },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
       };
 
-      document.getElementById('loadingStatusOrc').textContent = 'A gerar PDF para partilha...';
+      document.getElementById('loadingStatusOrc').textContent = 'A gerar PDF...';
 
       try {
         const worker = html2pdf().from(element).set(opt);
@@ -633,16 +637,16 @@
             title: `Orçamento ${activeBudgetData.number || ''}`,
             text: `Segue em anexo o Orçamento ${activeBudgetData.number || ''} para o cliente ${activeBudgetData.client || ''}.`
           });
-          document.getElementById('loadingStatusOrc').textContent = 'Partilhado com sucesso!';
+          document.getElementById('loadingStatusOrc').textContent = 'Partilhado!';
         } else {
           worker.save();
-          document.getElementById('loadingStatusOrc').textContent = 'PDF Guardado (Download)!';
+          document.getElementById('loadingStatusOrc').textContent = 'Guardado (Download)!';
         }
       } catch (err) {
         console.error("Erro ou cancelamento na partilha:", err);
         if (err.name !== 'AbortError') {
           html2pdf().from(element).set(opt).save();
-          document.getElementById('loadingStatusOrc').textContent = 'PDF Guardado (Download)!';
+          document.getElementById('loadingStatusOrc').textContent = 'Guardado (Download)!';
         } else {
           document.getElementById('loadingStatusOrc').textContent = 'Partilha cancelada.';
         }

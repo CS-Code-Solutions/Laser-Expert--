@@ -82,7 +82,7 @@
     .print-header img { height: 45px; width: auto; }
     .print-header-info { text-align: right; }
     .print-header-info h1 { font-size: 14px; color: #0B132B; margin: 0; font-weight: bold; }
-    .section-box { border: 1px solid #CBD5E1; padding: 10px; margin-bottom: 10px; border-radius: 6px; background: #F8FAFC; page-break-inside: avoid; }
+    .section-box { border: 1px solid #CBD5E1; padding: 10px; margin-bottom: 10px; border-radius: 6px; background: #F8FAFC; page-break-inside: avoid; box-sizing: border-box; }
     .section-title { font-weight: bold; font-size: 12px; color: #0B132B; margin-bottom: 6px; border-bottom: 1px solid #E2E8F0; padding-bottom: 3px; }
     
     .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
@@ -513,12 +513,12 @@
 
       if (opt !== 'boleto' && b.includeQr !== false) {
         pixCopiaEColaHtml = `
-          <div style="margin-top: 8px; padding: 8px; background: #F1F5F9; border: 1px solid #CBD5E1; border-radius: 4px;">
-            <p style="font-size: 10px; font-weight: bold; color: #0B132B; margin: 0 0 2px 0; text-align: center;">PIX COPIA E COLA (PAGAMENTO INSTANTÂNEO):</p>
-            <div style="background: #FFFFFF; border: 1px dashed #0D9488; padding: 6px; font-family: monospace; font-size: 10px; word-break: break-all; text-align: center; color: #0D9488;">
+          <div style="margin-top: 8px; padding: 8px; background: #F1F5F9; border: 1px solid #CBD5E1; border-radius: 4px; box-sizing: border-box; width: 100%;">
+            <p style="font-size: 10px; font-weight: bold; color: #0B132B; margin: 0 0 4px 0; text-align: center;">PIX COPIA E COLA (PAGAMENTO INSTANTÂNEO):</p>
+            <div style="background: #FFFFFF; border: 1px dashed #0D9488; padding: 8px; font-family: monospace; font-size: 8.5px; word-break: break-all; overflow-wrap: break-word; text-align: center; color: #0D9488; box-sizing: border-box; width: 100%; max-width: 100%; line-height: 1.2;">
               00020126580014br.gov.bcb.pix0136${escapeHTML(effectivePixKey)}5204000053039865802BR5925${escapeHTML(config.name)}6009SaoLeopoldo62070303${escapeHTML(b.number)}6304
             </div>
-            <p style="font-size: 9px; color: #64748B; margin: 3px 0 0 0; text-align: center;">Chave: <strong>${escapeHTML(effectivePixKey)}</strong> | Valor: <strong>R$ ${valorFormatado}</strong></p>
+            <p style="font-size: 9px; color: #64748B; margin: 4px 0 0 0; text-align: center;">Chave: <strong>${escapeHTML(effectivePixKey)}</strong> | Valor: <strong>R$ ${valorFormatado}</strong></p>
           </div>
         `;
       }

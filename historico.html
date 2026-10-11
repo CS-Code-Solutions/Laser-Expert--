@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-PT">
 <head>
   <link rel="icon" href="ico.png" type="image/png">
   <link rel="manifest" href="manifest.json">
@@ -127,7 +127,7 @@
       <div class="action-toolbar">
         <div>
           <strong id="modalTitleRs" style="color: var(--electric-cyan); font-size: 1rem;">Relatório de Serviço</strong>
-          <span id="loadingStatusRs" style="font-size: 0.8rem; margin-left: 8px; color: #FCD34D;">⏳ A preparar partilha...</span>
+          <span id="loadingStatusRs" style="font-size: 0.8rem; margin-left: 8px; color: #FCD34D;">⏳ A preparar...</span>
         </div>
         <div class="toolbar-buttons">
           <button class="btn" style="background-color: #00F5D4; color: #0B132B; font-weight: bold; padding: 6px 12px; font-size: 0.85rem;" onclick="compartilharPDF()">📤 Partilhar PDF</button>
@@ -247,207 +247,211 @@
     }
 
     window.openReportPreview = async function(index) {
-      let reports = await DataSync.load('rg_reports') || [];
-      const rep = reports[index];
-      if (!rep) { alert("Relatório não encontrado."); return; }
-      
-      const defaultConfig = { 
-        name: 'LASER EXPERT SERVICO E COMERCIO DE PECAS LTDA', 
-        tech: 'Otávio Barbosa',
-        doc: '48.959.536/0001-65',
-        email: 'comercial@laserexpertbr.com.br',
-        contact: '+55 51 98144-1865',
-        location: 'Rua Corte Real 487 – Scharlau – São Leopoldo – RS',
-        techSignature: ''
-      };
-
-      let config = { ...defaultConfig };
       try {
-        const savedCfg = await DataSync.load('rg_config');
-        if (savedCfg) config = { ...defaultConfig, ...savedCfg };
-      } catch (e) {}
+        let reports = await DataSync.load('rg_reports') || [];
+        const rep = reports[index];
+        if (!rep) { alert("Relatório não encontrado."); return; }
+        
+        const defaultConfig = { 
+          name: 'LASER EXPERT SERVICO E COMERCIO DE PECAS LTDA', 
+          tech: 'Otávio Barbosa',
+          doc: '48.959.536/0001-65',
+          email: 'comercial@laserexpertbr.com.br',
+          contact: '+55 51 98144-1865',
+          location: 'Rua Corte Real 487 – Scharlau – São Leopoldo – RS',
+          techSignature: ''
+        };
 
-      let clients = await DataSync.load('rg_clients') || [];
-      const clientObj = clients.find(c => c.name === rep.client) || {};
+        let config = { ...defaultConfig };
+        try {
+          const savedCfg = await DataSync.load('rg_config');
+          if (savedCfg) config = { ...defaultConfig, ...savedCfg };
+        } catch (e) {}
 
-      let valorTotal = 0;
-      let textoHoras = "Não cobrado";
+        let clients = await DataSync.load('rg_clients') || [];
+        const clientObj = clients.find(c => c.name === rep.client) || {};
 
-      if (rep.temEmpreitada === 'sim') {
-          valorTotal = Number(rep.valorEmpreitada) || 0;
-          textoHoras = `Empreitada (R$ ${valorTotal.toFixed(2)})`;
-      } else {
-          let valorHorasTotal = 0;
-          if (rep.temHora === 'sim') {
-              const valorHora = Number(rep.valorHora) || 200.00;
-              const horasCalc = calcularMinutosTrabalhados(rep.startManha, rep.endManha, rep.startTarde, rep.endTarde, valorHora);
-              valorHorasTotal = horasCalc.valorHorasTotal;
-              textoHoras = `${horasCalc.totalHoursText} (R$ ${valorHorasTotal.toFixed(2)})`;
-          }
-          let valorKmTotal = 0;
-          if (rep.temKm === 'sim') {
-              let kmTotal = (Number(rep.kmIda) || 0) + (Number(rep.kmVolta) || 0);
-              valorKmTotal = kmTotal * (Number(rep.valorKm) || 0);
-          }
-          let valorCombustivelTotal = 0;
-          if (rep.temCombustivel === 'sim') {
-              valorCombustivelTotal = (Number(rep.combustivelLitros) || 0) * (Number(rep.valorLitro) || 0);
-          }
-          let valorAdicional = rep.temDespesas === 'sim' ? (Number(rep.valorAdicional) || 0) : 0;
-          valorTotal = valorHorasTotal + valorKmTotal + valorCombustivelTotal + valorAdicional;
-      }
+        let valorTotal = 0;
+        let textoHoras = "Não cobrado";
 
-      const valorTotalStr = valorTotal.toFixed(2);
-      activeReportData = { number: rep.number, client: rep.client };
+        if (rep.temEmpreitada === 'sim') {
+            valorTotal = Number(rep.valorEmpreitada) || 0;
+            textoHoras = `Empreitada (R$ ${valorTotal.toFixed(2)})`;
+        } else {
+            let valorHorasTotal = 0;
+            if (rep.temHora === 'sim') {
+                const valorHora = Number(rep.valorHora) || 200.00;
+                const horasCalc = calcularMinutosTrabalhados(rep.startManha, rep.endManha, rep.startTarde, rep.endTarde, valorHora);
+                valorHorasTotal = horasCalc.valorHorasTotal;
+                textoHoras = `${horasCalc.totalHoursText} (R$ ${valorHorasTotal.toFixed(2)})`;
+            }
+            let valorKmTotal = 0;
+            if (rep.temKm === 'sim') {
+                let kmTotal = (Number(rep.kmIda) || 0) + (Number(rep.kmVolta) || 0);
+                valorKmTotal = kmTotal * (Number(rep.valorKm) || 0);
+            }
+            let valorCombustivelTotal = 0;
+            if (rep.temCombustivel === 'sim') {
+                valorCombustivelTotal = (Number(rep.combustivelLitros) || 0) * (Number(rep.valorLitro) || 0);
+            }
+            let valorAdicional = rep.temDespesas === 'sim' ? (Number(rep.valorAdicional) || 0) : 0;
+            valorTotal = valorHorasTotal + valorKmTotal + valorCombustivelTotal + valorAdicional;
+        }
 
-      const kmHtml = rep.temKm === 'sim' ? `<p>• <strong>Quilômetros Rodados:</strong> ${(Number(rep.kmIda||0)+Number(rep.kmVolta||0))} km a R$ ${Number(rep.valorKm||0).toFixed(2)}/km</p>` : '';
-      const combustivelHtml = rep.temCombustivel === 'sim' ? `<p>• <strong>Combustível:</strong> ${rep.combustivelLitros||0} L a R$ ${Number(rep.valorLitro||0).toFixed(2)}/L</p>` : '';
-      const despesasHtml = rep.temDespesas === 'sim' ? `<p>• <strong>Outras Despesas / Pedágio:</strong> R$ ${Number(rep.valorAdicional||0).toFixed(2)}</p>` : '';
+        const valorTotalStr = valorTotal.toFixed(2);
+        activeReportData = { number: rep.number, client: rep.client };
 
-      const clientSignature = rep.signature || rep.assinatura || rep.clientSignature || rep.assinaturaCliente || '';
-      const techSignature = config.techSignature || '';
+        const kmHtml = rep.temKm === 'sim' ? `<p>• <strong>Quilômetros Rodados:</strong> ${(Number(rep.kmIda||0)+Number(rep.kmVolta||0))} km a R$ ${Number(rep.valorKm||0).toFixed(2)}/km</p>` : '';
+        const combustivelHtml = rep.temCombustivel === 'sim' ? `<p>• <strong>Combustível:</strong> ${rep.combustivelLitros||0} L a R$ ${Number(rep.valorLitro||0).toFixed(2)}/L</p>` : '';
+        const despesasHtml = rep.temDespesas === 'sim' ? `<p>• <strong>Outras Despesas / Pedágio:</strong> R$ ${Number(rep.valorAdicional||0).toFixed(2)}</p>` : '';
 
-      const signatureAreaHtml = `
-        <div class="signature-area">
-          <div class="signature-box">
-            ${techSignature ? `<img src="${techSignature}" alt="Assinatura Técnico">` : '<p style="height: 50px;"></p>'}
-            <p>________________________________________</p>
-            <p><strong>Técnico Responsável:</strong> ${escapeHTML(config.tech || 'Otávio Barbosa')}</p>
-          </div>
-          <div class="signature-box">
-            ${clientSignature ? `<img src="${clientSignature}" alt="Assinatura Cliente">` : '<p style="height: 50px;"></p>'}
-            <p>________________________________________</p>
-            <p><strong>Assinatura do Cliente</strong></p>
-          </div>
-        </div>
-      `;
+        const clientSignature = rep.signature || rep.assinatura || rep.clientSignature || rep.assinaturaCliente || '';
+        const techSignature = config.techSignature || '';
 
-      let anexosHtml = '';
-      if (rep.anexos && rep.anexos.length > 0) {
-        let itemsHtml = '';
-        rep.anexos.forEach(anexo => {
-          itemsHtml += `
-            <div class="section-box" style="text-align: center; page-break-inside: avoid; margin-top: 15px;">
-              <div class="watermark">LASER EXPERT</div>
-              <div class="section-title" style="text-align: left;">${escapeHTML(anexo.titulo || 'Foto do Equipamento')}</div>
-              <img src="${anexo.imagem}" alt="${escapeHTML(anexo.titulo || '')}" style="max-width: 100%; max-height: 350px; height: auto; object-fit: contain; border-radius: 4px; border: 1px solid #CBD5E1; display: block; margin: 0 auto;">
+        const signatureAreaHtml = `
+          <div class="signature-area">
+            <div class="signature-box">
+              ${techSignature ? `<img src="${techSignature}" alt="Assinatura Técnico">` : '<p style="height: 50px;"></p>'}
+              <p>________________________________________</p>
+              <p><strong>Técnico Responsável:</strong> ${escapeHTML(config.tech || 'Otávio Barbosa')}</p>
             </div>
-          `;
-        });
-        anexosHtml = `
-          <div class="page-break"></div>
-          <div class="print-header" style="margin-top: 10px;">
-            <img src="logo.png" alt="Logo">
-            <div class="print-header-info">
-              <h1>ANEXOS / FOTOGRAFIAS DO EQUIPAMENTO</h1>
-              <p><strong>RS Nº:</strong> ${escapeHTML(rep.number)} | <strong>Cliente:</strong> ${escapeHTML(rep.client)}</p>
+            <div class="signature-box">
+              ${clientSignature ? `<img src="${clientSignature}" alt="Assinatura Cliente">` : '<p style="height: 50px;"></p>'}
+              <p>________________________________________</p>
+              <p><strong>Assinatura do Cliente</strong></p>
             </div>
-          </div>
-          <div style="display: flex; flex-direction: column; gap: 15px; margin-top: 10px;">
-            ${itemsHtml}
           </div>
         `;
+
+        let anexosHtml = '';
+        if (rep.anexos && rep.anexos.length > 0) {
+          let itemsHtml = '';
+          rep.anexos.forEach(anexo => {
+            itemsHtml += `
+              <div class="section-box" style="text-align: center; page-break-inside: avoid; margin-top: 15px;">
+                <div class="watermark">LASER EXPERT</div>
+                <div class="section-title" style="text-align: left;">${escapeHTML(anexo.titulo || 'Foto do Equipamento')}</div>
+                <img src="${anexo.imagem}" alt="${escapeHTML(anexo.titulo || '')}" style="max-width: 100%; max-height: 350px; height: auto; object-fit: contain; border-radius: 4px; border: 1px solid #CBD5E1; display: block; margin: 0 auto;">
+              </div>
+            `;
+          });
+          anexosHtml = `
+            <div class="page-break"></div>
+            <div class="print-header" style="margin-top: 10px;">
+              <img src="logo.png" alt="Logo">
+              <div class="print-header-info">
+                <h1>ANEXOS / FOTOGRAFIAS DO EQUIPAMENTO</h1>
+                <p><strong>RS Nº:</strong> ${escapeHTML(rep.number)} | <strong>Cliente:</strong> ${escapeHTML(rep.client)}</p>
+              </div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 15px; margin-top: 10px;">
+              ${itemsHtml}
+            </div>
+          `;
+        }
+
+        const safeRepNum = escapeHTML(rep.number);
+        const safeRepDate = escapeHTML(rep.date);
+        const safeCfgName = escapeHTML(config.name);
+        const safeCfgDoc = escapeHTML(config.doc);
+        const safeCfgEmail = escapeHTML(config.email || '-');
+        const safeCfgContact = escapeHTML(config.contact);
+        const safeCfgLocation = escapeHTML(config.location);
+        const safeRepClient = escapeHTML(rep.client);
+        const safeClientDoc = escapeHTML(clientObj.doc || clientObj.cnpj || '-');
+        const safeClientEmail = escapeHTML(clientObj.email || '-');
+        const safeClientAddress = escapeHTML(clientObj.address || '-');
+        const safeRepEq = escapeHTML(rep.equipment || '-');
+        const safeRepBrand = escapeHTML(rep.brand || '-');
+        const safeRepModel = escapeHTML(rep.model || '-');
+        const safeRepSerial = escapeHTML(rep.serialNumber || '-');
+        const safeServiceNature = escapeHTML(rep.serviceNature || '-');
+        const safeServiceArea = escapeHTML(rep.serviceArea || '-');
+        const safeDesc = escapeHTML(rep.desc || '-');
+
+        const fullReportHtml = `
+          <div class="print-body" id="pdfContentToPrint">
+            <div class="watermark">LASER EXPERT</div>
+
+            <div class="print-header">
+              <img src="logo.png" alt="Logo">
+              <div class="print-header-info">
+                <h1>RELATÓRIO DE SERVIÇO (RS)</h1>
+                <p><strong>Nº do RS:</strong> ${safeRepNum} | <strong>Data:</strong> ${safeRepDate}</p>
+              </div>
+            </div>
+
+            <div class="section-box">
+              <div class="section-title">Dados da Empresa / Prestador de Serviço</div>
+              <div class="grid-2">
+                <p><strong>Razão Social:</strong> ${safeCfgName}</p>
+                <p><strong>CNPJ:</strong> ${safeCfgDoc}</p>
+                <p><strong>E-mail:</strong> ${safeCfgEmail}</p>
+                <p><strong>Telefone / WhatsApp:</strong> ${safeCfgContact}</p>
+                <p style="grid-column: span 2;"><strong>Endereço:</strong> ${safeCfgLocation}</p>
+              </div>
+            </div>
+
+            <div class="section-box">
+              <div class="section-title">Dados do Cliente</div>
+              <div class="grid-2">
+                <p><strong>Nome / Razão Social:</strong> ${safeRepClient}</p>
+                <p><strong>CPF / CNPJ:</strong> ${safeClientDoc}</p>
+                <p><strong>E-mail:</strong> ${safeClientEmail}</p>
+                <p><strong>Endereço:</strong> ${safeClientAddress}</p>
+              </div>
+            </div>
+
+            <div class="section-box">
+              <div class="section-title">Dados do Equipamento / Máquina</div>
+              <div class="grid-2">
+                <p><strong>Equipamento:</strong> ${safeRepEq}</p>
+                <p><strong>Marca:</strong> ${safeRepBrand}</p>
+                <p><strong>Modelo:</strong> ${safeRepModel}</p>
+                <p><strong>Matrícula / N° de Série:</strong> ${safeRepSerial}</p>
+              </div>
+            </div>
+
+            <div class="section-box">
+              <div class="section-title">Registro do Serviço Realizado</div>
+              <div class="grid-2" style="margin-bottom: 4px;">
+                <p><strong>Tipo de Manutenção:</strong> ${safeServiceNature}</p>
+                <p><strong>Área de Serviço:</strong> ${safeServiceArea}</p>
+              </div>
+              <p><strong>Descrição Detalhada:</strong></p>
+              <p style="white-space: pre-wrap; margin-top: 2px; background: #FFF; padding: 6px; border: 1px solid #E2E8F0; border-radius: 4px;">${safeDesc}</p>
+            </div>
+
+            <div class="section-box">
+              <div class="section-title">Critérios de Cobrança e Valor Total</div>
+              <div style="font-size: 10px; margin-bottom: 6px;">
+                <p>• <strong>Serviço / Horas:</strong> ${textoHoras}</p>
+                ${kmHtml}
+                ${combustivelHtml}
+                ${despesasHtml}
+              </div>
+              <p style="font-size: 11px; font-weight: bold; color: #0D9488; border-top: 1px solid #CBD5E1; padding-top: 4px; margin-top: 4px;">Valor Total Estimado: R$ ${valorTotalStr}</p>
+            </div>
+
+            ${signatureAreaHtml}
+            ${anexosHtml}
+          </div>
+        `;
+
+        document.getElementById('reportRenderArea').innerHTML = fullReportHtml;
+        document.getElementById('modalTitleRs').textContent = `Relatório de Serviço - ${rep.number} (${rep.client})`;
+        document.getElementById('loadingStatusRs').textContent = 'Pronto';
+        document.getElementById('reportPreviewModal').style.display = 'flex';
+      } catch (err) {
+        console.error(err);
+        alert("Erro ao abrir pré-visualização do relatório.");
       }
-
-      const safeRepNum = escapeHTML(rep.number);
-      const safeRepDate = escapeHTML(rep.date);
-      const safeCfgName = escapeHTML(config.name);
-      const safeCfgDoc = escapeHTML(config.doc);
-      const safeCfgEmail = escapeHTML(config.email || '-');
-      const safeCfgContact = escapeHTML(config.contact);
-      const safeCfgLocation = escapeHTML(config.location);
-      const safeRepClient = escapeHTML(rep.client);
-      const safeClientDoc = escapeHTML(clientObj.doc || clientObj.cnpj || '-');
-      const safeClientEmail = escapeHTML(clientObj.email || '-');
-      const safeClientAddress = escapeHTML(clientObj.address || '-');
-      const safeRepEq = escapeHTML(rep.equipment || '-');
-      const safeRepBrand = escapeHTML(rep.brand || '-');
-      const safeRepModel = escapeHTML(rep.model || '-');
-      const safeRepSerial = escapeHTML(rep.serialNumber || '-');
-      const safeServiceNature = escapeHTML(rep.serviceNature || '-');
-      const safeServiceArea = escapeHTML(rep.serviceArea || '-');
-      const safeDesc = escapeHTML(rep.desc || '-');
-
-      const fullReportHtml = `
-        <div class="print-body" id="pdfContentToPrint">
-          <div class="watermark">LASER EXPERT</div>
-
-          <div class="print-header">
-            <img src="logo.png" alt="Logo">
-            <div class="print-header-info">
-              <h1>RELATÓRIO DE SERVIÇO (RS)</h1>
-              <p><strong>Nº do RS:</strong> ${safeRepNum} | <strong>Data:</strong> ${safeRepDate}</p>
-            </div>
-          </div>
-
-          <div class="section-box">
-            <div class="section-title">Dados da Empresa / Prestador de Serviço</div>
-            <div class="grid-2">
-              <p><strong>Razão Social:</strong> ${safeCfgName}</p>
-              <p><strong>CNPJ:</strong> ${safeCfgDoc}</p>
-              <p><strong>E-mail:</strong> ${safeCfgEmail}</p>
-              <p><strong>Telefone / WhatsApp:</strong> ${safeCfgContact}</p>
-              <p style="grid-column: span 2;"><strong>Endereço:</strong> ${safeCfgLocation}</p>
-            </div>
-          </div>
-
-          <div class="section-box">
-            <div class="section-title">Dados do Cliente</div>
-            <div class="grid-2">
-              <p><strong>Nome / Razão Social:</strong> ${safeRepClient}</p>
-              <p><strong>CPF / CNPJ:</strong> ${safeClientDoc}</p>
-              <p><strong>E-mail:</strong> ${safeClientEmail}</p>
-              <p><strong>Endereço:</strong> ${safeClientAddress}</p>
-            </div>
-          </div>
-
-          <div class="section-box">
-            <div class="section-title">Dados do Equipamento / Máquina</div>
-            <div class="grid-2">
-              <p><strong>Equipamento:</strong> ${safeRepEq}</p>
-              <p><strong>Marca:</strong> ${safeRepBrand}</p>
-              <p><strong>Modelo:</strong> ${safeRepModel}</p>
-              <p><strong>Matrícula / N° de Série:</strong> ${safeRepSerial}</p>
-            </div>
-          </div>
-
-          <div class="section-box">
-            <div class="section-title">Registro do Serviço Realizado</div>
-            <div class="grid-2" style="margin-bottom: 4px;">
-              <p><strong>Tipo de Manutenção:</strong> ${safeServiceNature}</p>
-              <p><strong>Área de Serviço:</strong> ${safeServiceArea}</p>
-            </div>
-            <p><strong>Descrição Detalhada:</strong></p>
-            <p style="white-space: pre-wrap; margin-top: 2px; background: #FFF; padding: 6px; border: 1px solid #E2E8F0; border-radius: 4px;">${safeDesc}</p>
-          </div>
-
-          <div class="section-box">
-            <div class="section-title">Critérios de Cobrança e Valor Total</div>
-            <div style="font-size: 10px; margin-bottom: 6px;">
-              <p>• <strong>Serviço / Horas:</strong> ${textoHoras}</p>
-              ${kmHtml}
-              ${combustivelHtml}
-              ${despesasHtml}
-            </div>
-            <p style="font-size: 11px; font-weight: bold; color: #0D9488; border-top: 1px solid #CBD5E1; padding-top: 4px; margin-top: 4px;">Valor Total Estimado: R$ ${valorTotalStr}</p>
-          </div>
-
-          ${signatureAreaHtml}
-          ${anexosHtml}
-        </div>
-      `;
-
-      document.getElementById('reportRenderArea').innerHTML = fullReportHtml;
-      document.getElementById('modalTitleRs').textContent = `Relatório de Serviço - ${rep.number} (${rep.client})`;
-      document.getElementById('loadingStatusRs').textContent = 'Pronto';
-      document.getElementById('reportPreviewModal').style.display = 'flex';
     };
 
     window.closeModal = function() {
       document.getElementById('reportPreviewModal').style.display = 'none';
     };
 
-    // Função atualizada com Partilha Nativa (navigator.share)
     window.compartilharPDF = async function() {
       const element = document.getElementById('reportRenderArea');
       const filename = `Relatorio_RS_${activeReportData.number || 'RS-1000'}.pdf`;
@@ -455,11 +459,11 @@
         margin: 10,
         filename: filename,
         image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true },
+        html2canvas: { scale: 2, useCORS: true, allowTaint: true },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
       };
 
-      document.getElementById('loadingStatusRs').textContent = 'A gerar PDF para partilha...';
+      document.getElementById('loadingStatusRs').textContent = 'A gerar PDF...';
 
       try {
         const worker = html2pdf().from(element).set(opt);
@@ -472,16 +476,16 @@
             title: `Relatório de Serviço ${activeReportData.number || ''}`,
             text: `Segue em anexo o Relatório de Serviço ${activeReportData.number || ''} para o cliente ${activeReportData.client || ''}.`
           });
-          document.getElementById('loadingStatusRs').textContent = 'Partilhado com sucesso!';
+          document.getElementById('loadingStatusRs').textContent = 'Partilhado!';
         } else {
           worker.save();
-          document.getElementById('loadingStatusRs').textContent = 'PDF Guardado (Download)!';
+          document.getElementById('loadingStatusRs').textContent = 'Guardado (Download)!';
         }
       } catch (err) {
         console.error("Erro ou cancelamento na partilha:", err);
         if (err.name !== 'AbortError') {
           html2pdf().from(element).set(opt).save();
-          document.getElementById('loadingStatusRs').textContent = 'PDF Guardado (Download)!';
+          document.getElementById('loadingStatusRs').textContent = 'Guardado (Download)!';
         } else {
           document.getElementById('loadingStatusRs').textContent = 'Partilha cancelada.';
         }

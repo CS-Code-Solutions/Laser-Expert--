@@ -155,7 +155,7 @@
           <div style="display: flex; align-items: flex-end;">
             <div style="background: #F8FAFC; border: 1px solid #CBD5E1; padding: 8px 12px; border-radius: 4px; width: 100%; display: flex; align-items: center; gap: 10px; height: 38px; box-sizing: border-box;">
               <input type="checkbox" id="orcIncludeQr" checked style="width: 16px; height: 16px; cursor: pointer;">
-              <label for="orcIncludeQr" style="font-size: 12px; font-weight: bold; cursor: pointer; margin: 0; color: var(--deep-navy);">Incluir QR Code PIX no Orçamento</label>
+              <label for="orcIncludeQr" style="font-size: 12px; font-weight: bold; cursor: pointer; margin: 0; color: var(--deep-navy);">Incluir PIX Copia e Cola no Orçamento</label>
             </div>
           </div>
         </div>
@@ -520,13 +520,16 @@
         `;
       }
 
-      let qrCodeSection = '';
+      let pixCopiaEColaHtml = '';
+      const valorFormatado = Number(b.total || 0).toFixed(2);
       if (opt !== 'boleto' && b.includeQr !== false && pixKeyToUse.trim() !== '') {
-        const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=110x110&data=${encodeURIComponent(pixKeyToUse)}`;
-        qrCodeSection = `
-          <div style="margin-top: 8px; text-align: center; border-top: 1px dashed #CBD5E1; padding-top: 8px;">
-            <img src="${qrApiUrl}" alt="QR Code PIX" style="width: 90px; height: 90px; border: 1px solid #CBD5E1; padding: 2px; background: #FFF; border-radius: 4px;">
-            <p style="font-size: 9px; color: #64748B; margin: 2px 0 0 0;">Escaneie o QR Code para pagamento instantâneo via PIX</p>
+        pixCopiaEColaHtml = `
+          <div style="margin-top: 8px; padding: 8px; background: #F1F5F9; border: 1px solid #CBD5E1; border-radius: 4px;">
+            <p style="font-size: 10px; font-weight: bold; color: #0B132B; margin: 0 0 2px 0; text-align: center;">PIX COPIA E COLA (PAGAMENTO INSTANTÂNEO):</p>
+            <div style="background: #FFFFFF; border: 1px dashed #0D9488; padding: 6px; font-family: monospace; font-size: 10px; word-break: break-all; text-align: center; color: #0D9488;">
+              00020126580014br.gov.bcb.pix0136${escapeHTML(pixKeyToUse)}5204000053039865802BR5925${escapeHTML(config.name)}6009SaoLeopoldo62070303${escapeHTML(b.number)}6304
+            </div>
+            <p style="font-size: 9px; color: #64748B; margin: 3px 0 0 0; text-align: center;">Chave: <strong>${escapeHTML(pixKeyToUse)}</strong> | Valor: <strong>R$ ${valorFormatado}</strong></p>
           </div>
         `;
       }
@@ -604,7 +607,7 @@
             <p style="white-space: pre-wrap; font-size: 11px; margin-bottom: 8px;">${safeTerms}</p>
             <hr style="border: 0; border-top: 1px solid #CBD5E1; margin: 6px 0;">
             ${bancoInfoHtml}
-            ${qrCodeSection}
+            ${pixCopiaEColaHtml}
           </div>
 
           <div class="section-box" style="text-align: right; background: #F1F5F9; border-color: #00F5D4;">

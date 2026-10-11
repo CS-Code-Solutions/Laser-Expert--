@@ -631,16 +631,26 @@
 
     window.compartilharPDFOrcamento = async function() {
       const element = document.getElementById('budgetRenderArea');
+      document.getElementById('loadingStatusOrc').textContent = '⏳ A preparar layout...';
+
+      // Aguarda 400ms para garantir que o layout flex do modal está 100% calculado e visível no ecrã
+      await new Promise(resolve => setTimeout(resolve, 400));
+
       const filename = `Orcamento_${activeBudgetData.number || '001'}.pdf`;
       const opt = {
         margin: 10,
         filename: filename,
         image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, allowTaint: true },
+        html2canvas: { 
+          scale: 2, 
+          useCORS: true, 
+          allowTaint: true,
+          windowWidth: 794 // Força largura padrão de renderização A4 para evitar telas brancas
+        },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
       };
 
-      document.getElementById('loadingStatusOrc').textContent = 'A gerar PDF...';
+      document.getElementById('loadingStatusOrc').textContent = '⏳ A gerar PDF...';
 
       try {
         const worker = html2pdf().from(element).set(opt);

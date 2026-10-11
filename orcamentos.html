@@ -201,7 +201,6 @@
       </form>
     </section>
 
-    <!-- Secção atualizada em Cartões Responsivos para Telemóvel -->
     <section class="card">
       <h2>Histórico de Orçamentos</h2>
       <div id="budgetCardsContainer" style="display: flex; flex-direction: column; gap: 12px; margin-top: 15px;">
@@ -609,19 +608,45 @@
       document.getElementById('budgetPreviewModal').style.display = 'none';
     };
 
-    window.compartilharPDFOrcamento = function() {
+    // Função atualizada com Partilha Nativa (navigator.share)
+    window.compartilharPDFOrcamento = async function() {
       const element = document.getElementById('budgetRenderArea');
+      const filename = `Orcamento_${activeBudgetData.number || '001'}.pdf`;
       const opt = {
         margin: 10,
-        filename: `Orcamento_${activeBudgetData.number || '001'}.pdf`,
+        filename: filename,
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
       };
-      document.getElementById('loadingStatusOrc').textContent = 'Gerando PDF...';
-      html2pdf().from(element).set(opt).save().then(() => {
-        document.getElementById('loadingStatusOrc').textContent = 'PDF Guardado!';
-      });
+
+      document.getElementById('loadingStatusOrc').textContent = 'A gerar PDF para partilha...';
+
+      try {
+        const worker = html2pdf().from(element).set(opt);
+        const pdfBlob = await worker.outputPdf('blob');
+        const file = new File([pdfBlob], filename, { type: 'application/pdf' });
+
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({
+            files: [file],
+            title: `Orçamento ${activeBudgetData.number || ''}`,
+            text: `Segue em anexo o Orçamento ${activeBudgetData.number || ''} para o cliente ${activeBudgetData.client || ''}.`
+          });
+          document.getElementById('loadingStatusOrc').textContent = 'Partilhado com sucesso!';
+        } else {
+          worker.save();
+          document.getElementById('loadingStatusOrc').textContent = 'PDF Guardado (Download)!';
+        }
+      } catch (err) {
+        console.error("Erro ou cancelamento na partilha:", err);
+        if (err.name !== 'AbortError') {
+          html2pdf().from(element).set(opt).save();
+          document.getElementById('loadingStatusOrc').textContent = 'PDF Guardado (Download)!';
+        } else {
+          document.getElementById('loadingStatusOrc').textContent = 'Partilha cancelada.';
+        }
+      }
     };
   </script>
 </body>

@@ -9,11 +9,8 @@
 
 <!-- Inicialização do Firebase -->
 <script src="firebase-init.js"></script>
-
-<!-- Módulo de Sincronização (FALTAVA ESTA LINHA) -->
 <script src="firebase-sync.js"></script>
   <script>
-    // Guardião de Sessão: Se não estiver autenticado, redireciona imediatamente para o login
     if (localStorage.getItem('rg_logged') !== 'true') {
       window.location.href = 'login.html';
     }
@@ -88,23 +85,11 @@
       </form>
     </section>
 
+    <!-- Cartões Responsivos para Máquinas -->
     <section class="card">
       <h2>Máquinas Cadastradas</h2>
-      <div class="table-responsive">
-        <table>
-          <thead>
-            <tr>
-              <th>Cliente</th>
-              <th>Equipamento</th>
-              <th>Marca / Modelo</th>
-              <th>Série / Tag</th>
-              <th>Ações</th>
-            </tr>
-          </thead>
-          <tbody id="machineTableBody">
-            <tr><td colspan="5" style="text-align: center; color: #64748B;">A carregar máquinas da nuvem...</td></tr>
-          </tbody>
-        </table>
+      <div id="machineCardsContainer" style="display: flex; flex-direction: column; gap: 12px; margin-top: 15px;">
+        <p style="text-align: center; color: #64748B;">A carregar máquinas da nuvem...</p>
       </div>
     </section>
   </main>
@@ -114,7 +99,6 @@
   </footer>
 
  <script>
-    // Função de blindagem contra XSS: converte carateres perigosos em entidades seguras
     function escapeHTML(str) {
       if (!str) return '';
       return String(str)
@@ -127,7 +111,7 @@
 
     const clientSelect = document.getElementById('machineClient');
     const machineForm = document.getElementById('machineForm');
-    const machineTableBody = document.getElementById('machineTableBody');
+    const machineCardsContainer = document.getElementById('machineCardsContainer');
     
     let machines = [];
     let clients = [];
@@ -152,38 +136,38 @@
         machines = await DataSync.load('rg_machines') || [];
         if (!Array.isArray(machines)) machines = [];
 
-        machineTableBody.innerHTML = '';
+        machineCardsContainer.innerHTML = '';
         if (machines.length === 0) {
-          machineTableBody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #64748B;">Nenhuma máquina cadastrada.</td></tr>';
+          machineCardsContainer.innerHTML = '<p style="text-align: center; color: #64748B;">Nenhuma máquina cadastrada.</p>';
           return;
         }
 
+        let htmlCards = '';
         machines.forEach((m, index) => {
-          // Sanitização XSS de todos os campos exibidos na tabela
           const safeClient = escapeHTML(m.client);
           const safeName = escapeHTML(m.name);
           const safeBrand = escapeHTML(m.brand || '-');
           const safeModel = escapeHTML(m.model || '-');
           const safeSerial = escapeHTML(m.serial || '-');
 
-          machineTableBody.innerHTML += `
-            <tr>
-              <td>${safeClient}</td>
-              <td>${safeName}</td>
-              <td>${safeBrand} / ${safeModel}</td>
-              <td>${safeSerial}</td>
-              <td>
-                <div style="display: flex; gap: 5px; flex-wrap: wrap;">
-                  <button class="btn" style="padding: 4px 8px; font-size: 0.8rem; background-color: #F59E0B;" onclick="editMachine(${index})">Editar</button>
-                  <button class="btn" style="padding: 4px 8px; font-size: 0.8rem; background-color: #EF4444;" onclick="deleteMachine(${index})">Excluir</button>
-                </div>
-              </td>
-            </tr>
+          htmlCards += `
+            <div style="border: 1px solid #CBD5E1; padding: 15px; border-radius: 6px; background: #F8FAFC; display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 10px;">
+              <div style="flex: 1; min-width: 220px;">
+                <strong style="font-size: 1.05rem; color: #0B132B;">${safeName}</strong> — <span style="color: #64748B; font-size: 0.9rem;">${safeClient}</span><br>
+                <span style="font-size: 0.9rem; color: #334155;"><strong>Marca / Modelo:</strong> ${safeBrand} / ${safeModel}</span><br>
+                <span style="font-size: 0.85rem; color: #334155;"><strong>Série / Tag:</strong> ${safeSerial}</span>
+              </div>
+              <div style="display: flex; gap: 6px; flex-wrap: wrap; align-items: center;">
+                <button class="btn" style="padding: 6px 12px; font-size: 0.85rem; background-color: #F59E0B;" onclick="editMachine(${index})">Editar</button>
+                <button class="btn" style="padding: 6px 12px; font-size: 0.85rem; background-color: #EF4444;" onclick="deleteMachine(${index})">Excluir</button>
+              </div>
+            </div>
           `;
         });
+        machineCardsContainer.innerHTML = htmlCards;
       } catch (err) {
         console.error(err);
-        machineTableBody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: red;">Erro ao carregar máquinas.</td></tr>';
+        machineCardsContainer.innerHTML = '<p style="text-align: center; color: red;">Erro ao carregar máquinas.</p>';
       }
     }
 

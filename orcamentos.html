@@ -622,8 +622,8 @@
       const status = document.getElementById('loadingStatusOrc');
       const source = document.getElementById('budgetRenderArea');
 
-      if (!source || !source.querySelector('.print-body') || !source.innerText.trim()) {
-        alert('Não foi possível gerar o PDF: o conteúdo do orçamento está vazio.');
+      if (!source || !source.innerText.trim()) {
+        alert('Não foi possível gerar o PDF: o conteúdo está vazio.');
         return;
       }
 
@@ -632,53 +632,7 @@
         return;
       }
 
-      let captureHost;
-
       try {
-        status.textContent = 'Preparando orçamento...';
-        captureHost = document.createElement('div');
-
-        captureHost.style.cssText = [
-          'position:fixed', 'left:-10000px', 'top:0', 'width:720px',
-          'background:#ffffff', 'color:#0B132B', 'opacity:1',
-          'visibility:visible', 'pointer-events:none', 'z-index:2147483647',
-          'overflow:visible', 'box-sizing:border-box', 'padding:10px'
-        ].join(';');
-
-        const clone = source.cloneNode(true);
-        clone.removeAttribute('id');
-        clone.style.cssText += ';display:block;width:100%;height:auto;min-height:0;overflow:visible;background:#ffffff;box-sizing:border-box;';
-
-        const printBody = clone.querySelector('.print-body');
-        if (printBody) {
-          printBody.style.width = '100%';
-          printBody.style.maxWidth = 'none';
-          printBody.style.color = '#0B132B';
-          printBody.style.background = '#ffffff';
-          printBody.style.boxSizing = 'border-box';
-        }
-
-        captureHost.appendChild(clone);
-        document.body.appendChild(captureHost);
-
-        if (document.fonts && document.fonts.ready) {
-          await document.fonts.ready;
-        }
-
-        const images = Array.from(captureHost.querySelectorAll('img'));
-        await Promise.all(
-          images.map(async (img) => {
-            if (img.complete && img.naturalWidth > 0) return;
-            if (typeof img.decode === 'function') {
-              try { await img.decode(); return; } catch (e) {}
-            }
-            await new Promise((resolve) => {
-              img.onload = resolve;
-              img.onerror = resolve;
-            });
-          })
-        );
-
         status.textContent = 'Gerando PDF...';
         const numeroOrcamento = (activeBudgetData && activeBudgetData.number) || '001';
         const clienteNome = (activeBudgetData && activeBudgetData.client) || 'Cliente';
@@ -688,20 +642,14 @@
           margin:       [5, 5, 5, 5],
           filename:     filename,
           image:        { type: 'jpeg', quality: 0.98 },
-          html2canvas:  { scale: 1.5, useCORS: true, backgroundColor: '#ffffff', logging: false, windowWidth: 720 },
+          html2canvas:  { scale: 1.5, useCORS: true, backgroundColor: '#ffffff', logging: false },
           jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
 
-        const worker = html2pdf().from(clone).set(opt);
+        const worker = html2pdf().from(source).set(opt);
         const pdfBlob = await worker.outputPdf('blob');
         const pdfFile = new File([pdfBlob], filename, { type: 'application/pdf' });
 
-        if (captureHost && captureHost.parentNode) {
-          captureHost.parentNode.removeChild(captureHost);
-          captureHost = null;
-        }
-
-        // Partilha nativa com tratamento seguro (se o utilizador cancelar, não gera erro)
         if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
           status.textContent = 'Pronto para partilhar!';
           try {
@@ -728,10 +676,6 @@
         console.error('Erro ao gerar PDF do orçamento:', error);
         status.textContent = 'Falha ao gerar PDF';
         alert('Não foi possível gerar o PDF. Tente novamente.');
-      } finally {
-        if (captureHost && captureHost.parentNode) {
-          captureHost.parentNode.removeChild(captureHost);
-        }
       }
     };
   </script>

@@ -14,11 +14,8 @@
 
 <!-- Inicialização do Firebase -->
 <script src="firebase-init.js"></script>
-
-<!-- Módulo de Sincronização (FALTAVA ESTA LINHA) -->
 <script src="firebase-sync.js"></script>
   <script>
-    // Guardião de Sessão: Se não estiver autenticado, redireciona imediatamente para o login
     if (localStorage.getItem('rg_logged') !== 'true') {
       window.location.href = 'login.html';
     }
@@ -134,7 +131,6 @@
         <div style="background: #F8FAFC; border: 1px solid #CBD5E1; padding: 12px; border-radius: 6px; margin-bottom: 15px;">
           <h3 style="font-size: 1rem; margin-bottom: 12px; color: var(--deep-navy);">Critérios de Cobrança e Deslocamento</h3>
           
-          <!-- Regime de Empreitada -->
           <div style="margin-bottom: 12px;">
             <label for="selectEmpreitada"><strong>Regime de Empreitada (Valor Fechado)?</strong></label>
             <select id="selectEmpreitada" class="form-control" style="width:100%; padding:8px; border:1px solid #CBD5E1; border-radius:4px; background:#FFF; margin-top: 4px;" onchange="toggleEmpreitadaSelect()">
@@ -148,7 +144,6 @@
             <input type="number" step="0.01" id="repValorEmpreitada" value="0.00" placeholder="Ex: 1500.00" style="width:100%; padding:6px; border:1px solid #CBD5E1; border-radius:4px; margin-top: 2px;">
           </div>
 
-          <!-- Cobrar Hora Trabalhada -->
           <div style="margin-bottom: 12px;">
             <label for="selectHora"><strong>Cobrar Hora Trabalhada?</strong></label>
             <select id="selectHora" class="form-control" style="width:100%; padding:8px; border:1px solid #CBD5E1; border-radius:4px; background:#FFF; margin-top: 4px;" onchange="toggleHoraSelect()">
@@ -157,28 +152,34 @@
             </select>
           </div>
 
+          <!-- Bloco Atualizado com Data e Hora (datetime-local) -->
           <div id="boxHoraDetalhes" style="display: none; margin-bottom: 12px; background: #FFF; padding: 10px; border: 1px solid #CBD5E1; border-radius: 4px;">
-            <div style="margin-bottom: 8px;">
-              <label>Início / Fim Manhã:</label>
-              <div style="display: flex; gap: 5px; margin-top: 2px;">
-                <input type="time" id="startManha" style="width:50%; padding:6px; border:1px solid #CBD5E1; border-radius:4px;">
-                <input type="time" id="endManha" style="width:50%; padding:6px; border:1px solid #CBD5E1; border-radius:4px;">
-              </div>
-            </div>
-            <div style="margin-bottom: 8px;">
-              <label>Início / Fim Tarde:</label>
-              <div style="display: flex; gap: 5px; margin-top: 2px;">
-                <input type="time" id="startTarde" style="width:50%; padding:6px; border:1px solid #CBD5E1; border-radius:4px;">
-                <input type="time" id="endTarde" style="width:50%; padding:6px; border:1px solid #CBD5E1; border-radius:4px;">
-              </div>
-            </div>
-            <div>
-              <label for="repValorHora">Valor da Hora (R$):</label>
+            <div style="margin-bottom: 10px;">
+              <label for="repValorHora"><strong>Valor da Hora (R$):</strong></label>
               <input type="number" step="0.01" id="repValorHora" value="200.00" placeholder="Ex: 200.00" style="width:100%; padding:6px; border:1px solid #CBD5E1; border-radius:4px; margin-top: 2px;">
+            </div>
+            
+            <div style="margin-bottom: 8px;">
+              <label><strong>Início Manhã:</strong></label>
+              <input type="datetime-local" id="startManha" style="width:100%; padding:6px; border:1px solid #CBD5E1; border-radius:4px; margin-top: 2px;">
+            </div>
+
+            <div style="margin-bottom: 8px;">
+              <label><strong>Final Manhã:</strong></label>
+              <input type="datetime-local" id="endManha" style="width:100%; padding:6px; border:1px solid #CBD5E1; border-radius:4px; margin-top: 2px;">
+            </div>
+
+            <div style="margin-bottom: 8px;">
+              <label><strong>Início Tarde:</strong></label>
+              <input type="datetime-local" id="startTarde" style="width:100%; padding:6px; border:1px solid #CBD5E1; border-radius:4px; margin-top: 2px;">
+            </div>
+
+            <div style="margin-bottom: 4px;">
+              <label><strong>Final Tarde (Encerramento):</strong></label>
+              <input type="datetime-local" id="endTarde" style="width:100%; padding:6px; border:1px solid #CBD5E1; border-radius:4px; margin-top: 2px;">
             </div>
           </div>
 
-          <!-- Cobrar Km Rodado -->
           <div style="margin-bottom: 12px;">
             <label for="selectKm"><strong>Cobrar Km Rodado?</strong></label>
             <select id="selectKm" class="form-control" style="width:100%; padding:8px; border:1px solid #CBD5E1; border-radius:4px; background:#FFF; margin-top: 4px;" onchange="toggleKmSelect()">
@@ -202,7 +203,6 @@
             </div>
           </div>
 
-          <!-- Adicionar Combustível -->
           <div style="margin-bottom: 12px;">
             <label for="selectCombustivel"><strong>Adicionar Combustível?</strong></label>
             <select id="selectCombustivel" class="form-control" style="width:100%; padding:8px; border:1px solid #CBD5E1; border-radius:4px; background:#FFF; margin-top: 4px;" onchange="toggleCombustivelSelect()">
@@ -222,7 +222,6 @@
             </div>
           </div>
 
-          <!-- Adicionar Pedágio (Sim/Não) -->
           <div style="margin-bottom: 12px;">
             <label for="selectPedagio"><strong>Adicionar Pedágio?</strong></label>
             <select id="selectPedagio" class="form-control" style="width:100%; padding:8px; border:1px solid #CBD5E1; border-radius:4px; background:#FFF; margin-top: 4px;" onchange="togglePedagioSelect()">
@@ -236,7 +235,6 @@
             <input type="number" step="0.01" id="valorPedagio" value="0.00" placeholder="Ex: 30.00" style="width:100%; padding:6px; border:1px solid #CBD5E1; border-radius:4px; margin-top: 2px;">
           </div>
 
-          <!-- Adicionar Hospedagem (Sim/Não) -->
           <div style="margin-bottom: 12px;">
             <label for="selectHospedagem"><strong>Adicionar Hospedagem?</strong></label>
             <select id="selectHospedagem" class="form-control" style="width:100%; padding:8px; border:1px solid #CBD5E1; border-radius:4px; background:#FFF; margin-top: 4px;" onchange="toggleHospedagemSelect()">
@@ -250,7 +248,6 @@
             <input type="number" step="0.01" id="valorHospedagem" value="0.00" placeholder="Ex: 150.00" style="width:100%; padding:6px; border:1px solid #CBD5E1; border-radius:4px; margin-top: 2px;">
           </div>
 
-          <!-- Adicionar Outras Despesas / Alimentação (Sim/Não) -->
           <div style="margin-bottom: 4px;">
             <label for="selectOutras"><strong>Adicionar Outras Despesas / Alimentação?</strong></label>
             <select id="selectOutras" class="form-control" style="width:100%; padding:8px; border:1px solid #CBD5E1; border-radius:4px; background:#FFF; margin-top: 4px;" onchange="toggleOutrasSelect()">
@@ -265,7 +262,6 @@
           </div>
         </div>
 
-        <!-- ANEXOS DE FOTOS (ACIMA DA ASSINATURA) -->
         <div style="margin-bottom: 20px;">
           <h3>📸 Fotografias / Anexos do Equipamento</h3>
           <div style="margin-bottom: 10px; display: flex; gap: 10px; flex-wrap: wrap;">
@@ -276,7 +272,6 @@
           <div id="listaAnexos" style="display: flex; flex-direction: column; gap: 8px;"></div>
         </div>
 
-        <!-- ASSINATURA DO CLIENTE APENAS -->
         <div style="margin-bottom: 15px;">
           <label><strong>Assinatura do Cliente:</strong></label>
           <canvas id="clientCanvas" class="signature-pad" width="400" height="150"></canvas>
@@ -363,9 +358,7 @@
       const file = event.target.files[0];
       if (!file) return;
       const reader = new FileReader();
-      reader.onload = function(e) {
-        tempAnexoBase64 = e.target.result;
-      };
+      reader.onload = function(e) { tempAnexoBase64 = e.target.result; };
       reader.readAsDataURL(file);
     }
 
@@ -560,7 +553,6 @@
           console.error("Erro ao carregar relatório para edição", e);
         }
       } else {
-        // Geração robusta do próximo número de RS
         try {
           let reports = await DataSync.load('rg_reports') || [];
           let config = await DataSync.load('rg_config') || {};

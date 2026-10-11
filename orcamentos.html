@@ -553,7 +553,7 @@
       const renderArea = document.getElementById('budgetRenderArea');
       renderArea.innerHTML = `
         <div class="watermark">ORÇAMENTO</div>
-        <div class="print-body">
+        <div class="print-body" style="width: 100%; box-sizing: border-box;">
           <div class="print-header">
             <img src="logo.png" alt="Logo">
             <div class="print-header-info">
@@ -638,16 +638,17 @@
         status.textContent = 'Preparando orçamento...';
         captureHost = document.createElement('div');
 
+        // Largura restrita para evitar cortes nas margens laterais no PDF
         captureHost.style.cssText = [
-          'position:fixed', 'left:-10000px', 'top:0', 'width:794px',
+          'position:fixed', 'left:-10000px', 'top:0', 'width:720px',
           'background:#ffffff', 'color:#0B132B', 'opacity:1',
           'visibility:visible', 'pointer-events:none', 'z-index:2147483647',
-          'overflow:visible', 'transform:none'
+          'overflow:visible', 'box-sizing:border-box', 'padding:10px'
         ].join(';');
 
         const clone = source.cloneNode(true);
         clone.removeAttribute('id');
-        clone.style.cssText += ';display:block;width:100%;height:auto;min-height:0;overflow:visible;background:#ffffff;transform:none;';
+        clone.style.cssText += ';display:block;width:100%;height:auto;min-height:0;overflow:visible;background:#ffffff;box-sizing:border-box;';
 
         const printBody = clone.querySelector('.print-body');
         if (printBody) {
@@ -655,6 +656,7 @@
           printBody.style.maxWidth = 'none';
           printBody.style.color = '#0B132B';
           printBody.style.background = '#ffffff';
+          printBody.style.boxSizing = 'border-box';
         }
 
         captureHost.appendChild(clone);
@@ -678,36 +680,41 @@
           })
         );
 
-        const rect = clone.getBoundingClientRect();
-        if (!rect.width || !rect.height || !clone.querySelector('.print-body')) {
-          throw new Error('O conteúdo do orçamento não possui dimensões válidas para captura.');
-        }
-
         status.textContent = 'Gerando PDF...';
         const numeroOrcamento = (activeBudgetData && activeBudgetData.number) || '001';
-        const filename = `Orcamento_${numeroOrcamento}.pdf`;
+        const clienteNome = (activeBudgetData && activeBudgetData.client) || 'Cliente';
+        const filename = `Orcamento_${numeroOrcamento}_${clienteNome.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`;
 
-        await html2pdf()
-          .set({
-            margin: [6, 6, 6, 6],
-            filename: filename,
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: {
-              scale: 1.6,
-              useCORS: true,
-              backgroundColor: '#ffffff',
-              logging: false,
-              scrollX: 0,
-              scrollY: 0,
-              windowWidth: 794
-            },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-            pagebreak: { mode: ['css', 'legacy'] }
-          })
-          .from(clone)
-          .save();
+        const opt = {
+          margin:       [5, 5, 5, 5],
+          filename:     filename,
+          image:        { type: 'jpeg', quality: 0.98 },
+          html2canvas:  { scale: 1.5, useCORS: true, backgroundColor: '#ffffff', logging: false, windowWidth: 720 },
+          jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
 
-        status.textContent = 'PDF baixado!';
+        const worker = html2pdf().from(clone).set(opt);
+        const pdfBlob = await worker.outputPdf('blob');
+        const pdfFile = new File([pdfBlob], filename, { type: 'application/pdf' });
+
+        if (document.body.contains(captureHost)) {
+          document.body.removeChild(captureHost);
+          captureHost = null;
+        }
+
+        // Ativa a partilha nativa do telemóvel (WhatsApp, Email, etc.)
+        if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
+          status.textContent = 'Pronto para partilhar!';
+          await navigator.share({
+            title: `Orçamento ${numeroOrcamento}`,
+            text: `Segue o Orçamento ${numeroOrcamento} (${clienteNome}).`,
+            files: [pdfFile]
+          });
+        } else {
+          worker.save();
+          status.textContent = 'PDF guardado!';
+          alert("O PDF foi gerado e descarregado com sucesso.");
+        }
       } catch (error) {
         console.error('Erro ao gerar PDF do orçamento:', error);
         status.textContent = 'Falha ao gerar PDF';

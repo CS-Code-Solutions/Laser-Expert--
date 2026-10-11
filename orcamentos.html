@@ -534,7 +534,6 @@
         let pixCopiaEColaHtml = '';
         const valorFormatado = Number(b.total || 0).toFixed(2);
         if (opt !== 'boleto' && b.includeQr !== false && pixKeyToUse.trim() !== '') {
-          // Modelo estruturado Copia e Cola limpo e compatível com 100% dos leitores de PDF
           pixCopiaEColaHtml = `
             <div style="margin-top: 8px; padding: 8px; background: #F1F5F9; border: 1px solid #CBD5E1; border-radius: 4px;">
               <p style="font-size: 10px; font-weight: bold; color: #0B132B; margin: 0 0 2px 0; text-align: center;">PIX COPIA E COLA (PAGAMENTO INSTANTÂNEO):</p>
@@ -565,7 +564,7 @@
         renderArea.innerHTML = `
           <div class="print-body">
             <div class="print-header">
-              <h1>LASER EXPERT</h1>
+              <img src="logo.png" alt="Logo">
               <div class="print-header-info">
                 <h1>ORÇAMENTO DE SERVIÇO</h1>
                 <p><strong>Nº:</strong> ${safeNum}</p>

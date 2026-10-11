@@ -553,7 +553,7 @@
       const renderArea = document.getElementById('budgetRenderArea');
       renderArea.innerHTML = `
         <div class="watermark">ORÇAMENTO</div>
-        <div class="print-body" style="width: 100%; box-sizing: border-box;">
+        <div class="print-body">
           <div class="print-header">
             <img src="logo.png" alt="Logo">
             <div class="print-header-info">
@@ -622,85 +622,92 @@
       const status = document.getElementById('loadingStatusOrc');
       const source = document.getElementById('budgetRenderArea');
 
-      if (!source || !source.innerText.trim()) {
-        alert('Não foi possível gerar o PDF: o conteúdo está vazio.');
+      if (!source || !source.querySelector('.print-body') || !source.innerText.trim()) {
+        alert('Não foi possível gerar o PDF: o conteúdo do orçamento está vazio. Feche e abra o orçamento novamente.');
         return;
       }
 
       if (typeof html2pdf === 'undefined') {
-        alert('A biblioteca de geração de PDF não foi carregada.');
+        alert('A biblioteca de geração de PDF não foi carregada. Verifique sua conexão e tente novamente.');
         return;
       }
 
-      let captureHost = null;
+      let captureHost;
 
       try {
-        status.textContent = 'A preparar PDF...';
-        
-        // Criar contentor temporário visível no DOM para evitar ecrã branco e falhas de flexbox
+        status.textContent = 'Preparando orçamento...';
         captureHost = document.createElement('div');
-        captureHost.style.cssText = 'position: absolute; left: 0; top: 0; width: 794px; background: #ffffff; color: #0B132B; z-index: 99999; opacity: 0.01; pointer-events: none; padding: 20px; box-sizing: border-box;';
-        
+
+        captureHost.style.cssText = [
+          'position:fixed', 'left:-10000px', 'top:0', 'width:794px',
+          'background:#ffffff', 'color:#0B132B', 'opacity:1',
+          'visibility:visible', 'pointer-events:none', 'z-index:2147483647',
+          'overflow:visible', 'transform:none'
+        ].join(';');
+
         const clone = source.cloneNode(true);
-        clone.style.display = 'block';
+        clone.removeAttribute('id');
+        clone.style.cssText += ';display:block;width:100%;height:auto;min-height:0;overflow:visible;background:#ffffff;transform:none;';
+
+        const printBody = clone.querySelector('.print-body');
+        if (printBody) {
+          printBody.style.width = '100%';
+          printBody.style.maxWidth = 'none';
+          printBody.style.color = '#0B132B';
+          printBody.style.background = '#ffffff';
+        }
+
         captureHost.appendChild(clone);
         document.body.appendChild(captureHost);
 
-        // Aguardar carregamento de todas as imagens (logotipo e assinatura)
-        const imgs = clone.querySelectorAll('img');
-        await Promise.all(Array.from(imgs).map(img => {
-          if (img.complete && img.naturalWidth > 0) return Promise.resolve();
-          return new Promise(resolve => {
-            img.onload = resolve;
-            img.onerror = resolve;
-          });
-        }));
-
-        status.textContent = 'A gerar PDF...';
-        const numeroOrcamento = (activeBudgetData && activeBudgetData.number) || '001';
-        const clienteNome = (activeBudgetData && activeBudgetData.client) || 'Cliente';
-        const filename = `Orcamento_${numeroOrcamento}_${clienteNome.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`;
-
-        const opt = {
-          margin:       [5, 5, 5, 5],
-          filename:     filename,
-          image:        { type: 'jpeg', quality: 0.98 },
-          html2canvas:  { scale: 1.5, useCORS: true, backgroundColor: '#ffffff', logging: false, windowWidth: 794 },
-          jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-        };
-
-        const worker = html2pdf().from(clone).set(opt);
-        const pdfBlob = await worker.outputPdf('blob');
-        const pdfFile = new File([pdfBlob], filename, { type: 'application/pdf' });
-
-        // Remover contentor temporário antes de acionar a partilha
-        if (captureHost && captureHost.parentNode) {
-          captureHost.parentNode.removeChild(captureHost);
-          captureHost = null;
+        if (document.fonts && document.fonts.ready) {
+          await document.fonts.ready;
         }
 
-        if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
-          status.textContent = 'A partilhar...';
-          try {
-            await navigator.share({
-              title: `Orçamento ${numeroOrcamento}`,
-              text: `Segue o Orçamento ${numeroOrcamento} (${clienteNome}).`,
-              files: [pdfFile]
-            });
-            status.textContent = 'Partilhado!';
-          } catch (shareErr) {
-            if (shareErr.name === 'AbortError') {
-              status.textContent = 'Partilha cancelada.';
-            } else {
-              worker.save();
-              status.textContent = 'PDF guardado!';
+        const images = Array.from(captureHost.querySelectorAll('img'));
+        await Promise.all(
+          images.map(async (img) => {
+            if (img.complete && img.naturalWidth > 0) return;
+            if (typeof img.decode === 'function') {
+              try { await img.decode(); return; } catch (e) {}
             }
-          }
-        } else {
-          worker.save();
-          status.textContent = 'PDF guardado!';
+            await new Promise((resolve) => {
+              img.onload = resolve;
+              img.onerror = resolve;
+            });
+          })
+        );
+
+        const rect = clone.getBoundingClientRect();
+        if (!rect.width || !rect.height || !clone.querySelector('.print-body')) {
+          throw new Error('O conteúdo do orçamento não possui dimensões válidas para captura.');
         }
 
+        status.textContent = 'Gerando PDF...';
+        const numeroOrcamento = (activeBudgetData && activeBudgetData.number) || '001';
+        const filename = `Orcamento_${numeroOrcamento}.pdf`;
+
+        await html2pdf()
+          .set({
+            margin: [6, 6, 6, 6],
+            filename: filename,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: {
+              scale: 1.6,
+              useCORS: true,
+              backgroundColor: '#ffffff',
+              logging: false,
+              scrollX: 0,
+              scrollY: 0,
+              windowWidth: 794
+            },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+            pagebreak: { mode: ['css', 'legacy'] }
+          })
+          .from(clone)
+          .save();
+
+        status.textContent = 'PDF baixado!';
       } catch (error) {
         console.error('Erro ao gerar PDF do orçamento:', error);
         status.textContent = 'Falha ao gerar PDF';

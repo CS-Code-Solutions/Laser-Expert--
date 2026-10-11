@@ -623,12 +623,12 @@
       const source = document.getElementById('budgetRenderArea');
 
       if (!source || !source.querySelector('.print-body') || !source.innerText.trim()) {
-        alert('Não foi possível gerar o PDF: o conteúdo do orçamento está vazio. Feche e abra o orçamento novamente.');
+        alert('Não foi possível gerar o PDF: o conteúdo do orçamento está vazio.');
         return;
       }
 
       if (typeof html2pdf === 'undefined') {
-        alert('A biblioteca de geração de PDF não foi carregada. Verifique sua conexão e tente novamente.');
+        alert('A biblioteca de geração de PDF não foi carregada.');
         return;
       }
 
@@ -638,7 +638,6 @@
         status.textContent = 'Preparando orçamento...';
         captureHost = document.createElement('div');
 
-        // Largura restrita para evitar cortes nas margens laterais no PDF
         captureHost.style.cssText = [
           'position:fixed', 'left:-10000px', 'top:0', 'width:720px',
           'background:#ffffff', 'color:#0B132B', 'opacity:1',
@@ -697,24 +696,34 @@
         const pdfBlob = await worker.outputPdf('blob');
         const pdfFile = new File([pdfBlob], filename, { type: 'application/pdf' });
 
-        if (document.body.contains(captureHost)) {
-          document.body.removeChild(captureHost);
+        if (captureHost && captureHost.parentNode) {
+          captureHost.parentNode.removeChild(captureHost);
           captureHost = null;
         }
 
-        // Ativa a partilha nativa do telemóvel (WhatsApp, Email, etc.)
+        // Partilha nativa com tratamento seguro (se o utilizador cancelar, não gera erro)
         if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
           status.textContent = 'Pronto para partilhar!';
-          await navigator.share({
-            title: `Orçamento ${numeroOrcamento}`,
-            text: `Segue o Orçamento ${numeroOrcamento} (${clienteNome}).`,
-            files: [pdfFile]
-          });
+          try {
+            await navigator.share({
+              title: `Orçamento ${numeroOrcamento}`,
+              text: `Segue o Orçamento ${numeroOrcamento} (${clienteNome}).`,
+              files: [pdfFile]
+            });
+            status.textContent = 'Partilhado!';
+          } catch (shareErr) {
+            if (shareErr.name === 'AbortError') {
+              status.textContent = 'Partilha cancelada.';
+            } else {
+              worker.save();
+              status.textContent = 'PDF guardado!';
+            }
+          }
         } else {
           worker.save();
           status.textContent = 'PDF guardado!';
-          alert("O PDF foi gerado e descarregado com sucesso.");
         }
+
       } catch (error) {
         console.error('Erro ao gerar PDF do orçamento:', error);
         status.textContent = 'Falha ao gerar PDF';

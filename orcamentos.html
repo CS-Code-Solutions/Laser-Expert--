@@ -633,7 +633,19 @@
       }
 
       try {
-        status.textContent = 'Gerando PDF...';
+        status.textContent = 'A carregar imagens...';
+        
+        // Assegurar que todas as imagens (logotipo e assinatura) estão totalmente carregadas antes de capturar
+        const imgs = source.querySelectorAll('img');
+        await Promise.all(Array.from(imgs).map(img => {
+          if (img.complete && img.naturalWidth > 0) return Promise.resolve();
+          return new Promise(resolve => {
+            img.onload = resolve;
+            img.onerror = resolve;
+          });
+        }));
+
+        status.textContent = 'A gerar PDF...';
         const numeroOrcamento = (activeBudgetData && activeBudgetData.number) || '001';
         const clienteNome = (activeBudgetData && activeBudgetData.client) || 'Cliente';
         const filename = `Orcamento_${numeroOrcamento}_${clienteNome.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`;
@@ -651,7 +663,7 @@
         const pdfFile = new File([pdfBlob], filename, { type: 'application/pdf' });
 
         if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
-          status.textContent = 'Pronto para partilhar!';
+          status.textContent = 'A partilhar...';
           try {
             await navigator.share({
               title: `Orçamento ${numeroOrcamento}`,

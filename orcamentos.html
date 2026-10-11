@@ -218,7 +218,7 @@
           <span id="loadingStatusOrc" style="font-size: 0.8rem; margin-left: 8px; color: #FCD34D;">⏳ Pronto</span>
         </div>
         <div class="toolbar-buttons">
-          <button class="btn" style="background-color: #00F5D4; color: #0B132B; font-weight: bold; padding: 6px 12px; font-size: 0.85rem;" onclick="compartilharPDFOrcamento()">📤 Partilhar PDF</button>
+          <button class="btn" style="background-color: #00F5D4; color: #0B132B; font-weight: bold; padding: 6px 12px; font-size: 0.85rem;" onclick="compartilharPDFOrcamento()">📥 Gerar & Baixar PDF</button>
           <button class="btn" style="background-color: #EF4444; padding: 6px 12px; font-size: 0.85rem;" onclick="closeModal()">✖ Fechar</button>
         </div>
       </div>
@@ -634,8 +634,6 @@
 
       try {
         status.textContent = 'A carregar imagens...';
-        
-        // Assegurar que todas as imagens (logotipo e assinatura) estão totalmente carregadas antes de capturar
         const imgs = source.querySelectorAll('img');
         await Promise.all(Array.from(imgs).map(img => {
           if (img.complete && img.naturalWidth > 0) return Promise.resolve();
@@ -645,7 +643,7 @@
           });
         }));
 
-        status.textContent = 'A gerar PDF...';
+        status.textContent = 'A gerar e guardar PDF...';
         const numeroOrcamento = (activeBudgetData && activeBudgetData.number) || '001';
         const clienteNome = (activeBudgetData && activeBudgetData.client) || 'Cliente';
         const filename = `Orcamento_${numeroOrcamento}_${clienteNome.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`;
@@ -658,31 +656,8 @@
           jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
 
-        const worker = html2pdf().from(source).set(opt);
-        const pdfBlob = await worker.outputPdf('blob');
-        const pdfFile = new File([pdfBlob], filename, { type: 'application/pdf' });
-
-        if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
-          status.textContent = 'A partilhar...';
-          try {
-            await navigator.share({
-              title: `Orçamento ${numeroOrcamento}`,
-              text: `Segue o Orçamento ${numeroOrcamento} (${clienteNome}).`,
-              files: [pdfFile]
-            });
-            status.textContent = 'Partilhado!';
-          } catch (shareErr) {
-            if (shareErr.name === 'AbortError') {
-              status.textContent = 'Partilha cancelada.';
-            } else {
-              worker.save();
-              status.textContent = 'PDF guardado!';
-            }
-          }
-        } else {
-          worker.save();
-          status.textContent = 'PDF guardado!';
-        }
+        await html2pdf().from(source).set(opt).save();
+        status.textContent = 'PDF guardado!';
 
       } catch (error) {
         console.error('Erro ao gerar PDF do orçamento:', error);

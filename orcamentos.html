@@ -509,14 +509,16 @@
 
       let pixCopiaEColaHtml = '';
       const valorFormatado = Number(b.total || 0).toFixed(2);
-      if (opt !== 'boleto' && b.includeQr !== false && pixKeyToUse.trim() !== '') {
+      const effectivePixKey = (pixKeyToUse && pixKeyToUse.trim() !== '') ? pixKeyToUse : (config.email || 'comercial@laserexpertbr.com.br');
+
+      if (opt !== 'boleto' && b.includeQr !== false) {
         pixCopiaEColaHtml = `
           <div style="margin-top: 8px; padding: 8px; background: #F1F5F9; border: 1px solid #CBD5E1; border-radius: 4px;">
             <p style="font-size: 10px; font-weight: bold; color: #0B132B; margin: 0 0 2px 0; text-align: center;">PIX COPIA E COLA (PAGAMENTO INSTANTÂNEO):</p>
             <div style="background: #FFFFFF; border: 1px dashed #0D9488; padding: 6px; font-family: monospace; font-size: 10px; word-break: break-all; text-align: center; color: #0D9488;">
-              00020126580014br.gov.bcb.pix0136${escapeHTML(pixKeyToUse)}5204000053039865802BR5925${escapeHTML(config.name)}6009SaoLeopoldo62070303${escapeHTML(b.number)}6304
+              00020126580014br.gov.bcb.pix0136${escapeHTML(effectivePixKey)}5204000053039865802BR5925${escapeHTML(config.name)}6009SaoLeopoldo62070303${escapeHTML(b.number)}6304
             </div>
-            <p style="font-size: 9px; color: #64748B; margin: 3px 0 0 0; text-align: center;">Chave: <strong>${escapeHTML(pixKeyToUse)}</strong> | Valor: <strong>R$ ${valorFormatado}</strong></p>
+            <p style="font-size: 9px; color: #64748B; margin: 3px 0 0 0; text-align: center;">Chave: <strong>${escapeHTML(effectivePixKey)}</strong> | Valor: <strong>R$ ${valorFormatado}</strong></p>
           </div>
         `;
       }
@@ -687,11 +689,11 @@
 
         await html2pdf()
           .set({
-            margin: 10,
+            margin: [6, 6, 6, 6],
             filename: filename,
             image: { type: 'jpeg', quality: 0.98 },
             html2canvas: {
-              scale: 2,
+              scale: 1.6,
               useCORS: true,
               backgroundColor: '#ffffff',
               logging: false,

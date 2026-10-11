@@ -9,11 +9,8 @@
 
 <!-- Inicialização do Firebase -->
 <script src="firebase-init.js"></script>
-
-<!-- Módulo de Sincronização (FALTAVA ESTA LINHA) -->
 <script src="firebase-sync.js"></script>
   <script>
-    // Guardião de Sessão: Se não estiver autenticado, redireciona imediatamente para o login
     if (localStorage.getItem('rg_logged') !== 'true') {
       window.location.href = 'login.html';
     }
@@ -87,7 +84,6 @@
   </footer>
 
  <script>
-    // Função de blindagem contra XSS: converte carateres perigosos em entidades seguras
     function escapeHTML(str) {
       if (!str) return '';
       return String(str)
@@ -119,7 +115,6 @@
         }
 
         clients.forEach((c, index) => {
-          // Utilização de escapeHTML() em todos os campos dinâmicos renderizados via HTML
           const safeName = escapeHTML(c.name);
           const safeDoc = escapeHTML(c.doc);
           const safeEmail = escapeHTML(c.email || '-');
@@ -127,12 +122,12 @@
 
           clientListContainer.innerHTML += `
             <div style="border: 1px solid #CBD5E1; padding: 15px; border-radius: 6px; background: #F8FAFC; display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 10px;">
-              <div>
+              <div style="flex: 1; min-width: 220px;">
                 <strong style="font-size: 1.05rem; color: #0B132B;">${safeName}</strong><br>
-                <span style="font-size: 0.9rem; color: #475569;">Documento: ${safeDoc} | E-mail: ${safeEmail}</span><br>
-                <span style="font-size: 0.9rem; color: #475569;">Endereço: ${safeAddress}</span>
+                <span style="font-size: 0.9rem; color: #475569;"><strong>Documento:</strong> ${safeDoc} | <strong>E-mail:</strong> ${safeEmail}</span><br>
+                <span style="font-size: 0.9rem; color: #475569;"><strong>Endereço:</strong> ${safeAddress}</span>
               </div>
-              <div style="display: flex; gap: 5px;">
+              <div style="display: flex; gap: 6px; flex-wrap: wrap; align-items: center;">
                 <button class="btn" style="padding: 6px 12px; font-size: 0.85rem; background-color: #F59E0B;" onclick="editClient(${index})">Editar</button>
                 <button class="btn" style="padding: 6px 12px; font-size: 0.85rem; background-color: #EF4444;" onclick="deleteClient(${index})">Excluir</button>
               </div>
@@ -147,9 +142,7 @@
 
     document.addEventListener("DOMContentLoaded", async () => {
       await renderClients();
-      DataSync.listen('rg_clients', () => {
-        renderClients();
-      });
+      DataSync.listen('rg_clients', () => { renderClients(); });
     });
 
     form.addEventListener('submit', async (e) => {

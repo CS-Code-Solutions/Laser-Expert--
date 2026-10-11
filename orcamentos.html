@@ -21,8 +21,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Laser Expert - Gestão de Orçamentos</title>
   <link rel="stylesheet" href="style.css">
-  <!-- html2pdf CDN -->
+  
+  <!-- html2pdf e QRCode.js CDNs -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
   <style>
     @media print {
       header, footer, .no-print, .action-toolbar { display: none !important; }
@@ -76,7 +79,7 @@
       text-align: center; white-space: nowrap; text-transform: uppercase; width: 100%;
     }
 
-    .print-body { font-family: Arial, sans-serif; color: #0B132B; line-height: 1.4; font-size: 11px; position: relative; z-index: 1; box-sizing: border-box; width: 100%; }
+    .print-body { font-family: Arial, sans-serif; color: #0B132B; line-height: 1.4; font-size: 11px; position: relative; z-index: 1; box-sizing: border-box; width: 100%; background: #ffffff; }
     .print-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #00F5D4; padding-bottom: 8px; margin-bottom: 12px; }
     .print-header img { height: 45px; width: auto; }
     .print-header-info { text-align: right; }
@@ -505,25 +508,13 @@
 
         let qrCodeSection = '';
         if (opt !== 'boleto' && b.includeQr !== false && pixKeyToUse.trim() !== '') {
-          const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=110x110&data=${encodeURIComponent(pixKeyToUse)}`;
           qrCodeSection = `
             <div style="margin-top: 8px; text-align: center; border-top: 1px dashed #CBD5E1; padding-top: 8px;">
-              <img src="${qrApiUrl}" alt="QR Code PIX" crossorigin="anonymous" style="width: 90px; height: 90px; border: 1px solid #CBD5E1; padding: 2px; background: #FFF; border-radius: 4px;">
+              <div id="qrcodeContainer" style="display: inline-block; padding: 2px; background: #FFF; border-radius: 4px;"></div>
               <p style="font-size: 9px; color: #64748B; margin: 2px 0 0 0;">Escaneie o QR Code para pagamento instantâneo via PIX</p>
             </div>
           `;
         }
-
-        const techSignature = config.techSignature || '';
-        const signatureAreaHtml = `
-          <div style="margin-top: 15px; display: flex; justify-content: center; page-break-inside: avoid;">
-            <div style="text-align: center; width: 60%;">
-              ${techSignature ? `<img src="${techSignature}" alt="Assinatura Técnico" crossorigin="anonymous" style="max-width: 180px; height: 50px; object-fit: contain; display: block; margin: 0 auto;">` : '<div style="height: 50px;"></div>'}
-              <p style="margin: 2px 0;">________________________________________</p>
-              <p style="margin: 2px 0; font-size: 10px;"><strong>Responsável Técnico / Emissor:</strong> ${escapeHTML(config.tech || 'Otávio Barbosa')}</p>
-            </div>
-          </div>
-        `;
 
         const safeNum = escapeHTML(b.number);
         const safeDate = escapeHTML(b.date);
@@ -546,7 +537,7 @@
           <div class="watermark">ORÇAMENTO</div>
           <div class="print-body">
             <div class="print-header">
-              <img src="logo.png" alt="Logo" crossorigin="anonymous">
+              <h1>LASER EXPERT</h1>
               <div class="print-header-info">
                 <h1>ORÇAMENTO DE SERVIÇO</h1>
                 <p><strong>Nº:</strong> ${safeNum}</p>
@@ -594,10 +585,26 @@
               <p style="font-size: 13px; font-weight: bold; color: #0B132B;">VALOR TOTAL DO ORÇAMENTO:</p>
               <p style="font-size: 18px; font-weight: bold; color: #0D9488;">R$ ${safeTotal}</p>
             </div>
-
-            ${signatureAreaHtml}
           </div>
         `;
+
+        // Gera o QR Code localmente após renderizar o HTML no modal
+        if (opt !== 'boleto' && b.includeQr !== false && pixKeyToUse.trim() !== '') {
+          setTimeout(() => {
+            const qrContainer = document.getElementById('qrcodeContainer');
+            if (qrContainer) {
+              qrContainer.innerHTML = '';
+              new QRCode(qrContainer, {
+                text: pixKeyToUse,
+                width: 90,
+                height: 90,
+                colorDark: "#0B132B",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+              });
+            }
+          }, 50);
+        }
 
         activeBudgetData = b;
         document.getElementById('modalTitleOrc').textContent = `Orçamento - ${b.number} (${b.client})`;
@@ -613,26 +620,8 @@
       document.getElementById('budgetPreviewModal').style.display = 'none';
     };
 
-    // Função auxiliar para garantir que todas as imagens estão totalmente carregadas antes de gerar o PDF
-    async function garantirImagensCarregadas(container) {
-      const imagens = container.querySelectorAll('img');
-      const promessas = Array.from(imagens).map(img => {
-        if (img.complete) return Promise.resolve();
-        return new Promise(resolve => {
-          img.onload = resolve;
-          img.onerror = resolve; // ignora falhas pontuais de imagens para não bloquear o PDF
-        });
-      });
-      await Promise.all(promessas);
-    }
-
     window.compartilharPDFOrcamento = async function() {
       const element = document.getElementById('budgetRenderArea');
-      document.getElementById('loadingStatusOrc').textContent = 'A carregar imagens...';
-
-      // Aguarda o carregamento completo de todas as imagens (logótipo e QR Code)
-      await garantirImagensCarregadas(element);
-
       const filename = `Orcamento_${activeBudgetData.number || '001'}.pdf`;
       const opt = {
         margin: 10,

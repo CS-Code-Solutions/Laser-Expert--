@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-PT">
 <head>
   <link rel="icon" href="ico.png" type="image/png">
   <link rel="manifest" href="manifest.json">
@@ -15,11 +15,8 @@
 
 <!-- Inicialização do Firebase -->
 <script src="firebase-init.js"></script>
-
-<!-- Módulo de Sincronização (FALTAVA ESTA LINHA) -->
 <script src="firebase-sync.js"></script>
   <script>
-    // Guardião de Sessão: Se não estiver autenticado, redireciona imediatamente para o login
     if (localStorage.getItem('rg_logged') !== 'true') {
       window.location.href = 'login.html';
     }
@@ -68,7 +65,6 @@
           <input type="text" id="configTech" required>
         </div>
 
-        <!-- ASSINATURA FIXA DO TÉCNICO COM BOTÃO DEDICADO -->
         <div class="form-group" style="margin-top: 15px;">
           <label><strong>Assinatura Fixa do Técnico (Responsável):</strong></label>
           <div style="border: 1px solid #CBD5E1; background: #FFF; width: 100%; max-width: 400px; border-radius: 4px; overflow: hidden; margin-bottom: 8px;">
@@ -105,10 +101,9 @@
           <input type="number" id="configNextRs" value="1000">
         </div>
 
-        <!-- CONTA BANCÁRIA 1 -->
         <h3 style="margin-top: 25px;">💳 Dados Bancários - Conta 1</h3>
         <div class="form-group">
-          <label for="configNomeConta1">Nome / Apelido da Conta 1 (Exibido no Orçamento):</label>
+          <label for="configNomeConta1">Nome / Apelido da Conta 1:</label>
           <input type="text" id="configNomeConta1" placeholder="Ex: Conta Principal Nubank">
         </div>
         <div class="form-group">
@@ -130,10 +125,9 @@
           </div>
         </div>
 
-        <!-- CONTA BANCÁRIA 2 -->
         <h3 style="margin-top: 25px;">💳 Dados Bancários - Conta 2</h3>
         <div class="form-group">
-          <label for="configNomeConta2">Nome / Apelido da Conta 2 (Exibido no Orçamento):</label>
+          <label for="configNomeConta2">Nome / Apelido da Conta 2:</label>
           <input type="text" id="configNomeConta2" placeholder="Ex: Bradesco PJ">
         </div>
         <div class="form-group">
@@ -162,13 +156,8 @@
 
       <hr style="border: 0; border-top: 1px solid #CBD5E1; margin: 35px 0;">
 
-      <!-- SECÇÃO DE BACKUP E RESTAURAÇÃO -->
       <div>
         <h3 style="color: var(--deep-navy); margin-bottom: 10px; font-size: 1.2rem;">💾 Backup e Segurança de Dados</h3>
-        <p style="font-size: 0.9rem; color: #64748B; margin-bottom: 20px;">
-          Faça o download de uma cópia de segurança de todos os seus dados ou restaure os dados a partir de um ficheiro JSON anterior.
-        </p>
-
         <div style="display: flex; gap: 15px; flex-wrap: wrap;">
           <button type="button" onclick="fazerBackup()" class="btn" style="background-color: var(--tech-blue); color: white; padding: 10px 20px; flex: 1; min-width: 200px; font-weight: bold;">
             📥 Descarregar Backup (JSON)
@@ -194,9 +183,14 @@
     const canvas = document.getElementById('techSignatureCanvas');
     const ctx = canvas.getContext('2d');
     let painting = false;
+    let currentTechSignature = '';
 
     function startPosition(e) { painting = true; draw(e); }
-    function finishedPosition() { painting = false; ctx.beginPath(); }
+    function finishedPosition() { 
+      painting = false; 
+      ctx.beginPath(); 
+      currentTechSignature = canvas.toDataURL();
+    }
     function draw(e) {
       if (!painting) return;
       ctx.lineWidth = 2;
@@ -222,13 +216,14 @@
 
     window.limparAssinaturaTech = function() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+      currentTechSignature = '';
     };
 
     window.salvarAssinaturaTech = async function() {
       try {
-        const techSigData = canvas.toDataURL();
+        currentTechSignature = canvas.toDataURL();
         let config = await DataSync.load('rg_config') || {};
-        config.techSignature = techSigData;
+        config.techSignature = currentTechSignature;
         await DataSync.save('rg_config', config);
         alert('Assinatura do técnico guardada com sucesso!');
       } catch (err) {
@@ -270,6 +265,7 @@
         document.getElementById('configNextRs').value = config.nextRsNumber || '1000';
 
         if (config.techSignature) {
+          currentTechSignature = config.techSignature;
           const img = new Image();
           img.onload = () => { ctx.drawImage(img, 0, 0); };
           img.src = config.techSignature;
@@ -280,35 +276,31 @@
 
       document.getElementById('configForm').addEventListener('submit', async (e) => {
         e.preventDefault();
-        const techSigData = canvas.toDataURL();
         
         const configData = {
           name: document.getElementById('configName').value,
           tech: document.getElementById('configTech').value,
-          techSignature: techSigData,
+          techSignature: currentTechSignature || (await DataSync.load('rg_config') || {}).techSignature || '',
           doc: document.getElementById('configDoc').value,
           email: document.getElementById('configEmail').value,
           contact: document.getElementById('configContact').value,
           location: document.getElementById('configLocation').value,
-          
           nomeConta1: document.getElementById('configNomeConta1').value,
           pix1: document.getElementById('configPix1').value,
           bank1: document.getElementById('configBank1').value,
           agency1: document.getElementById('configAgency1').value,
           account1: document.getElementById('configAccount1').value,
-
           nomeConta2: document.getElementById('configNomeConta2').value,
           pix2: document.getElementById('configPix2').value,
           bank2: document.getElementById('configBank2').value,
           agency2: document.getElementById('configAgency2').value,
           account2: document.getElementById('configAccount2').value,
-
           nextRsNumber: document.getElementById('configNextRs').value
         };
 
         try {
           await DataSync.save('rg_config', configData);
-          alert('Configurações e assinatura do técnico salvas com sucesso!');
+          alert('Configurações salvas com sucesso!');
         } catch (err) {
           alert('Erro ao guardar configurações: ' + err.message);
         }
@@ -317,7 +309,7 @@
 
     window.fazerBackup = async function() {
       try {
-        const keys = ['rg_config', 'rg_clients', 'rg_machines', 'rg_relatorios', 'rg_orcamentos'];
+        const keys = ['rg_config', 'rg_clients', 'rg_machines', 'rg_reports', 'rg_orcamentos'];
         const backupData = {};
         for (const key of keys) {
           backupData[key] = await DataSync.load(key) || [];
@@ -339,69 +331,53 @@
     window.restaurarBackup = async function(event) {
       const file = event.target.files[0];
       if (!file) return;
-      
-      // Validação rigorosa de extensão e tipo de ficheiro
       if (!file.name.endsWith('.json') && file.type !== 'application/json') {
         alert('Erro: Por favor, selecione um ficheiro JSON válido.');
         event.target.value = '';
         return;
       }
-
       if (!confirm('Atenção: A restauração irá substituir os dados atuais pelos do backup. Deseja continuar?')) {
         event.target.value = '';
         return;
       }
-
       const reader = new FileReader();
       reader.onload = async function(e) {
         try {
           const backupData = JSON.parse(e.target.result);
-          
-          // Verificar se o objeto parseado é válido
-          if (!backupData || typeof backupData !== 'object') {
-            throw new Error('Formato JSON inválido.');
-          }
-
-          // Mapeamento oficial de chaves permitidas para evitar injeção de chaves arbitrárias
+          if (!backupData || typeof backupData !== 'object') throw new Error('Formato JSON inválido.');
           const validKeysMap = {
             'rg_config': 'rg_config',
             'rg_clients': 'rg_clients',
             'rg_machines': 'rg_machines',
-            'rg_maquinas': 'rg_machines', // Compatibilidade com chaves antigas
+            'rg_maquinas': 'rg_machines',
             'rg_reports': 'rg_reports',
-            'rg_relatorios': 'rg_reports', // Compatibilidade com chaves antigas
+            'rg_relatorios': 'rg_reports',
             'rg_orcamentos': 'rg_orcamentos'
           };
-
           let restoredAny = false;
           for (const [fileKey, targetKey] of Object.entries(validKeysMap)) {
             if (backupData[fileKey] !== undefined) {
-              // Validar se o conteúdo é um array (para coleções) ou objeto (para config)
               const dataToSave = backupData[fileKey];
               if (targetKey === 'rg_config' && (typeof dataToSave !== 'object' || Array.isArray(dataToSave))) continue;
               if (targetKey !== 'rg_config' && !Array.isArray(dataToSave)) continue;
-
               await DataSync.save(targetKey, dataToSave);
               restoredAny = true;
             }
           }
-
           if (!restoredAny) {
             alert('Aviso: O ficheiro não contém dados compatíveis com o sistema.');
             return;
           }
-
-          alert('Dados restaurados e blindados com sucesso!');
+          alert('Dados restaurados com sucesso!');
           location.reload();
         } catch (err) {
-          alert('Erro ao processar ficheiro de backup: Certifique-se de que o ficheiro está íntegro.');
+          alert('Erro ao processar ficheiro de backup.');
           console.error(err);
         } finally {
           event.target.value = '';
         }
       };
       reader.readAsText(file);
-    };
     };
   </script>
 </body>

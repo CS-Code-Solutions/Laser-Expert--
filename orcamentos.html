@@ -8,11 +8,8 @@
 
 <!-- Inicialização do Firebase -->
 <script src="firebase-init.js"></script>
-
-<!-- Módulo de Sincronização (FALTAVA ESTA LINHA) -->
 <script src="firebase-sync.js"></script>
   <script>
-    // Guardião de Sessão: Se não estiver autenticado, redireciona imediatamente para o login
     if (localStorage.getItem('rg_logged') !== 'true') {
       window.location.href = 'login.html';
     }
@@ -145,7 +142,6 @@
           <textarea id="orcDesc" rows="5" placeholder="Descreva os serviços..." style="width:100%; padding:8px; border:1px solid #CBD5E1; border-radius:4px; font-family:inherit;"></textarea>
         </div>
 
-        <!-- SELETOR DE OPÇÃO DE CONTA / PAGAMENTO E BOTÃO QR CODE -->
         <div class="grid-2" style="margin-bottom: 12px;">
           <div>
             <label for="orcPaymentOption"><strong>Forma de Recebimento / Conta:</strong></label>
@@ -205,24 +201,11 @@
       </form>
     </section>
 
+    <!-- Secção atualizada em Cartões Responsivos para Telemóvel -->
     <section class="card">
       <h2>Histórico de Orçamentos</h2>
-      <div class="table-responsive">
-        <table>
-          <thead>
-            <tr>
-              <th>Nº Orçamento</th>
-              <th>Data</th>
-              <th>Cliente</th>
-              <th>Equipamento</th>
-              <th>Valor Total</th>
-              <th class="no-print">Ações</th>
-            </tr>
-          </thead>
-          <tbody id="budgetTableBody">
-            <tr><td colspan="6" style="text-align: center; color: #64748B;">A carregar orçamentos da nuvem...</td></tr>
-          </tbody>
-        </table>
+      <div id="budgetCardsContainer" style="display: flex; flex-direction: column; gap: 12px; margin-top: 15px;">
+        <p style="text-align: center; color: #64748B;">A carregar orçamentos da nuvem...</p>
       </div>
     </section>
   </main>
@@ -250,7 +233,6 @@
   </footer>
 
  <script>
-    // Função de blindagem contra XSS: converte carateres perigosos em entidades seguras
     function escapeHTML(str) {
       if (!str) return '';
       return String(str)
@@ -269,12 +251,8 @@
         const config = await DataSync.load('rg_config') || {};
         const opt1 = document.getElementById('optionBank1Label');
         const opt2 = document.getElementById('optionBank2Label');
-        if (opt1) {
-          opt1.textContent = config.nomeConta1 ? `PIX / Conta: ${config.nomeConta1}` : 'Conta Bancária 1';
-        }
-        if (opt2) {
-          opt2.textContent = config.nomeConta2 ? `PIX / Conta: ${config.nomeConta2}` : 'Conta Bancária 2';
-        }
+        if (opt1) opt1.textContent = config.nomeConta1 ? `PIX / Conta: ${config.nomeConta1}` : 'Conta Bancária 1';
+        if (opt2) opt2.textContent = config.nomeConta2 ? `PIX / Conta: ${config.nomeConta2}` : 'Conta Bancária 2';
       } catch (e) {
         console.error("Erro ao carregar apelidos dos bancos", e);
       }
@@ -305,48 +283,48 @@
     }
 
     async function renderBudgets() {
-      const tbody = document.getElementById('budgetTableBody');
-      if (!tbody) return;
+      const container = document.getElementById('budgetCardsContainer');
+      if (!container) return;
       try {
         let budgets = await DataSync.load('rg_orcamentos') || [];
         if (!Array.isArray(budgets)) budgets = [];
 
-        tbody.innerHTML = '';
+        container.innerHTML = '';
         if (budgets.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #64748B;">Nenhum orçamento registado.</td></tr>';
+          container.innerHTML = '<p style="text-align: center; color: #64748B;">Nenhum orçamento registado.</p>';
           return;
         }
 
-        let htmlRows = '';
+        let htmlCards = '';
         for (let i = budgets.length - 1; i >= 0; i--) {
           const b = budgets[i];
           if (!b) continue;
 
-          // Sanitização XSS dos dados exibidos na tabela de orçamentos
           const safeNum = escapeHTML(b.number || 'ORC-0001');
           const safeDate = escapeHTML(b.date || '-');
           const safeClient = escapeHTML(b.client || '-');
           const safeEq = escapeHTML(b.equipment || '-');
           const safeTotal = Number(b.total || 0).toFixed(2);
 
-          htmlRows += `
-            <tr>
-              <td><strong>${safeNum}</strong></td>
-              <td>${safeDate}</td>
-              <td>${safeClient}</td>
-              <td>${safeEq}</td>
-              <td>R$ ${safeTotal}</td>
-              <td class="no-print" style="display: flex; gap: 5px; flex-wrap: wrap;">
-                <button class="btn" style="padding: 4px 8px; font-size: 0.8rem; background-color: #1D4ED8;" onclick="openBudgetPreview(${i})">Gerar Orçamento</button>
-                <button class="btn" style="padding: 4px 8px; font-size: 0.8rem; background-color: #F59E0B;" onclick="editBudget(${i})">Editar</button>
-                <button class="btn" style="padding: 4px 8px; font-size: 0.8rem; background-color: #EF4444;" onclick="deleteBudget(${i})">Excluir</button>
-              </td>
-            </tr>
+          htmlCards += `
+            <div style="border: 1px solid #CBD5E1; padding: 15px; border-radius: 6px; background: #F8FAFC; display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 10px;">
+              <div style="flex: 1; min-width: 220px;">
+                <strong style="font-size: 1.05rem; color: #0B132B;">${safeNum}</strong> — <span style="color: #64748B; font-size: 0.9rem;">${safeDate}</span><br>
+                <span style="font-size: 0.9rem; color: #334155;"><strong>Cliente:</strong> ${safeClient}</span><br>
+                <span style="font-size: 0.9rem; color: #334155;"><strong>Equipamento:</strong> ${safeEq}</span><br>
+                <span style="font-size: 0.95rem; color: #0D9488; font-weight: bold;">Valor: R$ ${safeTotal}</span>
+              </div>
+              <div class="no-print" style="display: flex; gap: 6px; flex-wrap: wrap; align-items: center;">
+                <button class="btn" style="padding: 6px 12px; font-size: 0.85rem; background-color: #1D4ED8;" onclick="openBudgetPreview(${i})">Gerar Orçamento</button>
+                <button class="btn" style="padding: 6px 12px; font-size: 0.85rem; background-color: #F59E0B;" onclick="editBudget(${i})">Editar</button>
+                <button class="btn" style="padding: 6px 12px; font-size: 0.85rem; background-color: #EF4444;" onclick="deleteBudget(${i})">Excluir</button>
+              </div>
+            </div>
           `;
         }
-        tbody.innerHTML = htmlRows;
+        container.innerHTML = htmlCards;
       } catch (err) {
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: red;">Erro ao carregar orçamentos.</td></tr>`;
+        container.innerHTML = `<p style="text-align: center; color: red;">Erro ao carregar orçamentos.</p>`;
       }
     }
 
@@ -547,7 +525,6 @@
         </div>
       `;
 
-      // Sanitização de dados do orçamento no preview
       const safeNum = escapeHTML(b.number);
       const safeDate = escapeHTML(b.date);
       const safeCfgName = escapeHTML(config.name);

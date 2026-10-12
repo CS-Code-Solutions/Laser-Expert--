@@ -162,7 +162,7 @@
           <div style="display: flex; align-items: flex-end;">
             <div style="background: #FFF; border: 1px solid #CBD5E1; padding: 8px 12px; border-radius: 4px; width: 100%; display: flex; align-items: center; gap: 10px; height: 38px; box-sizing: border-box;">
               <input type="checkbox" id="orcIncludeQr" checked style="width: 16px; height: 16px; cursor: pointer; flex-shrink: 0;">
-              <label for="orcIncludeQr" style="font-size: 12px; font-weight: bold; cursor: pointer; margin: 0; color: #0B132B;">Incluir PIX Copia e Cola</label>
+              <label for="orcIncludeQr" style="font-size: 12px; font-weight: bold; cursor: pointer; margin: 0; color: #0B132B;">Incluir PIX Copia e Cola no Orçamento</label>
             </div>
           </div>
         </div>
@@ -173,7 +173,7 @@
             <input type="number" step="0.01" id="orcTotal" placeholder="0.00" class="form-control" required style="width:100%; padding:8px; border:1px solid #CBD5E1; border-radius:4px; box-sizing: border-box;">
           </div>
           <div>
-            <label style="margin-bottom: 4px; display: block; font-weight: bold; font-size: 13px;">Condições Comerciais:</label>
+            <label style="margin-bottom: 4px; display: block; font-weight: bold; font-size: 13px;">Condições Comerciais (Opções Rápidas):</label>
             <div style="background: #FFF; border: 1px solid #CBD5E1; padding: 12px; border-radius: 6px; margin-bottom: 8px; display: flex; flex-direction: column; gap: 10px;">
               <label style="display: flex; align-items: center; gap: 10px; font-size: 12px; cursor: pointer; margin: 0;">
                 <input type="checkbox" class="term-check" value="Pagamento a combinar." checked style="width: 16px; height: 16px; flex-shrink: 0;" onchange="atualizarTermosCompletos()">
@@ -185,12 +185,20 @@
               </label>
               <label style="display: flex; align-items: center; gap: 10px; font-size: 12px; cursor: pointer; margin: 0;">
                 <input type="checkbox" class="term-check" value="Despesas com deslocamento, alimentação e hotel já incluso no orçamento." checked style="width: 16px; height: 16px; flex-shrink: 0;" onchange="atualizarTermosCompletos()">
-                <span>Despesas de deslocamento, alimentação e hotel inclusas.</span>
+                <span>Despesas com deslocamento, alimentação e hotel já incluso no orçamento.</span>
               </label>
             </div>
 
-            <label for="orcTerms" style="margin-top: 6px; display: block; font-size: 12px; font-weight: bold;">Resumo Editável das Condições:</label>
-            <textarea id="orcTerms" rows="3" class="form-control" style="width:100%; padding:8px; border:1px solid #CBD5E1; border-radius:4px; font-family:inherit; background: #FFF; box-sizing: border-box;"></textarea>
+            <div style="background: #FFF; border: 1px solid #CBD5E1; padding: 10px; border-radius: 6px; margin-bottom: 8px; display: flex; flex-direction: column; gap: 8px;">
+              <label style="display: flex; align-items: center; gap: 10px; font-size: 12px; cursor: pointer; margin: 0;">
+                <input type="checkbox" id="checkNotIncluded" checked style="width: 16px; height: 16px; flex-shrink: 0;" onchange="atualizarTermosCompletos()">
+                <span style="font-weight: bold;">Não estão inclusos:</span>
+              </label>
+              <textarea id="orcNotIncludedText" rows="2" class="form-control" placeholder="óleos, peças, espelhos" style="width:100%; padding:6px; border:1px solid #CBD5E1; border-radius:4px; font-family:inherit; font-size: 11px; box-sizing: border-box;" oninput="atualizarTermosCompletos()"></textarea>
+            </div>
+
+            <label for="orcTerms" style="margin-top: 6px; display: block; font-size: 12px; font-weight: bold;">Resumo das Condições Comerciais:</label>
+            <textarea id="orcTerms" rows="4" class="form-control" style="width:100%; padding:8px; border:1px solid #CBD5E1; border-radius:4px; font-family:inherit; background: #FFF; box-sizing: border-box;"></textarea>
           </div>
         </div>
 
@@ -263,6 +271,14 @@
       const checkboxes = document.querySelectorAll('.term-check');
       let selecionados = [];
       checkboxes.forEach(cb => { if (cb.checked) selecionados.push(cb.value); });
+
+      const checkNotInc = document.getElementById('checkNotIncluded');
+      const textNotInc = document.getElementById('orcNotIncludedText');
+      if (checkNotInc && checkNotInc.checked && textNotInc) {
+        const val = textNotInc.value.trim() !== '' ? textNotInc.value.trim() : textNotInc.placeholder;
+        selecionados.push(`Não estão inclusos: ${val}`);
+      }
+
       document.getElementById('orcTerms').value = selecionados.join('\n');
     }
 
@@ -383,6 +399,8 @@
       document.getElementById('orcDate').valueAsDate = new Date();
       document.getElementById('orcIncludeQr').checked = true;
       document.querySelectorAll('.term-check').forEach(cb => cb.checked = true);
+      document.getElementById('checkNotIncluded').checked = true;
+      document.getElementById('orcNotIncludedText').value = "";
       atualizarTermosCompletos();
 
       try {
@@ -413,6 +431,15 @@
         document.querySelectorAll('.term-check').forEach(cb => {
           cb.checked = currentTerms.includes(cb.value);
         });
+
+        if (currentTerms.includes("Não estão inclusos:")) {
+          document.getElementById('checkNotIncluded').checked = true;
+          const parts = currentTerms.split("Não estão inclusos:");
+          if (parts[1]) document.getElementById('orcNotIncludedText').value = parts[1].trim();
+        } else {
+          document.getElementById('checkNotIncluded').checked = false;
+          document.getElementById('orcNotIncludedText').value = "";
+        }
 
         window.scrollTo({ top: 0, behavior: 'smooth' });
       } catch (e) {
@@ -600,7 +627,7 @@
       document.getElementById('budgetPreviewModal').style.display = 'none';
     };
 
-    // Função robusta de partilha com atraso de segurança para evitar PDF em branco
+    // Função robusta de partilha com fundo branco sólido e tempo de espera para evitar PDF em branco
     window.compartilharPDFOrcamento = async function () {
       const status = document.getElementById('loadingStatusOrc');
       const source = document.getElementById('budgetRenderArea');
@@ -620,16 +647,17 @@
       try {
         status.textContent = 'A preparar PDF...';
         captureHost = document.createElement('div');
-        captureHost.style.cssText = 'position:absolute; left:0; top:0; width:794px; background:#ffffff; color:#0B132B; opacity:0.01; pointer-events:none; z-index:99999;';
+        // Fundo totalmente branco e visível para o motor do telemóvel renderizar perfeitamente
+        captureHost.style.cssText = 'position: fixed; left: 0; top: 0; width: 794px; background: #ffffff; color: #0B132B; z-index: 99999; padding: 20px; box-sizing: border-box;';
 
         const clone = source.cloneNode(true);
         clone.removeAttribute('id');
-        clone.style.cssText += ';display:block;width:100%;background:#ffffff;';
+        clone.style.cssText += ';display: block; width: 100%; background: #ffffff;';
         captureHost.appendChild(clone);
         document.body.appendChild(captureHost);
 
-        // Atraso de segurança para garantir pintura completa de fontes e imagens no telemóvel
-        await new Promise(resolve => setTimeout(resolve, 400));
+        // Atraso de 600ms para garantir que o telemóvel pinta todas as fontes e imagens
+        await new Promise(resolve => setTimeout(resolve, 600));
 
         if (document.fonts && document.fonts.ready) {
           await document.fonts.ready;

@@ -17,6 +17,9 @@
   <script src="firebase-init.js"></script>
   <script src="firebase-sync.js"></script>
 
+  <!-- jsPDF CDN UMD (Versão Vetorial Direta) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
   <script>
     // Guardião de Sessão
     if (localStorage.getItem('rg_logged') !== 'true') {
@@ -25,36 +28,10 @@
   </script>
 
   <style>
-    /* Estilos de Impressão Nativa (Gera PDF perfeito e vetorial no telemóvel) */
     @media print {
-      header, footer, .no-print, .action-toolbar, main { display: none !important; }
+      header, footer, .no-print, .action-toolbar { display: none !important; }
       body { background: white; color: black; padding: 0; margin: 0; }
-      
-      #budgetPreviewModal {
-        display: block !important;
-        position: absolute !important;
-        top: 0 !important;
-        left: 0 !important;
-        width: 100% !important;
-        height: auto !important;
-        background: white !important;
-        z-index: 99999 !important;
-        padding: 0 !important;
-        overflow: visible !important;
-      }
-      .modal-content-wrapper {
-        box-shadow: none !important;
-        border: none !important;
-        width: 100% !important;
-        max-width: 100% !important;
-        height: auto !important;
-        background: white !important;
-      }
-      .report-scroll-container {
-        padding: 0 !important;
-        overflow: visible !important;
-        background: white !important;
-      }
+      .card { box-shadow: none; border: none; padding: 0; margin: 0; }
     }
 
     #budgetPreviewModal {
@@ -250,7 +227,7 @@
           <span id="loadingStatusOrc" style="font-size: 0.8rem; margin-left: 8px; color: #FCD34D;">⏳ Pronto</span>
         </div>
         <div class="toolbar-buttons">
-          <button class="btn" style="background-color: #00F5D4; color: #0B132B; font-weight: bold; padding: 6px 12px; font-size: 0.85rem; border: none; border-radius: 4px; cursor: pointer;" onclick="compartilharPDFOrcamento()">📤 Gerar / Imprimir PDF</button>
+          <button class="btn" style="background-color: #00F5D4; color: #0B132B; font-weight: bold; padding: 6px 12px; font-size: 0.85rem; border: none; border-radius: 4px; cursor: pointer;" onclick="compartilharPDFOrcamento()">📤 Partilhar PDF</button>
           <button class="btn" style="background-color: #dc3545; color: white; padding: 6px 12px; font-size: 0.85rem; border: none; border-radius: 4px; cursor: pointer;" onclick="closeModal()">✖ Fechar</button>
         </div>
       </div>
@@ -544,17 +521,13 @@
       const effectivePixKey = (pixKeyToUse && pixKeyToUse.trim() !== '') ? pixKeyToUse : (config.email || 'comercial@laserexpertbr.com.br');
 
       if (opt !== 'boleto' && b.includeQr !== false) {
-        // Payload Pix Copia e Cola estruturado para gerar o QR Code visual
         const pixPayload = `00020126580014br.gov.bcb.pix0136${effectivePixKey}5204000053039865802BR5925${config.name}6009SaoLeopoldo62070303${b.number}6304`;
         const qrCodeApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(pixPayload)}`;
 
         pixCopiaEColaHtml = `
           <div style="margin-top: 10px; padding: 10px; background: #F1F5F9; border: 1px solid #CBD5E1; border-radius: 4px; box-sizing: border-box; width: 100%; text-align: center;">
             <p style="font-size: 10px; font-weight: bold; color: #0B132B; margin: 0 0 6px 0;">QR CODE PIX & COPIA E COLA (PAGAMENTO INSTANTÂNEO):</p>
-            
-            <!-- Imagem do QR Code Visual -->
             <img src="${qrCodeApiUrl}" alt="QR Code Pix" style="width: 110px; height: 110px; display: block; margin: 0 auto 6px auto; border: 1px solid #CBD5E1; background: #fff; padding: 4px; border-radius: 4px;">
-
             <div style="background: #FFFFFF; border: 1px dashed #0D9488; padding: 6px; font-family: monospace; font-size: 8px; word-break: break-all; overflow-wrap: break-word; color: #0D9488; box-sizing: border-box; width: 100%; line-height: 1.2; margin-bottom: 4px;">
               ${escapeHTML(pixPayload)}
             </div>
@@ -658,9 +631,98 @@
       document.getElementById('budgetPreviewModal').style.display = 'none';
     };
 
-    // Aciona a impressão/PDF nativa do telemóvel com o QR Code visual integrado
-    window.compartilharPDFOrcamento = function () {
-      window.print();
+    // Geração vetorial pura com jsPDF e Partilha Automática via navigator.share
+    window.compartilharPDFOrcamento = async function () {
+      const status = document.getElementById('loadingStatusOrc');
+      if (!activeBudgetData || !activeBudgetData.number) {
+        alert('Nenhum orçamento selecionado.');
+        return;
+      }
+
+      try {
+        status.textContent = 'A gerar PDF...';
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('p', 'mm', 'a4');
+
+        // Cabeçalho
+        doc.setFont("Helvetica", "bold");
+        doc.setFontSize(14);
+        doc.setTextColor(11, 19, 43);
+        doc.text("LASER EXPERT - ORÇAMENTO DE SERVIÇO", 15, 20);
+
+        doc.setFontSize(10);
+        doc.setFont("Helvetica", "normal");
+        doc.text(`Nº do Orçamento: ${activeBudgetData.number}`, 15, 28);
+        doc.text(`Data: ${activeBudgetData.date || '-'}`, 15, 34);
+
+        // Cliente & Equipamento
+        doc.setDrawColor(203, 213, 225);
+        doc.setFillColor(248, 250, 252);
+        doc.roundedRect(15, 40, 180, 25, 3, 3, 'FD');
+        doc.setFont("Helvetica", "bold");
+        doc.text("CLIENTE & EQUIPAMENTO", 18, 46);
+        doc.setFont("Helvetica", "normal");
+        doc.text(`Cliente: ${activeBudgetData.client || '-'}`, 18, 53);
+        doc.text(`Equipamento: ${activeBudgetData.equipment || '-'}`, 18, 59);
+
+        // Escopo dos Serviços
+        doc.setFont("Helvetica", "bold");
+        doc.text("ESCOPO DOS SERVIÇOS:", 15, 75);
+        doc.setFont("Helvetica", "normal");
+        const splitDesc = doc.splitTextToSize(activeBudgetData.desc || 'Nenhum detalhe informado.', 180);
+        doc.text(splitDesc, 15, 81);
+
+        let currentY = 81 + (splitDesc.length * 5) + 8;
+
+        // Condições Comerciais
+        doc.setFont("Helvetica", "bold");
+        doc.text("CONDIÇÕES COMERCIAIS & PAGAMENTO:", 15, currentY);
+        doc.setFont("Helvetica", "normal");
+        const splitTerms = doc.splitTextToSize(activeBudgetData.terms || '-', 180);
+        doc.text(splitTerms, 15, currentY + 6);
+
+        currentY += 6 + (splitTerms.length * 5) + 10;
+
+        // Valor Total
+        doc.setFillColor(241, 245, 249);
+        doc.roundedRect(15, currentY, 180, 16, 2, 2, 'FD');
+        doc.setFont("Helvetica", "bold");
+        doc.setFontSize(12);
+        doc.setTextColor(13, 148, 136);
+        doc.text(`VALOR TOTAL: R$ ${Number(activeBudgetData.total || 0).toFixed(2)}`, 18, currentY + 11);
+
+        // Saída em Blob
+        const pdfBlob = doc.output('blob');
+        const filename = `Orcamento_${activeBudgetData.number}_${(activeBudgetData.client || 'Cliente').replace(/[^a-zA-Z0-9]/g, '_')}.pdf`;
+        const pdfFile = new File([pdfBlob], filename, { type: 'application/pdf' });
+
+        if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
+          status.textContent = 'A partilhar...';
+          try {
+            await navigator.share({
+              title: `Orçamento ${activeBudgetData.number}`,
+              text: `Segue o Orçamento ${activeBudgetData.number} (${activeBudgetData.client}).`,
+              files: [pdfFile]
+            });
+            status.textContent = 'Partilhado com sucesso!';
+          } catch (shareErr) {
+            if (shareErr.name === 'AbortError') {
+              status.textContent = 'Partilha cancelada.';
+            } else {
+              doc.save(filename);
+              status.textContent = 'PDF guardado!';
+            }
+          }
+        } else {
+          doc.save(filename);
+          status.textContent = 'PDF guardado!';
+        }
+
+      } catch (error) {
+        console.error('Erro ao gerar PDF vetorial:', error);
+        status.textContent = 'Falha ao gerar PDF';
+        alert('Não foi possível gerar o PDF. Tente novamente.');
+      }
     };
   </script>
 </body>

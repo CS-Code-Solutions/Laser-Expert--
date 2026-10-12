@@ -17,9 +17,6 @@
   <script src="firebase-init.js"></script>
   <script src="firebase-sync.js"></script>
 
-  <!-- html2pdf CDN -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-
   <script>
     // Guardião de Sessão
     if (localStorage.getItem('rg_logged') !== 'true') {
@@ -28,10 +25,36 @@
   </script>
 
   <style>
+    /* Estilos de Impressão Nativa (Gera PDF perfeito e vetorial no telemóvel) */
     @media print {
-      header, footer, .no-print, .action-toolbar { display: none !important; }
+      header, footer, .no-print, .action-toolbar, main { display: none !important; }
       body { background: white; color: black; padding: 0; margin: 0; }
-      .card { box-shadow: none; border: none; padding: 0; margin: 0; }
+      
+      #budgetPreviewModal {
+        display: block !important;
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        height: auto !important;
+        background: white !important;
+        z-index: 99999 !important;
+        padding: 0 !important;
+        overflow: visible !important;
+      }
+      .modal-content-wrapper {
+        box-shadow: none !important;
+        border: none !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        height: auto !important;
+        background: white !important;
+      }
+      .report-scroll-container {
+        padding: 0 !important;
+        overflow: visible !important;
+        background: white !important;
+      }
     }
 
     #budgetPreviewModal {
@@ -227,7 +250,7 @@
           <span id="loadingStatusOrc" style="font-size: 0.8rem; margin-left: 8px; color: #FCD34D;">⏳ Pronto</span>
         </div>
         <div class="toolbar-buttons">
-          <button class="btn" style="background-color: #00F5D4; color: #0B132B; font-weight: bold; padding: 6px 12px; font-size: 0.85rem; border: none; border-radius: 4px; cursor: pointer;" onclick="compartilharPDFOrcamento()">📤 Partilhar PDF</button>
+          <button class="btn" style="background-color: #00F5D4; color: #0B132B; font-weight: bold; padding: 6px 12px; font-size: 0.85rem; border: none; border-radius: 4px; cursor: pointer;" onclick="compartilharPDFOrcamento()">📤 Gerar / Imprimir PDF</button>
           <button class="btn" style="background-color: #dc3545; color: white; padding: 6px 12px; font-size: 0.85rem; border: none; border-radius: 4px; cursor: pointer;" onclick="closeModal()">✖ Fechar</button>
         </div>
       </div>
@@ -627,84 +650,9 @@
       document.getElementById('budgetPreviewModal').style.display = 'none';
     };
 
-    // Função de partilha que captura diretamente o elemento renderizado na pré-visualização (Zero ecrã branco)
-    window.compartilharPDFOrcamento = async function () {
-      const status = document.getElementById('loadingStatusOrc');
-      const source = document.getElementById('budgetRenderArea');
-      const modal = document.getElementById('budgetPreviewModal');
-      const toolbar = modal.querySelector('.action-toolbar');
-
-      if (!source || !source.innerText.trim()) {
-        alert('Conteúdo vazio. Feche e abra o orçamento novamente.');
-        return;
-      }
-
-      if (typeof html2pdf === 'undefined') {
-        alert('A biblioteca de PDF não foi carregada.');
-        return;
-      }
-
-      try {
-        status.textContent = 'A preparar PDF...';
-        
-        // Ocultar a barra de ferramentas para não sair no PDF e ajustar fundo
-        toolbar.style.display = 'none';
-        modal.style.background = '#ffffff';
-
-        await new Promise(resolve => setTimeout(resolve, 300));
-
-        status.textContent = 'A gerar PDF...';
-        const numeroOrcamento = (activeBudgetData && activeBudgetData.number) || '001';
-        const clienteNome = (activeBudgetData && activeBudgetData.client) || 'Cliente';
-        const filename = `Orcamento_${numeroOrcamento}_${clienteNome.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`;
-
-        const opt = {
-          margin: 10,
-          filename: filename,
-          image: { type: 'jpeg', quality: 0.98 },
-          html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false, windowWidth: 794 },
-          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-        };
-
-        const worker = html2pdf().from(source).set(opt);
-        const pdfBlob = await worker.outputPdf('blob');
-        const pdfFile = new File([pdfBlob], filename, { type: 'application/pdf' });
-
-        // Restaurar interface imediatamente antes de abrir a partilha nativa
-        toolbar.style.display = 'flex';
-        modal.style.background = 'rgba(11, 19, 43, 0.85)';
-
-        if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
-          status.textContent = 'A abrir partilha...';
-          try {
-            await navigator.share({
-              title: `Orçamento ${numeroOrcamento}`,
-              text: `Segue o Orçamento ${numeroOrcamento} (${clienteNome}).`,
-              files: [pdfFile]
-            });
-            status.textContent = 'Partilhado com sucesso!';
-          } catch (shareErr) {
-            if (shareErr.name === 'AbortError') {
-              status.textContent = 'Partilha cancelada.';
-            } else {
-              worker.save();
-              status.textContent = 'PDF guardado!';
-            }
-          }
-        } else {
-          worker.save();
-          status.textContent = 'PDF guardado!';
-        }
-
-      } catch (error) {
-        console.error('Erro ao gerar PDF:', error);
-        status.textContent = 'Falha ao gerar';
-        alert('Não foi possível gerar o PDF. Tente novamente.');
-      } finally {
-        // Garantir que a interface é sempre restaurada mesmo se ocorrer erro
-        if (toolbar) toolbar.style.display = 'flex';
-        if (modal) modal.style.background = 'rgba(11, 19, 43, 0.85)';
-      }
+    // Utiliza o motor nativo de impressão/PDF do telemóvel (100% fiável, sem ecrãs brancos)
+    window.compartilharPDFOrcamento = function () {
+      window.print();
     };
   </script>
 </body>

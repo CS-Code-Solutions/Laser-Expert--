@@ -185,7 +185,7 @@
           <div style="display: flex; align-items: flex-end;">
             <div style="background: #FFF; border: 1px solid #CBD5E1; padding: 8px 12px; border-radius: 4px; width: 100%; display: flex; align-items: center; gap: 10px; height: 38px; box-sizing: border-box;">
               <input type="checkbox" id="orcIncludeQr" checked style="width: 16px; height: 16px; cursor: pointer; flex-shrink: 0;">
-              <label for="orcIncludeQr" style="font-size: 12px; font-weight: bold; cursor: pointer; margin: 0; color: #0B132B;">Incluir PIX Copia e Cola no Orçamento</label>
+              <label for="orcIncludeQr" style="font-size: 12px; font-weight: bold; cursor: pointer; margin: 0; color: #0B132B;">Incluir QR Code e Pix Copia e Cola</label>
             </div>
           </div>
         </div>
@@ -544,13 +544,21 @@
       const effectivePixKey = (pixKeyToUse && pixKeyToUse.trim() !== '') ? pixKeyToUse : (config.email || 'comercial@laserexpertbr.com.br');
 
       if (opt !== 'boleto' && b.includeQr !== false) {
+        // Payload Pix Copia e Cola estruturado para gerar o QR Code visual
+        const pixPayload = `00020126580014br.gov.bcb.pix0136${effectivePixKey}5204000053039865802BR5925${config.name}6009SaoLeopoldo62070303${b.number}6304`;
+        const qrCodeApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(pixPayload)}`;
+
         pixCopiaEColaHtml = `
-          <div style="margin-top: 8px; padding: 8px; background: #F1F5F9; border: 1px solid #CBD5E1; border-radius: 4px; box-sizing: border-box; width: 100%;">
-            <p style="font-size: 10px; font-weight: bold; color: #0B132B; margin: 0 0 4px 0; text-align: center;">PIX COPIA E COLA (PAGAMENTO INSTANTÂNEO):</p>
-            <div style="background: #FFFFFF; border: 1px dashed #0D9488; padding: 8px; font-family: monospace; font-size: 8.5px; word-break: break-all; overflow-wrap: break-word; text-align: center; color: #0D9488; box-sizing: border-box; width: 100%; max-width: 100%; line-height: 1.2;">
-              00020126580014br.gov.bcb.pix0136${escapeHTML(effectivePixKey)}5204000053039865802BR5925${escapeHTML(config.name)}6009SaoLeopoldo62070303${escapeHTML(b.number)}6304
+          <div style="margin-top: 10px; padding: 10px; background: #F1F5F9; border: 1px solid #CBD5E1; border-radius: 4px; box-sizing: border-box; width: 100%; text-align: center;">
+            <p style="font-size: 10px; font-weight: bold; color: #0B132B; margin: 0 0 6px 0;">QR CODE PIX & COPIA E COLA (PAGAMENTO INSTANTÂNEO):</p>
+            
+            <!-- Imagem do QR Code Visual -->
+            <img src="${qrCodeApiUrl}" alt="QR Code Pix" style="width: 110px; height: 110px; display: block; margin: 0 auto 6px auto; border: 1px solid #CBD5E1; background: #fff; padding: 4px; border-radius: 4px;">
+
+            <div style="background: #FFFFFF; border: 1px dashed #0D9488; padding: 6px; font-family: monospace; font-size: 8px; word-break: break-all; overflow-wrap: break-word; color: #0D9488; box-sizing: border-box; width: 100%; line-height: 1.2; margin-bottom: 4px;">
+              ${escapeHTML(pixPayload)}
             </div>
-            <p style="font-size: 9px; color: #64748B; margin: 4px 0 0 0; text-align: center;">Chave: <strong>${escapeHTML(effectivePixKey)}</strong> | Valor: <strong>R$ ${valorFormatado}</strong></p>
+            <p style="font-size: 9px; color: #64748B; margin: 2px 0 0 0;">Chave: <strong>${escapeHTML(effectivePixKey)}</strong> | Valor: <strong>R$ ${valorFormatado}</strong></p>
           </div>
         `;
       }
@@ -650,7 +658,7 @@
       document.getElementById('budgetPreviewModal').style.display = 'none';
     };
 
-    // Utiliza o motor nativo de impressão/PDF do telemóvel (100% fiável, sem ecrãs brancos)
+    // Aciona a impressão/PDF nativa do telemóvel com o QR Code visual integrado
     window.compartilharPDFOrcamento = function () {
       window.print();
     };

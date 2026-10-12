@@ -161,7 +161,7 @@
           </div>
           <div style="display: flex; align-items: flex-end;">
             <div style="background: #FFF; border: 1px solid #CBD5E1; padding: 8px 12px; border-radius: 4px; width: 100%; display: flex; align-items: center; gap: 10px; height: 38px; box-sizing: border-box;">
-              <input type="checkbox" id="orcIncludeQr" checked style="width: 16px; height: 16px; cursor: pointer;">
+              <input type="checkbox" id="orcIncludeQr" checked style="width: 16px; height: 16px; cursor: pointer; flex-shrink: 0;">
               <label for="orcIncludeQr" style="font-size: 12px; font-weight: bold; cursor: pointer; margin: 0; color: #0B132B;">Incluir PIX Copia e Cola</label>
             </div>
           </div>
@@ -174,17 +174,17 @@
           </div>
           <div>
             <label style="margin-bottom: 4px; display: block; font-weight: bold; font-size: 13px;">Condições Comerciais:</label>
-            <div style="background: #FFF; border: 1px solid #CBD5E1; padding: 10px; border-radius: 6px; margin-bottom: 8px; display: flex; flex-direction: column; gap: 8px;">
-              <label style="display: flex; align-items: flex-start; gap: 8px; font-size: 12px; cursor: pointer; margin: 0;">
-                <input type="checkbox" class="term-check" value="Pagamento a combinar." checked style="margin-top: 2px;" onchange="atualizarTermosCompletos()">
+            <div style="background: #FFF; border: 1px solid #CBD5E1; padding: 12px; border-radius: 6px; margin-bottom: 8px; display: flex; flex-direction: column; gap: 10px;">
+              <label style="display: flex; align-items: center; gap: 10px; font-size: 12px; cursor: pointer; margin: 0;">
+                <input type="checkbox" class="term-check" value="Pagamento a combinar." checked style="width: 16px; height: 16px; flex-shrink: 0;" onchange="atualizarTermosCompletos()">
                 <span>Pagamento a combinar.</span>
               </label>
-              <label style="display: flex; align-items: flex-start; gap: 8px; font-size: 12px; cursor: pointer; margin: 0;">
-                <input type="checkbox" class="term-check" value="Impostos inclusos." checked style="margin-top: 2px;" onchange="atualizarTermosCompletos()">
+              <label style="display: flex; align-items: center; gap: 10px; font-size: 12px; cursor: pointer; margin: 0;">
+                <input type="checkbox" class="term-check" value="Impostos inclusos." checked style="width: 16px; height: 16px; flex-shrink: 0;" onchange="atualizarTermosCompletos()">
                 <span>Impostos inclusos.</span>
               </label>
-              <label style="display: flex; align-items: flex-start; gap: 8px; font-size: 12px; cursor: pointer; margin: 0;">
-                <input type="checkbox" class="term-check" value="Despesas com deslocamento, alimentação e hotel já incluso no orçamento." checked style="margin-top: 2px;" onchange="atualizarTermosCompletos()">
+              <label style="display: flex; align-items: center; gap: 10px; font-size: 12px; cursor: pointer; margin: 0;">
+                <input type="checkbox" class="term-check" value="Despesas com deslocamento, alimentação e hotel já incluso no orçamento." checked style="width: 16px; height: 16px; flex-shrink: 0;" onchange="atualizarTermosCompletos()">
                 <span>Despesas de deslocamento, alimentação e hotel inclusas.</span>
               </label>
             </div>
@@ -219,7 +219,7 @@
           <span id="loadingStatusOrc" style="font-size: 0.8rem; margin-left: 8px; color: #FCD34D;">⏳ Pronto</span>
         </div>
         <div class="toolbar-buttons">
-          <button class="btn" style="background-color: #00F5D4; color: #0B132B; font-weight: bold; padding: 6px 12px; font-size: 0.85rem; border: none; border-radius: 4px; cursor: pointer;" onclick="compartilharPDFOrcamento()">📥 Gerar & Baixar PDF</button>
+          <button class="btn" style="background-color: #00F5D4; color: #0B132B; font-weight: bold; padding: 6px 12px; font-size: 0.85rem; border: none; border-radius: 4px; cursor: pointer;" onclick="compartilharPDFOrcamento()">📤 Partilhar PDF</button>
           <button class="btn" style="background-color: #dc3545; color: white; padding: 6px 12px; font-size: 0.85rem; border: none; border-radius: 4px; cursor: pointer;" onclick="closeModal()">✖ Fechar</button>
         </div>
       </div>
@@ -300,7 +300,6 @@
           const safeEq = escapeHTML(b.equipment || '-');
           const safeTotal = Number(b.total || 0).toFixed(2);
 
-          // Layout em formato de cartão limpo e confortável para telemóveis (inspirado no módulo de horas extras)
           htmlCards += `
             <div style="background: white; border: 1px solid #ddd; border-left: 5px solid #00F5D4; padding: 12px 15px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
               <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 6px;">
@@ -601,7 +600,7 @@
       document.getElementById('budgetPreviewModal').style.display = 'none';
     };
 
-    // Função de geração e download otimizada contra ecrãs brancos em telemóveis
+    // Função robusta de partilha com atraso de segurança para evitar PDF em branco
     window.compartilharPDFOrcamento = async function () {
       const status = document.getElementById('loadingStatusOrc');
       const source = document.getElementById('budgetRenderArea');
@@ -629,6 +628,9 @@
         captureHost.appendChild(clone);
         document.body.appendChild(captureHost);
 
+        // Atraso de segurança para garantir pintura completa de fontes e imagens no telemóvel
+        await new Promise(resolve => setTimeout(resolve, 400));
+
         if (document.fonts && document.fonts.ready) {
           await document.fonts.ready;
         }
@@ -647,18 +649,40 @@
         const clienteNome = (activeBudgetData && activeBudgetData.client) || 'Cliente';
         const filename = `Orcamento_${numeroOrcamento}_${clienteNome.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`;
 
-        await html2pdf()
-          .set({
-            margin: 10,
-            filename: filename,
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false, windowWidth: 794 },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-          })
-          .from(clone)
-          .save();
+        const opt = {
+          margin: 10,
+          filename: filename,
+          image: { type: 'jpeg', quality: 0.98 },
+          html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false, windowWidth: 794 },
+          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
 
-        status.textContent = 'PDF baixado!';
+        const worker = html2pdf().from(clone).set(opt);
+        const pdfBlob = await worker.outputPdf('blob');
+        const pdfFile = new File([pdfBlob], filename, { type: 'application/pdf' });
+
+        if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
+          status.textContent = 'A abrir partilha...';
+          try {
+            await navigator.share({
+              title: `Orçamento ${numeroOrcamento}`,
+              text: `Segue o Orçamento ${numeroOrcamento} (${clienteNome}).`,
+              files: [pdfFile]
+            });
+            status.textContent = 'Partilhado com sucesso!';
+          } catch (shareErr) {
+            if (shareErr.name === 'AbortError') {
+              status.textContent = 'Partilha cancelada.';
+            } else {
+              worker.save();
+              status.textContent = 'PDF guardado!';
+            }
+          }
+        } else {
+          worker.save();
+          status.textContent = 'PDF guardado!';
+        }
+
       } catch (error) {
         console.error('Erro ao gerar PDF:', error);
         status.textContent = 'Falha ao gerar';

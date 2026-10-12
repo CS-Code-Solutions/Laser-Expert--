@@ -627,10 +627,12 @@
       document.getElementById('budgetPreviewModal').style.display = 'none';
     };
 
-    // Função robusta de partilha com fundo branco sólido e tempo de espera para evitar PDF em branco
+    // Função de partilha que captura diretamente o elemento renderizado na pré-visualização (Zero ecrã branco)
     window.compartilharPDFOrcamento = async function () {
       const status = document.getElementById('loadingStatusOrc');
       const source = document.getElementById('budgetRenderArea');
+      const modal = document.getElementById('budgetPreviewModal');
+      const toolbar = modal.querySelector('.action-toolbar');
 
       if (!source || !source.innerText.trim()) {
         alert('Conteúdo vazio. Feche e abra o orçamento novamente.');
@@ -642,35 +644,14 @@
         return;
       }
 
-      let captureHost;
-
       try {
         status.textContent = 'A preparar PDF...';
-        captureHost = document.createElement('div');
-        // Fundo totalmente branco e visível para o motor do telemóvel renderizar perfeitamente
-        captureHost.style.cssText = 'position: fixed; left: 0; top: 0; width: 794px; background: #ffffff; color: #0B132B; z-index: 99999; padding: 20px; box-sizing: border-box;';
+        
+        // Ocultar a barra de ferramentas para não sair no PDF e ajustar fundo
+        toolbar.style.display = 'none';
+        modal.style.background = '#ffffff';
 
-        const clone = source.cloneNode(true);
-        clone.removeAttribute('id');
-        clone.style.cssText += ';display: block; width: 100%; background: #ffffff;';
-        captureHost.appendChild(clone);
-        document.body.appendChild(captureHost);
-
-        // Atraso de 600ms para garantir que o telemóvel pinta todas as fontes e imagens
-        await new Promise(resolve => setTimeout(resolve, 600));
-
-        if (document.fonts && document.fonts.ready) {
-          await document.fonts.ready;
-        }
-
-        const images = Array.from(captureHost.querySelectorAll('img'));
-        await Promise.all(images.map(async (img) => {
-          if (img.complete && img.naturalWidth > 0) return;
-          if (typeof img.decode === 'function') {
-            try { await img.decode(); return; } catch (e) {}
-          }
-          await new Promise(resolve => { img.onload = resolve; img.onerror = resolve; });
-        }));
+        await new Promise(resolve => setTimeout(resolve, 300));
 
         status.textContent = 'A gerar PDF...';
         const numeroOrcamento = (activeBudgetData && activeBudgetData.number) || '001';
@@ -685,9 +666,13 @@
           jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
 
-        const worker = html2pdf().from(clone).set(opt);
+        const worker = html2pdf().from(source).set(opt);
         const pdfBlob = await worker.outputPdf('blob');
         const pdfFile = new File([pdfBlob], filename, { type: 'application/pdf' });
+
+        // Restaurar interface imediatamente antes de abrir a partilha nativa
+        toolbar.style.display = 'flex';
+        modal.style.background = 'rgba(11, 19, 43, 0.85)';
 
         if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
           status.textContent = 'A abrir partilha...';
@@ -716,9 +701,9 @@
         status.textContent = 'Falha ao gerar';
         alert('Não foi possível gerar o PDF. Tente novamente.');
       } finally {
-        if (captureHost && captureHost.parentNode) {
-          captureHost.parentNode.removeChild(captureHost);
-        }
+        // Garantir que a interface é sempre restaurada mesmo se ocorrer erro
+        if (toolbar) toolbar.style.display = 'flex';
+        if (modal) modal.style.background = 'rgba(11, 19, 43, 0.85)';
       }
     };
   </script>

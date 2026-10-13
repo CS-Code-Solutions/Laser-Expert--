@@ -77,16 +77,16 @@
       text-align: center; white-space: nowrap; text-transform: uppercase; width: 100%;
     }
 
-    .print-body { font-family: Arial, sans-serif; color: #0B132B; line-height: 1.4; font-size: 11px; position: relative; z-index: 1; box-sizing: border-box; width: 100%; }
+    .print-body { font-family: Arial, sans-serif; color: #0B132B; line-height: 1.4; font-size: 11px; position: relative; z-index: 1; box-sizing: border-box; width: 100%; padding-bottom: 20px; }
     .print-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #00F5D4; padding-bottom: 8px; margin-bottom: 12px; }
     .print-header img { height: 45px; width: auto; }
     .print-header-info { text-align: right; }
     .print-header-info h1 { font-size: 14px; color: #0B132B; margin: 0; font-weight: bold; }
-    .section-box { border: 1px solid #CBD5E1; padding: 10px; margin-bottom: 10px; border-radius: 6px; background: #F8FAFC; page-break-inside: avoid; }
+    .section-box { border: 1px solid #CBD5E1; padding: 10px; margin-bottom: 10px; border-radius: 6px; background: #F8FAFC; page-break-inside: avoid; break-inside: avoid; }
     .section-title { font-weight: bold; font-size: 12px; color: #0B132B; margin-bottom: 6px; border-bottom: 1px solid #E2E8F0; padding-bottom: 3px; }
     .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
     .print-body p { margin: 2px 0; }
-    .signature-area { margin-top: 20px; display: flex; justify-content: space-between; align-items: flex-end; page-break-inside: avoid; }
+    .signature-area { margin-top: 15px; display: flex; justify-content: space-between; align-items: flex-end; page-break-inside: avoid; break-inside: avoid; }
     .signature-box { text-align: center; width: 45%; }
     .signature-box img { max-width: 180px; height: 50px; object-fit: contain; display: block; margin: 0 auto; }
     .page-break { page-break-before: always; }
@@ -273,37 +273,45 @@
 
         let valorTotal = 0;
         let textoHoras = "Não cobrado";
+        let valorHorasTotal = 0;
 
         if (rep.temEmpreitada === 'sim') {
             valorTotal = Number(rep.valorEmpreitada) || 0;
             textoHoras = `Empreitada (R$ ${valorTotal.toFixed(2)})`;
         } else {
-            let valorHorasTotal = 0;
             if (rep.temHora === 'sim') {
                 const valorHora = Number(rep.valorHora) || 200.00;
                 const horasCalc = calcularMinutosTrabalhados(rep.startManha, rep.endManha, rep.startTarde, rep.endTarde, valorHora);
                 valorHorasTotal = horasCalc.valorHorasTotal;
                 textoHoras = `${horasCalc.totalHoursText} (R$ ${valorHorasTotal.toFixed(2)})`;
             }
-            let valorKmTotal = 0;
-            if (rep.temKm === 'sim') {
-                let kmTotal = (Number(rep.kmIda) || 0) + (Number(rep.kmVolta) || 0);
-                valorKmTotal = kmTotal * (Number(rep.valorKm) || 0);
+            
+            let valorDeslocamentoTotal = 0;
+            if (rep.temDeslocamento === 'sim') {
+                const valorHDesloc = Number(rep.valorHoraDeslocamento) || 260.00;
+                const horasDesloc = Number(rep.tempoDeslocamentoHoras) || 0;
+                valorDeslocamentoTotal = valorHDesloc * horasDesloc;
             }
-            let valorCombustivelTotal = 0;
-            if (rep.temCombustivel === 'sim') {
-                valorCombustivelTotal = (Number(rep.combustivelLitros) || 0) * (Number(rep.valorLitro) || 0);
+
+            let valorHospedagemTotal = 0;
+            if (rep.temHospedagem === 'sim') {
+                valorHospedagemTotal = Number(rep.valorHospedagem) || 0;
             }
-            let valorAdicional = rep.temDespesas === 'sim' ? (Number(rep.valorAdicional) || 0) : 0;
-            valorTotal = valorHorasTotal + valorKmTotal + valorCombustivelTotal + valorAdicional;
+
+            let valorOutrasTotal = 0;
+            if (rep.temOutras === 'sim') {
+                valorOutrasTotal = Number(rep.valorOutras) || 0;
+            }
+
+            valorTotal = valorHorasTotal + valorDeslocamentoTotal + valorHospedagemTotal + valorOutrasTotal;
         }
 
         const valorTotalStr = valorTotal.toFixed(2);
         activeReportData = { number: rep.number, client: rep.client };
 
-        const kmHtml = rep.temKm === 'sim' ? `<p>• <strong>Quilômetros Rodados:</strong> ${(Number(rep.kmIda||0)+Number(rep.kmVolta||0))} km a R$ ${Number(rep.valorKm||0).toFixed(2)}/km</p>` : '';
-        const combustivelHtml = rep.temCombustivel === 'sim' ? `<p>• <strong>Combustível:</strong> ${rep.combustivelLitros||0} L a R$ ${Number(rep.valorLitro||0).toFixed(2)}/L</p>` : '';
-        const despesasHtml = rep.temDespesas === 'sim' ? `<p>• <strong>Outras Despesas / Pedágio:</strong> R$ ${Number(rep.valorAdicional||0).toFixed(2)}</p>` : '';
+        const deslocamentoHtml = rep.temDeslocamento === 'sim' ? `<p>• <strong>Hora de Deslocamento:</strong> ${rep.tempoDeslocamentoHoras || 0}h a R$ ${Number(rep.valorHoraDeslocamento || 0).toFixed(2)}/h (Total: R$ ${(Number(rep.valorHoraDeslocamento || 0) * Number(rep.tempoDeslocamentoHoras || 0)).toFixed(2)})</p>` : '';
+        const hospedagemHtml = rep.temHospedagem === 'sim' ? `<p>• <strong>Hospedagem:</strong> R$ ${Number(rep.valorHospedagem || 0).toFixed(2)}</p>` : '';
+        const outrasHtml = rep.temOutras === 'sim' ? `<p>• <strong>Outras Despesas / Alimentação:</strong> R$ ${Number(rep.valorOutras || 0).toFixed(2)}</p>` : '';
 
         const clientSignature = rep.signature || rep.assinatura || rep.clientSignature || rep.assinaturaCliente || '';
         const techSignature = config.techSignature || '';
@@ -425,10 +433,11 @@
             <div class="section-box">
               <div class="section-title">Critérios de Cobrança e Valor Total</div>
               <div style="font-size: 10px; margin-bottom: 6px;">
-                <p>• <strong>Serviço / Horas:</strong> ${textoHoras}</p>
-                ${kmHtml}
-                ${combustivelHtml}
-                ${despesasHtml}
+                ${rep.temHora === 'sim' ? `<p>• <strong>Serviço / Horas:</strong> ${textoHoras}</p>` : ''}
+                ${deslocamentoHtml}
+                ${hospedagemHtml}
+                ${outrasHtml}
+                ${rep.temEmpreitada === 'sim' ? `<p>• <strong>Regime de Empreitada:</strong> ${textoHoras}</p>` : ''}
               </div>
               <p style="font-size: 11px; font-weight: bold; color: #0D9488; border-top: 1px solid #CBD5E1; padding-top: 4px; margin-top: 4px;">Valor Total Estimado: R$ ${valorTotalStr}</p>
             </div>
@@ -456,7 +465,7 @@
       const element = document.getElementById('reportRenderArea');
       const filename = `Relatorio_RS_${activeReportData.number || 'RS-1000'}.pdf`;
       const opt = {
-        margin: 10,
+        margin: [10, 10, 15, 10],
         filename: filename,
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true, allowTaint: true },

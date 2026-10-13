@@ -8,8 +8,8 @@
   <link rel="manifest" href="manifest.json">
   <link rel="stylesheet" href="style.css">
 
-  <!-- Biblioteca jsPDF para gerar o PDF e permitir compartilhamento nativo -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <!-- html2pdf CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
   <!-- Firebase SDKs Compat -->
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
@@ -68,7 +68,7 @@
       justify-content: center;
       align-items: center;
       overflow-y: auto;
-      padding: 10px;
+      padding: 15px;
     }
     .modal-content-wrapper {
       background: white;
@@ -94,8 +94,9 @@
       flex-shrink: 0;
     }
     .toolbar-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
-    .report-scroll-container { padding: 15px; overflow-y: auto; background: #FFF; flex-grow: 1; position: relative; }
+    .report-scroll-container { padding: 20px; overflow-y: auto; background: #FFF; flex-grow: 1; position: relative; }
 
+    /* Marca d'água padronizada idêntica à do Histórico de RS */
     .watermark {
       position: absolute; top: 50%; left: 50%;
       transform: translate(-50%, -50%) rotate(-30deg);
@@ -113,7 +114,7 @@
     .section-box { border: 1px solid #CBD5E1; padding: 10px; margin-bottom: 10px; border-radius: 6px; background: #F8FAFC; page-break-inside: avoid; box-sizing: border-box; }
     .section-title { font-weight: bold; font-size: 12px; color: #0B132B; margin-bottom: 6px; border-bottom: 1px solid #E2E8F0; padding-bottom: 3px; }
     
-    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
     @media (max-width: 768px) { .grid-2 { grid-template-columns: 1fr; } }
     .print-body p { margin: 2px 0; }
   </style>
@@ -175,56 +176,38 @@
           <textarea id="orcDesc" rows="4" placeholder="Descreva os serviços..." style="width:100%; padding:8px; border:1px solid #CBD5E1; border-radius:4px; font-family:inherit; box-sizing: border-box;"></textarea>
         </div>
 
-        <div class="grid-2" style="margin-bottom: 12px;">
-          <div>
-            <label for="orcPaymentOption" style="display: block; font-weight: bold; margin-bottom: 4px; font-size: 13px;">Forma de Recebimento / Conta:</label>
-            <select id="orcPaymentOption" class="form-control" required style="width:100%; padding:8px; border:1px solid #CBD5E1; border-radius:4px; background: #FFF; box-sizing: border-box;">
-              <option value="banco1" id="optionBank1Label">Conta Bancária 1</option>
-              <option value="banco2" id="optionBank2Label">Conta Bancária 2</option>
-              <option value="boleto">Boleto Bancário</option>
-            </select>
-          </div>
-          <div style="display: flex; align-items: flex-end;">
-            <div style="background: #FFF; border: 1px solid #CBD5E1; padding: 8px 12px; border-radius: 4px; width: 100%; display: flex; align-items: center; gap: 10px; height: 38px; box-sizing: border-box;">
-              <input type="checkbox" id="orcIncludeQr" checked style="width: 16px; height: 16px; cursor: pointer; flex-shrink: 0;">
-              <label for="orcIncludeQr" style="font-size: 12px; font-weight: bold; cursor: pointer; margin: 0; color: #0B132B;">Incluir QR Code e Pix Copia e Cola</label>
-            </div>
-          </div>
+        <div style="margin-bottom: 15px;">
+          <label for="orcTotal" style="display: block; font-weight: bold; margin-bottom: 4px; font-size: 13px;">Valor Total (R$):</label>
+          <input type="number" step="0.01" id="orcTotal" placeholder="0.00" class="form-control" required style="width:100%; padding:8px; border:1px solid #CBD5E1; border-radius:4px; box-sizing: border-box;">
         </div>
 
-        <div class="grid-2" style="margin-bottom: 15px;">
-          <div>
-            <label for="orcTotal" style="display: block; font-weight: bold; margin-bottom: 4px; font-size: 13px;">Valor Total (R$):</label>
-            <input type="number" step="0.01" id="orcTotal" placeholder="0.00" class="form-control" required style="width:100%; padding:8px; border:1px solid #CBD5E1; border-radius:4px; box-sizing: border-box;">
+        <div style="margin-bottom: 15px;">
+          <label style="margin-bottom: 4px; display: block; font-weight: bold; font-size: 13px;">Condições Comerciais (Opções Rápidas):</label>
+          <div style="background: #FFF; border: 1px solid #CBD5E1; padding: 12px; border-radius: 6px; margin-bottom: 8px; display: flex; flex-direction: column; gap: 10px;">
+            <label style="display: flex; align-items: center; gap: 10px; font-size: 12px; cursor: pointer; margin: 0;">
+              <input type="checkbox" class="term-check" value="Pagamento a combinar." checked style="width: 16px; height: 16px; flex-shrink: 0;" onchange="atualizarTermosCompletos()">
+              <span>Pagamento a combinar.</span>
+            </label>
+            <label style="display: flex; align-items: center; gap: 10px; font-size: 12px; cursor: pointer; margin: 0;">
+              <input type="checkbox" class="term-check" value="Impostos inclusos." checked style="width: 16px; height: 16px; flex-shrink: 0;" onchange="atualizarTermosCompletos()">
+              <span>Impostos inclusos.</span>
+            </label>
+            <label style="display: flex; align-items: center; gap: 10px; font-size: 12px; cursor: pointer; margin: 0;">
+              <input type="checkbox" class="term-check" value="Despesas com deslocamento, alimentação e hotel já incluso no orçamento." checked style="width: 16px; height: 16px; flex-shrink: 0;" onchange="atualizarTermosCompletos()">
+              <span>Despesas com deslocamento, alimentação e hotel já incluso no orçamento.</span>
+            </label>
           </div>
-          <div>
-            <label style="margin-bottom: 4px; display: block; font-weight: bold; font-size: 13px;">Condições Comerciais (Opções Rápidas):</label>
-            <div style="background: #FFF; border: 1px solid #CBD5E1; padding: 12px; border-radius: 6px; margin-bottom: 8px; display: flex; flex-direction: column; gap: 10px;">
-              <label style="display: flex; align-items: center; gap: 10px; font-size: 12px; cursor: pointer; margin: 0;">
-                <input type="checkbox" class="term-check" value="Pagamento a combinar." checked style="width: 16px; height: 16px; flex-shrink: 0;" onchange="atualizarTermosCompletos()">
-                <span>Pagamento a combinar.</span>
-              </label>
-              <label style="display: flex; align-items: center; gap: 10px; font-size: 12px; cursor: pointer; margin: 0;">
-                <input type="checkbox" class="term-check" value="Impostos inclusos." checked style="width: 16px; height: 16px; flex-shrink: 0;" onchange="atualizarTermosCompletos()">
-                <span>Impostos inclusos.</span>
-              </label>
-              <label style="display: flex; align-items: center; gap: 10px; font-size: 12px; cursor: pointer; margin: 0;">
-                <input type="checkbox" class="term-check" value="Despesas com deslocamento, alimentação e hotel já incluso no orçamento." checked style="width: 16px; height: 16px; flex-shrink: 0;" onchange="atualizarTermosCompletos()">
-                <span>Despesas com deslocamento, alimentação e hotel já incluso no orçamento.</span>
-              </label>
-            </div>
 
-            <div style="background: #FFF; border: 1px solid #CBD5E1; padding: 10px; border-radius: 6px; margin-bottom: 8px; display: flex; flex-direction: column; gap: 8px;">
-              <label style="display: flex; align-items: center; gap: 10px; font-size: 12px; cursor: pointer; margin: 0;">
-                <input type="checkbox" id="checkNotIncluded" checked style="width: 16px; height: 16px; flex-shrink: 0;" onchange="atualizarTermosCompletos()">
-                <span style="font-weight: bold;">Não estão inclusos:</span>
-              </label>
-              <textarea id="orcNotIncludedText" rows="2" class="form-control" placeholder="óleos, peças, espelhos" style="width:100%; padding:6px; border:1px solid #CBD5E1; border-radius:4px; font-family:inherit; font-size: 11px; box-sizing: border-box;" oninput="atualizarTermosCompletos()"></textarea>
-            </div>
-
-            <label for="orcTerms" style="margin-top: 6px; display: block; font-size: 12px; font-weight: bold;">Resumo das Condições Comerciais:</label>
-            <textarea id="orcTerms" rows="4" class="form-control" style="width:100%; padding:8px; border:1px solid #CBD5E1; border-radius:4px; font-family:inherit; background: #FFF; box-sizing: border-box;"></textarea>
+          <div style="background: #FFF; border: 1px solid #CBD5E1; padding: 10px; border-radius: 6px; margin-bottom: 8px; display: flex; flex-direction: column; gap: 8px;">
+            <label style="display: flex; align-items: center; gap: 10px; font-size: 12px; cursor: pointer; margin: 0;">
+              <input type="checkbox" id="checkNotIncluded" checked style="width: 16px; height: 16px; flex-shrink: 0;" onchange="atualizarTermosCompletos()">
+              <span style="font-weight: bold;">Não estão inclusos:</span>
+            </label>
+            <textarea id="orcNotIncludedText" rows="2" class="form-control" placeholder="óleos, peças, espelhos" style="width:100%; padding:6px; border:1px solid #CBD5E1; border-radius:4px; font-family:inherit; font-size: 11px; box-sizing: border-box;" oninput="atualizarTermosCompletos()"></textarea>
           </div>
+
+          <label for="orcTerms" style="margin-top: 6px; display: block; font-size: 12px; font-weight: bold;">Resumo das Condições Comerciais:</label>
+          <textarea id="orcTerms" rows="4" class="form-control" style="width:100%; padding:8px; border:1px solid #CBD5E1; border-radius:4px; font-family:inherit; background: #FFF; box-sizing: border-box;"></textarea>
         </div>
 
         <div style="display: flex; gap: 10px; flex-wrap: wrap;">
@@ -248,12 +231,12 @@
     <div class="modal-content-wrapper">
       <div class="action-toolbar">
         <div>
-          <strong id="modalTitleOrc" style="color: #00F5D4; font-size: 0.95rem;">Orçamento</strong>
-          <span id="loadingStatusOrc" style="font-size: 0.8rem; margin-left: 8px; color: #FCD34D;">⏳ Pronto</span>
+          <strong id="modalTitleOrc" style="color: var(--electric-cyan, #00F5D4); font-size: 1rem;">Orçamento</strong>
+          <span id="loadingStatusOrc" style="font-size: 0.8rem; margin-left: 8px; color: #FCD34D;">⏳ A preparar...</span>
         </div>
         <div class="toolbar-buttons">
-          <button class="btn" style="background-color: #00F5D4; color: #0B132B; font-weight: bold; padding: 6px 12px; font-size: 0.85rem; border: none; border-radius: 4px; cursor: pointer;" onclick="compartilharPDFOrcamento()">📤 Gerar / Partilhar PDF</button>
-          <button class="btn" style="background-color: #dc3545; color: white; padding: 6px 12px; font-size: 0.85rem; border: none; border-radius: 4px; cursor: pointer;" onclick="closeModal()">✖ Fechar</button>
+          <button class="btn" style="background-color: #00F5D4; color: #0B132B; font-weight: bold; padding: 6px 12px; font-size: 0.85rem;" onclick="compartilharPDF()">📤 Partilhar PDF</button>
+          <button class="btn" style="background-color: #EF4444; color: white; padding: 6px 12px; font-size: 0.85rem;" onclick="closeModal()">✖️ Fechar</button>
         </div>
       </div>
       <div class="report-scroll-container" id="budgetScrollContainer">
@@ -277,53 +260,8 @@
         .replace(/'/g, '&#039;');
     }
 
-    // Auxiliar para converter imagens externas em Base64 para uso seguro no jsPDF
-    function getBase64ImageFromUrl(url) {
-      return new Promise((resolve) => {
-        if (!url) { resolve(null); return; }
-        const img = new Image();
-        img.crossOrigin = 'Anonymous';
-        img.onload = function() {
-          try {
-            const canvas = document.createElement('canvas');
-            canvas.width = img.width;
-            canvas.height = img.height;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0);
-            resolve({
-              dataUrl: canvas.toDataURL('image/png'),
-              width: img.width,
-              height: img.height
-            });
-          } catch (e) {
-            console.warn("Erro ao converter imagem:", e);
-            resolve(null);
-          }
-        };
-        img.onerror = function() { resolve(null); };
-        img.src = url;
-      });
-    }
-
     let activeBudgetData = {};
-    let activeConfigData = {};
-    let activeClientData = {};
-    let activePixPayload = "";
-    let activeQrCodeUrl = "";
-
     document.getElementById('orcDate').valueAsDate = new Date();
-
-    async function carregarApelidosContas() {
-      try {
-        const config = await DataSync.load('rg_config') || {};
-        const opt1 = document.getElementById('optionBank1Label');
-        const opt2 = document.getElementById('optionBank2Label');
-        if (opt1) opt1.textContent = config.nomeConta1 ? `PIX / Conta: ${config.nomeConta1}` : 'Conta Bancária 1';
-        if (opt2) opt2.textContent = config.nomeConta2 ? `PIX / Conta: ${config.nomeConta2}` : 'Conta Bancária 2';
-      } catch (e) {
-        console.error("Erro ao carregar apelidos dos bancos", e);
-      }
-    }
 
     function atualizarTermosCompletos() {
       const checkboxes = document.querySelectorAll('.term-check');
@@ -399,7 +337,6 @@
     }
 
     document.addEventListener("DOMContentLoaded", async () => {
-      await carregarApelidosContas();
       await loadClientsSelect();
       await renderBudgets();
       try {
@@ -412,7 +349,6 @@
 
       DataSync.listen('rg_orcamentos', () => renderBudgets());
       DataSync.listen('rg_clients', () => loadClientsSelect());
-      DataSync.listen('rg_config', () => carregarApelidosContas());
     });
 
     document.getElementById('budgetForm').addEventListener('submit', async (e) => {
@@ -425,8 +361,6 @@
         client: document.getElementById('orcClient').value.trim(),
         equipment: document.getElementById('orcEquipment').value.trim(),
         desc: document.getElementById('orcDesc').value.trim(),
-        paymentOption: document.getElementById('orcPaymentOption').value.trim(),
-        includeQr: document.getElementById('orcIncludeQr').checked,
         total: document.getElementById('orcTotal').value.trim(),
         terms: document.getElementById('orcTerms').value.trim()
       };
@@ -455,7 +389,6 @@
       document.getElementById('editIndex').value = '';
       document.getElementById('formTitle').textContent = 'Novo Orçamento';
       document.getElementById('orcDate').valueAsDate = new Date();
-      document.getElementById('orcIncludeQr').checked = true;
       document.querySelectorAll('.term-check').forEach(cb => cb.checked = true);
       document.getElementById('checkNotIncluded').checked = true;
       document.getElementById('orcNotIncludedText').value = "";
@@ -480,8 +413,6 @@
         document.getElementById('orcClient').value = b.client || '';
         document.getElementById('orcEquipment').value = b.equipment || '';
         document.getElementById('orcDesc').value = b.desc || '';
-        document.getElementById('orcPaymentOption').value = b.paymentOption || 'banco1';
-        document.getElementById('orcIncludeQr').checked = b.includeQr !== false;
         document.getElementById('orcTotal').value = b.total || '';
         document.getElementById('orcTerms').value = b.terms || '';
 
@@ -528,11 +459,6 @@
         email: 'comercial@laserexpertbr.com.br',
         contact: '+55 51 98144-1865',
         location: 'Rua Corte Real 487 – Scharlau – São Leopoldo – RS',
-        orcPixKey: '',
-        nomeConta1: 'Conta Principal',
-        pix1: 'comercial@laserexpertbr.com.br', bank1: '', agency1: '', account1: '',
-        nomeConta2: 'Conta Secundária',
-        pix2: '', bank2: '', agency2: '', account2: '',
         techSignature: ''
       };
 
@@ -545,64 +471,6 @@
       let clients = [];
       try { clients = await DataSync.load('rg_clients') || []; } catch (e) {}
       const clientObj = clients.find(c => c.name === b.client) || {};
-
-      activeBudgetData = b;
-      activeConfigData = config;
-      activeClientData = clientObj;
-
-      let bancoInfoHtml = '';
-      const opt = b.paymentOption || 'banco1';
-      let pixKeyToUse = '';
-      let nomeConta1 = config.nomeConta1 || 'Conta Bancária 1';
-      let nomeConta2 = config.nomeConta2 || 'Conta Bancária 2';
-
-      // Define a chave PIX a usar priorizando a global de orçamentos, depois a da conta e por fim o email
-      const resolvedPixKey = (config.orcPixKey && config.orcPixKey.trim() !== '') 
-        ? config.orcPixKey.trim() 
-        : (opt === 'banco2' ? (config.pix2 || config.email) : (config.pix1 || config.email));
-
-      if (opt === 'banco1') {
-        bancoInfoHtml = `
-          <p><strong>Forma de Recebimento:</strong> Transferência / PIX (${escapeHTML(nomeConta1)})</p>
-          <p><strong>Banco:</strong> ${escapeHTML(config.bank1 || '-')}</p>
-          <p><strong>Agência:</strong> ${escapeHTML(config.agency1 || '-')} | <strong>Conta:</strong> ${escapeHTML(config.account1 || '-')}</p>
-          <p><strong>Chave PIX:</strong> ${escapeHTML(resolvedPixKey)}</p>
-        `;
-      } else if (opt === 'banco2') {
-        bancoInfoHtml = `
-          <p><strong>Forma de Recebimento:</strong> Transferência / PIX (${escapeHTML(nomeConta2)})</p>
-          <p><strong>Banco:</strong> ${escapeHTML(config.bank2 || '-')}</p>
-          <p><strong>Agência:</strong> ${escapeHTML(config.agency2 || '-')} | <strong>Conta:</strong> ${escapeHTML(config.account2 || '-')}</p>
-          <p><strong>Chave PIX:</strong> ${escapeHTML(resolvedPixKey)}</p>
-        `;
-      } else {
-        bancoInfoHtml = `
-          <p><strong>Forma de Recebimento:</strong> Boleto Bancário</p>
-          <p><em>Instruções: O boleto será emitido e enviado conforme prazo comercial acordado.</em></p>
-        `;
-      }
-
-      let pixCopiaEColaHtml = '';
-      const valorFormatado = Number(b.total || 0).toFixed(2);
-
-      if (opt !== 'boleto' && b.includeQr !== false) {
-        activePixPayload = `00020126580014br.gov.bcb.pix0136${resolvedPixKey}5204000053039865802BR5925${config.name}6009SaoLeopoldo62070303${b.number}6304`;
-        activeQrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(activePixPayload)}`;
-
-        pixCopiaEColaHtml = `
-          <div style="margin-top: 10px; padding: 10px; background: #F1F5F9; border: 1px solid #CBD5E1; border-radius: 4px; box-sizing: border-box; width: 100%; text-align: center;">
-            <p style="font-size: 10px; font-weight: bold; color: #0B132B; margin: 0 0 6px 0;">QR CODE PIX & COPIA E COLA (PAGAMENTO INSTANTÂNEO):</p>
-            <img src="${activeQrCodeUrl}" alt="QR Code Pix" style="width: 110px; height: 110px; display: block; margin: 0 auto 6px auto; border: 1px solid #CBD5E1; background: #fff; padding: 4px; border-radius: 4px;">
-            <div style="background: #FFFFFF; border: 1px dashed #0D9488; padding: 6px; font-family: monospace; font-size: 8px; word-break: break-all; overflow-wrap: break-word; color: #0D9488; box-sizing: border-box; width: 100%; line-height: 1.2; margin-bottom: 4px;">
-              ${escapeHTML(activePixPayload)}
-            </div>
-            <p style="font-size: 9px; color: #64748B; margin: 2px 0 0 0;">Chave: <strong>${escapeHTML(resolvedPixKey)}</strong> | Valor: <strong>R$ ${valorFormatado}</strong></p>
-          </div>
-        `;
-      } else {
-        activePixPayload = "";
-        activeQrCodeUrl = "";
-      }
 
       const techSignature = config.techSignature || '';
       const signatureAreaHtml = `
@@ -633,7 +501,7 @@
 
       const renderArea = document.getElementById('budgetRenderArea');
       renderArea.innerHTML = `
-        <div class="watermark">ORÇAMENTO</div>
+        <div class="watermark">LASER EXPERT</div>
         <div class="print-body" style="width: 100%; box-sizing: border-box;">
           <div class="print-header">
             <img src="logo.png" alt="Logo">
@@ -673,11 +541,8 @@
           </div>
 
           <div class="section-box">
-            <div class="section-title">CONDIÇÕES COMERCIAIS & PAGAMENTO</div>
-            <p style="white-space: pre-wrap; font-size: 11px; margin-bottom: 8px;">${safeTerms}</p>
-            <hr style="border: 0; border-top: 1px solid #CBD5E1; margin: 6px 0;">
-            ${bancoInfoHtml}
-            ${pixCopiaEColaHtml}
+            <div class="section-title">CONDIÇÕES COMERCIAIS</div>
+            <p style="white-space: pre-wrap; font-size: 11px; margin-bottom: 4px;">${safeTerms}</p>
           </div>
 
           <div class="section-box" style="text-align: right; background: #F1F5F9; border-color: #00F5D4;">
@@ -689,6 +554,7 @@
         </div>
       `;
 
+      activeBudgetData = b;
       document.getElementById('modalTitleOrc').textContent = `Orçamento - ${b.number} (${b.client})`;
       document.getElementById('loadingStatusOrc').textContent = 'Pronto';
       document.getElementById('budgetPreviewModal').style.display = 'flex';
@@ -698,206 +564,45 @@
       document.getElementById('budgetPreviewModal').style.display = 'none';
     };
 
-    // Gera PDF nativo com jsPDF e aciona o compartilhamento/download sem sobreposições
-    window.compartilharPDFOrcamento = async function () {
-      const b = activeBudgetData;
-      const config = activeConfigData;
-      const clientObj = activeClientData;
+    // Compartilhamento nativo via html2pdf idêntico ao histórico de RS
+    window.compartilharPDF = async function() {
+      const element = document.getElementById('budgetRenderArea');
+      const filename = `Orcamento_${activeBudgetData.number || 'ORC-0001'}.pdf`;
+      const opt = {
+        margin: 10,
+        filename: filename,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, allowTaint: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
 
-      if (!b || !b.number) {
-        alert("Erro ao selecionar orçamento para o PDF.");
-        return;
-      }
+      document.getElementById('loadingStatusOrc').textContent = 'A gerar PDF...';
 
-      const { jsPDF } = window.jspdf;
-      const docPDF = new jsPDF();
+      try {
+        const worker = html2pdf().from(element).set(opt);
+        const pdfBlob = await worker.outputPdf('blob');
+        const file = new File([pdfBlob], filename, { type: 'application/pdf' });
 
-      // 1. LOGÓTIPO & CABEÇALHO PRINCIPAL
-      const logoResult = await getBase64ImageFromUrl('logo.png');
-      if (logoResult) {
-        docPDF.addImage(logoResult.dataUrl, 'PNG', 20, 8, 28, 12);
-      }
-
-      docPDF.setFont("helvetica", "bold");
-      docPDF.setFontSize(11);
-      docPDF.text("ORÇAMENTO DE SERVIÇO", 52, 13);
-
-      docPDF.setFontSize(10);
-      docPDF.setTextColor(0, 180, 160);
-      docPDF.text(`N°: ${b.number || 'ORC-0001'}`, 150, 12);
-
-      docPDF.setTextColor(0, 0, 0);
-      docPDF.setFontSize(8);
-      docPDF.setFont("helvetica", "normal");
-      docPDF.text(`Data: ${b.date || '-'}`, 150, 16.5);
-
-      docPDF.setLineWidth(0.3);
-      docPDF.line(20, 22, 190, 22);
-
-      let y = 22;
-
-      function desenharCabecalho(titulo) {
-        y += 5;
-        docPDF.setFillColor(240, 244, 248);
-        docPDF.rect(20, y, 170, 5, 'F');
-        docPDF.setFont("helvetica", "bold");
-        docPDF.setFontSize(8.5);
-        docPDF.setTextColor(11, 19, 43);
-        docPDF.text(titulo, 22, y + 3.5);
-        y += 9;
-      }
-
-      // 2. DADOS DA EMPRESA
-      desenharCabecalho("DADOS DA EMPRESA");
-      docPDF.setFont("helvetica", "normal");
-      docPDF.setFontSize(8);
-      
-      const splitRazao = docPDF.splitTextToSize(`Razão Social: ${config.name || '-'}`, 110);
-      docPDF.text(splitRazao, 22, y);
-      docPDF.text(`CNPJ: ${config.doc || '-'}`, 135, y);
-      y += (splitRazao.length * 4) + 1;
-
-      docPDF.text(`Contato: ${config.contact || '-'} | E-mail: ${config.email || '-'}`, 22, y);
-      y += 4.5;
-      docPDF.text(`Endereço: ${config.location || '-'}`, 22, y);
-      y += 2;
-
-      // 3. CLIENTE & EQUIPAMENTO
-      desenharCabecalho("CLIENTE & EQUIPAMENTO");
-      docPDF.setFont("helvetica", "normal");
-      docPDF.setFontSize(8);
-      
-      const splitCliente = docPDF.splitTextToSize(`Cliente: ${b.client || '-'}`, 95);
-      docPDF.text(splitCliente, 22, y);
-      
-      const splitEq = docPDF.splitTextToSize(`Equipamento: ${b.equipment || '-'}`, 70);
-      docPDF.text(splitEq, 120, y);
-      
-      const alturaMax1 = Math.max(splitCliente.length, splitEq.length) * 4;
-      y += alturaMax1 + 1;
-
-      docPDF.text(`CNPJ/CPF: ${clientObj.doc || '-'}`, 22, y);
-      const splitEndClient = docPDF.splitTextToSize(`Endereço: ${clientObj.address || '-'}`, 70);
-      docPDF.text(splitEndClient, 120, y);
-      y += Math.max(1, splitEndClient.length) * 4 + 2;
-
-      // 4. ESCOPO DOS SERVIÇOS
-      desenharCabecalho("ESCOPO DOS SERVIÇOS");
-      docPDF.setFont("helvetica", "normal");
-      docPDF.setFontSize(8);
-      const splitDesc = docPDF.splitTextToSize(b.desc || 'Nenhum detalhe informado.', 165);
-      docPDF.text(splitDesc, 22, y);
-      y += (splitDesc.length * 4) + 2;
-
-      // 5. CONDIÇÕES COMERCIAIS & PAGAMENTO
-      desenharCabecalho("CONDIÇÕES COMERCIAIS & PAGAMENTO");
-      docPDF.setFont("helvetica", "normal");
-      docPDF.setFontSize(8);
-      const splitTerms = docPDF.splitTextToSize(b.terms || '-', 165);
-      docPDF.text(splitTerms, 22, y);
-      y += (splitTerms.length * 4) + 3;
-
-      const opt = b.paymentOption || 'banco1';
-      let nomeConta = opt === 'banco2' ? (config.nomeConta2 || 'Conta 2') : (config.nomeConta1 || 'Conta 1');
-      let banco = opt === 'banco2' ? config.bank2 : config.bank1;
-      let ag = opt === 'banco2' ? config.agency2 : config.agency1;
-      let cc = opt === 'banco2' ? config.account2 : config.account1;
-      
-      const pdfResolvedPixKey = (config.orcPixKey && config.orcPixKey.trim() !== '') 
-        ? config.orcPixKey.trim() 
-        : (opt === 'banco2' ? (config.pix2 || config.email) : (config.pix1 || config.email));
-
-      if (opt !== 'boleto') {
-        docPDF.text(`• Recebimento: PIX / Transferência (${nomeConta})`, 22, y);
-        y += 4;
-        docPDF.text(`• Banco: ${banco || '-'} | Agência: ${ag || '-'} | Conta: ${cc || '-'}`, 22, y);
-        y += 4;
-        docPDF.text(`• Chave PIX: ${pdfResolvedPixKey}`, 22, y);
-        y += 6;
-      } else {
-        docPDF.text(`• Recebimento: Boleto Bancário`, 22, y);
-        y += 6;
-      }
-
-      // 6. PIX COPIA E COLA & QR CODE
-      if (activeQrCodeUrl && activePixPayload) {
-        const qrY = y;
-        const qrResult = await getBase64ImageFromUrl(activeQrCodeUrl);
-        
-        if (qrResult) {
-          docPDF.addImage(qrResult.dataUrl, 'PNG', 152, qrY, 28, 28);
-          docPDF.setFontSize(6.5);
-          docPDF.setFont("helvetica", "bold");
-          docPDF.text("Escanear Pix", 166, qrY + 31, { align: "center" });
-        }
-
-        docPDF.setFontSize(7.5);
-        docPDF.setFont("helvetica", "bold");
-        docPDF.setTextColor(11, 19, 43);
-        docPDF.text("PIX COPIA E COLA (CÓDIGO DE PAGAMENTO):", 22, qrY + 3);
-
-        docPDF.setFillColor(248, 250, 252);
-        docPDF.rect(22, qrY + 5, 125, 18, 'F');
-        docPDF.setDrawColor(203, 213, 225);
-        docPDF.rect(22, qrY + 5, 125, 18, 'D');
-
-        docPDF.setFont("courier", "bold");
-        docPDF.setFontSize(6.5);
-        docPDF.setTextColor(13, 148, 136);
-        const splitPixCode = docPDF.splitTextToSize(activePixPayload, 121);
-        docPDF.text(splitPixCode, 24, qrY + 9);
-
-        y = qrY + 36;
-      }
-
-      // 7. VALOR TOTAL DO ORÇAMENTO
-      desenharCabecalho("VALOR TOTAL DO ORÇAMENTO");
-      docPDF.setFont("helvetica", "bold");
-      docPDF.setFontSize(12);
-      docPDF.setTextColor(13, 148, 136);
-      docPDF.text(`TOTAL: R$ ${Number(b.total || 0).toFixed(2)}`, 22, y + 1);
-
-      y += 22;
-
-      // 8. ASSINATURA DO EMISSOR
-      docPDF.setLineWidth(0.2);
-      docPDF.setDrawColor(0, 0, 0);
-      docPDF.line(65, y, 145, y);
-      docPDF.setFont("helvetica", "normal");
-      docPDF.setFontSize(8);
-      docPDF.setTextColor(0, 0, 0);
-      docPDF.text(`Responsável Técnico: ${config.tech || 'Otávio Barbosa'}`, 105, y + 4, { align: "center" });
-
-      if (config.techSignature) {
-        docPDF.addImage(config.techSignature, 'PNG', 85, y - 12, 40, 10);
-      }
-
-      // 9. AÇÃO DE COMPARTILHAMENTO / DOWNLOAD
-      const pdfBlob = docPDF.output('blob');
-      const safeClientName = (b.client || 'Cliente').replace(/[^a-zA-Z0-9]/g, "_");
-      const fileName = `Orcamento_${b.number}_${safeClientName}.pdf`;
-      const pdfFile = new File([pdfBlob], fileName, { type: 'application/pdf' });
-
-      if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
-        try {
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
           await navigator.share({
-            title: `Orçamento ${b.number} - Laser Expert`,
-            text: `Segue o orçamento ${b.number} para ${b.client}.`,
-            files: [pdfFile],
+            files: [file],
+            title: `Orçamento ${activeBudgetData.number || ''}`,
+            text: `Segue em anexo o orçamento ${activeBudgetData.number || ''} para o cliente ${activeBudgetData.client || ''}.`
           });
-          return;
-        } catch (error) {
-          if (error.name === 'AbortError') return;
+          document.getElementById('loadingStatusOrc').textContent = 'Partilhado!';
+        } else {
+          worker.save();
+          document.getElementById('loadingStatusOrc').textContent = 'Guardado (Download)!';
+        }
+      } catch (err) {
+        console.error("Erro ou cancelamento na partilha:", err);
+        if (err.name !== 'AbortError') {
+          html2pdf().from(element).set(opt).save();
+          document.getElementById('loadingStatusOrc').textContent = 'Guardado (Download)!';
+        } else {
+          document.getElementById('loadingStatusOrc').textContent = 'Partilha cancelada.';
         }
       }
-
-      const pdfUrl = URL.createObjectURL(pdfBlob);
-      const downloadLink = document.createElement('a');
-      downloadLink.href = pdfUrl;
-      downloadLink.download = fileName;
-      document.body.appendChild(downloadLink);
-      downloadLink.click();
-      document.body.removeChild(downloadLink);
     };
   </script>
 </body>

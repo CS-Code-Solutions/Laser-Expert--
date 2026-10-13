@@ -89,17 +89,17 @@
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
           <div>
             <label for="repBrand"><strong>Marca:</strong></label>
-            <input type="text" id="repBrand" placeholder="Ex: Raycus / IPG" style="width:100%; padding:8px; border:1px solid #CBD5E1; border-radius:4px;">
+            <input type="text" id="repBrand" placeholder="Ex: Trumpf / Bystronic" style="width:100%; padding:8px; border:1px solid #CBD5E1; border-radius:4px;">
           </div>
           <div>
             <label for="repModel"><strong>Modelo:</strong></label>
-            <input type="text" id="repModel" placeholder="Ex: LF-3015" style="width:100%; padding:8px; border:1px solid #CBD5E1; border-radius:4px;">
+            <input type="text" id="repModel" placeholder="Ex: TruLaser 3030" style="width:100%; padding:8px; border:1px solid #CBD5E1; border-radius:4px;">
           </div>
         </div>
 
         <div style="margin-bottom: 12px;">
-          <label for="repSerialNumber"><strong>Matrícula / N° de Série:</strong></label>
-          <input type="text" id="repSerialNumber" placeholder="Número de série do equipamento" style="width:100%; padding:8px; border:1px solid #CBD5E1; border-radius:4px;">
+          <label for="repSerialNumber"><strong>Número de Série / Tag:</strong></label>
+          <input type="text" id="repSerialNumber" placeholder="Ex: SN-99823" style="width:100%; padding:8px; border:1px solid #CBD5E1; border-radius:4px;">
         </div>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
@@ -179,7 +179,6 @@
             </div>
           </div>
 
-          <!-- BLOCO DE HORA DE DESLOCAMENTO ATUALIZADO -->
           <div style="margin-bottom: 12px;">
             <label for="selectDeslocamento"><strong>Cobrar Hora de Deslocamento?</strong></label>
             <select id="selectDeslocamento" class="form-control" style="width:100%; padding:8px; border:1px solid #CBD5E1; border-radius:4px; background:#FFF; margin-top: 4px;" onchange="toggleDeslocamentoSelect()">
@@ -379,7 +378,7 @@
         clientMachines = machines.filter(m => m.client === clientName || m.cliente === clientName);
         
         clientMachines.forEach((m, idx) => {
-          const eqName = m.equipment || m.nome || m.name || `Máquina ${idx+1}`;
+          const eqName = m.name || m.equipment || m.nome || `Máquina ${idx+1}`;
           const isSelected = (eqName === selectedEquipment) ? 'selected' : '';
           eqSelect.innerHTML += `<option value="${escapeHTML(eqName)}" data-index="${idx}" ${isSelected}>${escapeHTML(eqName)}</option>`;
         });

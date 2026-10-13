@@ -46,7 +46,7 @@
       overflow: hidden;
     }
     .action-toolbar {
-      background: var(--deep-navy);
+      background: var(--deep-navy, #0B132B);
       color: white;
       padding: 12px 15px;
       display: flex;
@@ -54,7 +54,7 @@
       align-items: center;
       flex-wrap: wrap;
       gap: 10px;
-      border-bottom: 2px solid var(--electric-cyan);
+      border-bottom: 2px solid var(--electric-cyan, #00F5D4);
       flex-shrink: 0;
     }
     .toolbar-buttons {
@@ -124,7 +124,7 @@
     </div>
   </header>
 
-  <main>
+  <main style="max-width: 900px; margin: 20px auto; padding: 0 15px;">
     <section class="card no-print" style="margin-bottom: 20px;">
       <h2 id="formTitle">Novo Orçamento</h2>
       <form id="budgetForm">
@@ -143,7 +143,7 @@
         <div class="grid-2" style="margin-bottom: 12px;">
           <div>
             <label for="orcClient"><strong>Cliente:</strong></label>
-            <select id="orcClient" class="form-control" required style="width:100%; padding:8px; border:1px solid #CBD5E1; border-radius:4px;"></select>
+            <select id="orcClient" class="form-control" required style="width:100%; padding:8px; border:1px solid #CBD5E1; border-radius:4px; background: #fff;"></select>
           </div>
           <div>
             <label for="orcEquipment"><strong>Equipamento / Máquina:</strong></label>
@@ -156,43 +156,52 @@
           <textarea id="orcDesc" rows="5" placeholder="Descreva os serviços..." style="width:100%; padding:8px; border:1px solid #CBD5E1; border-radius:4px; font-family:inherit;"></textarea>
         </div>
 
-        <div class="grid-2" style="margin-bottom: 15px;">
+        <div class="grid-2" style="margin-bottom: 12px;">
           <div>
-            <label for="orcTotal"><strong>Valor Total (R$):</strong></label>
-            <input type="number" step="0.01" id="orcTotal" placeholder="0.00" class="form-control" required style="width:100%; padding:8px; border:1px solid #CBD5E1; border-radius:4px; margin-top: 5px;">
+            <label for="orcPaymentOption"><strong>Forma de Recebimento / Conta Bancária:</strong></label>
+            <select id="orcPaymentOption" class="form-control" required style="width:100%; padding:8px; border:1px solid #CBD5E1; border-radius:4px; background: #FFF;">
+              <option value="banco1" id="optionBank1Label">Conta Bancária 1</option>
+              <option value="banco2" id="optionBank2Label">Conta Bancária 2</option>
+              <option value="boleto">Boleto Bancário</option>
+            </select>
           </div>
           <div>
-            <label style="margin-bottom: 5px; display: block;"><strong>Condições Comerciais (Opções Rápidas):</strong></label>
-            <div style="background: #F8FAFC; border: 1px solid #CBD5E1; padding: 12px; border-radius: 6px; margin-bottom: 8px; display: flex; flex-direction: column; gap: 10px;">
-              <label style="display: flex; align-items: flex-start; gap: 10px; font-size: 12px; cursor: pointer; margin: 0; line-height: 1.4;">
-                <input type="checkbox" class="term-check" value="Pagamento a combinar." checked style="margin-top: 2px; flex-shrink: 0; width: 16px; height: 16px;" onchange="atualizarTermosCompletos()">
-                <span>Pagamento a combinar.</span>
-              </label>
-              <label style="display: flex; align-items: flex-start; gap: 10px; font-size: 12px; cursor: pointer; margin: 0; line-height: 1.4;">
-                <input type="checkbox" class="term-check" value="Impostos inclusos." checked style="margin-top: 2px; flex-shrink: 0; width: 16px; height: 16px;" onchange="atualizarTermosCompletos()">
-                <span>Impostos inclusos.</span>
-              </label>
-              <label style="display: flex; align-items: flex-start; gap: 10px; font-size: 12px; cursor: pointer; margin: 0; line-height: 1.4;">
-                <input type="checkbox" class="term-check" value="Despesas com deslocamento, alimentação e hotel já incluso no orçamento." checked style="margin-top: 2px; flex-shrink: 0; width: 16px; height: 16px;" onchange="atualizarTermosCompletos()">
-                <span>Despesas com deslocamento, alimentação e hotel já incluso no orçamento.</span>
-              </label>
-            </div>
-
-            <div style="background: #F8FAFC; border: 1px solid #CBD5E1; padding: 12px; border-radius: 6px; margin-bottom: 8px; display: flex; flex-direction: column; gap: 8px;">
-              <label style="display: flex; align-items: flex-start; gap: 10px; font-size: 12px; cursor: pointer; margin: 0; line-height: 1.4;">
-                <input type="checkbox" id="checkNotIncluded" checked style="margin-top: 2px; flex-shrink: 0; width: 16px; height: 16px;" onchange="atualizarTermosCompletos()">
-                <span style="font-weight: bold;">Não estão inclusos:</span>
-              </label>
-              <textarea id="orcNotIncludedText" rows="2" class="form-control" placeholder="óleos, peças, espelhos" style="width:100%; padding:6px; border:1px solid #CBD5E1; border-radius:4px; font-family:inherit; font-size: 11px;" oninput="atualizarTermosCompletos()"></textarea>
-            </div>
-
-            <label for="orcTerms" style="margin-top: 8px; display: block;"><strong>Resumo das Condições Comerciais:</strong></label>
-            <textarea id="orcTerms" rows="4" class="form-control" placeholder="Pode editar livremente aqui..." style="width:100%; padding:8px; border:1px solid #CBD5E1; border-radius:4px; font-family:inherit; margin-top: 4px; background: #FFF;"></textarea>
+            <label for="orcTotal"><strong>Valor Total (R$):</strong></label>
+            <input type="number" step="0.01" id="orcTotal" placeholder="0.00" class="form-control" required style="width:100%; padding:8px; border:1px solid #CBD5E1; border-radius:4px;">
           </div>
         </div>
 
+        <div style="margin-bottom: 15px;">
+          <label style="margin-bottom: 5px; display: block;"><strong>Condições Comerciais (Opções Rápidas):</strong></label>
+          <div style="background: #F8FAFC; border: 1px solid #CBD5E1; padding: 12px; border-radius: 6px; margin-bottom: 8px; display: flex; flex-direction: column; gap: 10px;">
+            <label style="display: flex; align-items: flex-start; gap: 10px; font-size: 12px; cursor: pointer; margin: 0; line-height: 1.4;">
+              <input type="checkbox" class="term-check" value="Pagamento a combinar." checked style="margin-top: 2px; flex-shrink: 0; width: 16px; height: 16px;" onchange="atualizarTermosCompletos()">
+              <span>Pagamento a combinar.</span>
+            </label>
+            <label style="display: flex; align-items: flex-start; gap: 10px; font-size: 12px; cursor: pointer; margin: 0; line-height: 1.4;">
+              <input type="checkbox" class="term-check" value="Impostos inclusos." checked style="margin-top: 2px; flex-shrink: 0; width: 16px; height: 16px;" onchange="atualizarTermosCompletos()">
+              <span>Impostos inclusos.</span>
+            </label>
+            <label style="display: flex; align-items: flex-start; gap: 10px; font-size: 12px; cursor: pointer; margin: 0; line-height: 1.4;">
+              <input type="checkbox" class="term-check" value="Despesas com deslocamento, alimentação e hotel já incluso no orçamento." checked style="margin-top: 2px; flex-shrink: 0; width: 16px; height: 16px;" onchange="atualizarTermosCompletos()">
+              <span>Despesas com deslocamento, alimentação e hotel já incluso no orçamento.</span>
+            </label>
+          </div>
+
+          <div style="background: #F8FAFC; border: 1px solid #CBD5E1; padding: 12px; border-radius: 6px; margin-bottom: 8px; display: flex; flex-direction: column; gap: 8px;">
+            <label style="display: flex; align-items: flex-start; gap: 10px; font-size: 12px; cursor: pointer; margin: 0; line-height: 1.4;">
+              <input type="checkbox" id="checkNotIncluded" checked style="margin-top: 2px; flex-shrink: 0; width: 16px; height: 16px;" onchange="atualizarTermosCompletos()">
+              <span style="font-weight: bold;">Não estão inclusos:</span>
+            </label>
+            <textarea id="orcNotIncludedText" rows="2" class="form-control" placeholder="óleos, peças, espelhos" style="width:100%; padding:6px; border:1px solid #CBD5E1; border-radius:4px; font-family:inherit; font-size: 11px;" oninput="atualizarTermosCompletos()"></textarea>
+          </div>
+
+          <label for="orcTerms" style="margin-top: 8px; display: block;"><strong>Resumo das Condições Comerciais:</strong></label>
+          <textarea id="orcTerms" rows="4" class="form-control" placeholder="Pode editar livremente aqui..." style="width:100%; padding:8px; border:1px solid #CBD5E1; border-radius:4px; font-family:inherit; margin-top: 4px; background: #FFF;"></textarea>
+        </div>
+
         <div style="display: flex; gap: 10px;">
-          <button type="submit" class="btn" style="background-color: #00F5D4; color: #0B132B; font-weight: bold; padding: 10px 20px;">Salvar Orçamento</button>
+          <button type="submit" class="btn" style="background-color: #22C55E; color: #FFF; font-weight: bold; padding: 10px 20px;">Guardar Orçamento</button>
           <button type="button" class="btn" style="background-color: #64748B; color: #FFF; padding: 10px 20px;" onclick="resetForm()">Cancelar / Limpar</button>
         </div>
       </form>
@@ -200,22 +209,8 @@
 
     <section class="card">
       <h2>Histórico de Orçamentos</h2>
-      <div class="table-responsive">
-        <table>
-          <thead>
-            <tr>
-              <th>Nº Orçamento</th>
-              <th>Data</th>
-              <th>Cliente</th>
-              <th>Equipamento</th>
-              <th>Valor Total</th>
-              <th class="no-print">Ações</th>
-            </tr>
-          </thead>
-          <tbody id="budgetTableBody">
-            <tr><td colspan="6" style="text-align: center; color: #64748B;">A carregar orçamentos da nuvem...</td></tr>
-          </tbody>
-        </table>
+      <div id="budgetCardsContainer" style="display: flex; flex-direction: column; gap: 12px; margin-top: 15px;">
+        <p style="text-align: center; color: #64748B;">A carregar orçamentos da nuvem...</p>
       </div>
     </section>
   </main>
@@ -246,6 +241,18 @@
     let activeBudgetData = {};
     document.getElementById('orcDate').valueAsDate = new Date();
 
+    async function carregarApelidosContas() {
+      try {
+        const config = await DataSync.load('rg_config') || {};
+        const opt1 = document.getElementById('optionBank1Label');
+        const opt2 = document.getElementById('optionBank2Label');
+        if (opt1) opt1.textContent = config.nomeConta1 ? `Conta Bancária: ${config.nomeConta1}` : 'Conta Bancária 1';
+        if (opt2) opt2.textContent = config.nomeConta2 ? `Conta Bancária: ${config.nomeConta2}` : 'Conta Bancária 2';
+      } catch (e) {
+        console.error("Erro ao carregar apelidos dos bancos", e);
+      }
+    }
+
     function atualizarTermosCompletos() {
       const checkboxes = document.querySelectorAll('.term-check');
       let selecionados = [];
@@ -270,7 +277,7 @@
         const clients = await DataSync.load('rg_clients') || [];
         select.innerHTML = '<option value="">Selecione um cliente...</option>';
         clients.forEach(c => {
-          select.innerHTML += `<option value="${c.name}">${c.name}</option>`;
+          select.innerHTML += `<option value="${escapeHTML(c.name)}">${escapeHTML(c.name)}</option>`;
         });
       } catch (e) {
         console.error("Erro ao carregar clientes", e);
@@ -278,45 +285,60 @@
     }
 
     async function renderBudgets() {
-      const tbody = document.getElementById('budgetTableBody');
-      if (!tbody) return;
+      const container = document.getElementById('budgetCardsContainer');
+      if (!container) return;
 
       try {
         let budgets = await DataSync.load('rg_orcamentos') || [];
         if (!Array.isArray(budgets)) budgets = [];
 
-        tbody.innerHTML = '';
+        container.innerHTML = '';
         if (budgets.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #64748B;">Nenhum orçamento registado.</td></tr>';
+          container.innerHTML = '<p style="text-align: center; color: #64748B;">Nenhum orçamento registado.</p>';
           return;
         }
 
-        let htmlRows = '';
+        let htmlCards = '';
         for (let i = budgets.length - 1; i >= 0; i--) {
           const b = budgets[i];
           if (!b) continue;
-          htmlRows += `
-            <tr>
-              <td><strong>${b.number || 'ORC-0001'}</strong></td>
-              <td>${b.date || '-'}</td>
-              <td>${b.client || '-'}</td>
-              <td>${b.equipment || '-'}</td>
-              <td>R$ ${Number(b.total || 0).toFixed(2)}</td>
-              <td class="no-print" style="display: flex; gap: 5px; flex-wrap: wrap;">
-                <button class="btn" style="padding: 4px 8px; font-size: 0.8rem; background-color: #1D4ED8;" onclick="openBudgetPreview(${i})">Gerar Orçamento</button>
-                <button class="btn" style="padding: 4px 8px; font-size: 0.8rem; background-color: #F59E0B;" onclick="editBudget(${i})">Editar</button>
-                <button class="btn" style="padding: 4px 8px; font-size: 0.8rem; background-color: #EF4444;" onclick="deleteBudget(${i})">Excluir</button>
-              </td>
-            </tr>
+
+          const safeNum = escapeHTML(b.number || 'ORC-0001');
+          const safeDate = escapeHTML(b.date || '-');
+          const safeClient = escapeHTML(b.client || '-');
+          const safeEquipment = escapeHTML(b.equipment || '-');
+          const safeTotal = Number(b.total || 0).toFixed(2);
+
+          htmlCards += `
+            <div style="border: 1px solid #CBD5E1; border-left: 5px solid #00F5D4; padding: 15px; border-radius: 6px; background: #F8FAFC; display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 10px;">
+              <div style="flex: 1; min-width: 220px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                  <strong style="font-size: 1.05rem; color: #0B132B;">${safeNum}</strong>
+                  <span style="color: #64748B; font-size: 0.9rem;">${safeDate}</span>
+                </div>
+                <span style="font-size: 0.9rem; color: #334155;"><strong>Cliente:</strong> ${safeClient}</span><br>
+                <span style="font-size: 0.9rem; color: #334155;"><strong>Equipamento:</strong> ${safeEquipment}</span><br>
+                <div style="margin-top: 6px;">
+                  <span style="background: #22C55E; color: white; padding: 3px 8px; border-radius: 4px; font-size: 0.85rem; font-weight: bold;">R$ ${safeTotal}</span>
+                </div>
+              </div>
+              <div class="no-print" style="display: flex; gap: 6px; flex-wrap: wrap; align-items: center;">
+                <button class="btn" style="padding: 6px 12px; font-size: 0.85rem; background-color: #1D4ED8; color: white;" onclick="openBudgetPreview(${i})">Gerar Orçamento</button>
+                <button class="btn" style="padding: 6px 12px; font-size: 0.85rem; background-color: #F59E0B; color: white;" onclick="editBudget(${i})">Editar</button>
+                <button class="btn" style="padding: 6px 12px; font-size: 0.85rem; background-color: #EF4444; color: white;" onclick="deleteBudget(${i})">Excluir</button>
+              </div>
+            </div>
           `;
         }
-        tbody.innerHTML = htmlRows;
+        container.innerHTML = htmlCards;
       } catch (err) {
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: red;">Erro ao carregar orçamentos.</td></tr>`;
+        console.error(err);
+        container.innerHTML = `<p style="text-align: center; color: red;">Erro ao carregar orçamentos.</p>`;
       }
     }
 
     document.addEventListener("DOMContentLoaded", async () => {
+      await carregarApelidosContas();
       await loadClientsSelect();
       await renderBudgets();
       
@@ -331,6 +353,7 @@
 
       DataSync.listen('rg_orcamentos', () => renderBudgets());
       DataSync.listen('rg_clients', () => loadClientsSelect());
+      DataSync.listen('rg_config', () => carregarApelidosContas());
     });
 
     document.getElementById('budgetForm').addEventListener('submit', async (e) => {
@@ -343,6 +366,7 @@
         client: document.getElementById('orcClient').value,
         equipment: document.getElementById('orcEquipment').value,
         desc: document.getElementById('orcDesc').value,
+        paymentOption: document.getElementById('orcPaymentOption').value,
         total: document.getElementById('orcTotal').value,
         terms: document.getElementById('orcTerms').value
       };
@@ -396,6 +420,7 @@
         document.getElementById('orcClient').value = b.client;
         document.getElementById('orcEquipment').value = b.equipment;
         document.getElementById('orcDesc').value = b.desc;
+        document.getElementById('orcPaymentOption').value = b.paymentOption || 'banco1';
         document.getElementById('orcTotal').value = b.total;
         document.getElementById('orcTerms').value = b.terms;
 
@@ -445,7 +470,11 @@
         doc: '48.959.536/0001-65',
         email: 'comercial@laserexpertbr.com.br',
         contact: '+55 51 98144-1865',
-        location: 'Rua Corte Real 487 – Scharlau – São Leopoldo – RS'
+        location: 'Rua Corte Real 487 – Scharlau – São Leopoldo – RS',
+        nomeConta1: 'Conta Principal',
+        bank1: '', agency1: '', account1: '',
+        nomeConta2: 'Conta Secundária',
+        bank2: '', agency2: '', account2: ''
       };
 
       let config = { ...defaultConfig };
@@ -461,7 +490,31 @@
       document.getElementById('modalTitleOrc').textContent = `Orçamento - ${b.number || 'ORC-0001'}`;
       document.getElementById('loadingStatusOrc').textContent = '⏳ A preparar visualização...';
 
-      const termsList = (b.terms || '').split('\n').map(t => `<p>• ${t}</p>`).join('');
+      let bancoInfoHtml = '';
+      const opt = b.paymentOption || 'banco1';
+      let nomeConta1 = config.nomeConta1 || 'Conta Bancária 1';
+      let nomeConta2 = config.nomeConta2 || 'Conta Bancária 2';
+
+      if (opt === 'banco1') {
+        bancoInfoHtml = `
+          <p><strong>Forma de Recebimento:</strong> Transferência Bancária (${escapeHTML(nomeConta1)})</p>
+          <p><strong>Banco:</strong> ${escapeHTML(config.bank1 || '-')}</p>
+          <p><strong>Agência:</strong> ${escapeHTML(config.agency1 || '-')} | <strong>Conta:</strong> ${escapeHTML(config.account1 || '-')}</p>
+        `;
+      } else if (opt === 'banco2') {
+        bancoInfoHtml = `
+          <p><strong>Forma de Recebimento:</strong> Transferência Bancária (${escapeHTML(nomeConta2)})</p>
+          <p><strong>Banco:</strong> ${escapeHTML(config.bank2 || '-')}</p>
+          <p><strong>Agência:</strong> ${escapeHTML(config.agency2 || '-')} | <strong>Conta:</strong> ${escapeHTML(config.account2 || '-')}</p>
+        `;
+      } else {
+        bancoInfoHtml = `
+          <p><strong>Forma de Recebimento:</strong> Boleto Bancário</p>
+          <p><em>Instruções: O boleto será emitido e enviado conforme prazo comercial acordado.</em></p>
+        `;
+      }
+
+      const termsList = (b.terms || '').split('\n').map(t => `<p>• ${escapeHTML(t)}</p>`).join('');
 
       const renderArea = document.getElementById('budgetRenderArea');
       renderArea.innerHTML = `
@@ -470,10 +523,10 @@
           <div class="print-header">
             <img src="logo.png" alt="Logo">
             <div class="print-header-info">
-              <h1>${config.name}</h1>
-              <p>CNPJ: ${config.doc}</p>
-              <p>${config.location}</p>
-              <p>Email: ${config.email} | Tel: ${config.contact}</p>
+              <h1>${escapeHTML(config.name)}</h1>
+              <p>CNPJ: ${escapeHTML(config.doc)}</p>
+              <p>${escapeHTML(config.location)}</p>
+              <p>Email: ${escapeHTML(config.email)} | Tel: ${escapeHTML(config.contact)}</p>
             </div>
           </div>
 
@@ -481,31 +534,33 @@
             <div class="section-title">DADOS DO ORÇAMENTO E CLIENTE</div>
             <div class="grid-2">
               <div>
-                <p><strong>Nº Orçamento:</strong> ${b.number || '-'}</p>
-                <p><strong>Data:</strong> ${b.date || '-'}</p>
-                <p><strong>Cliente:</strong> ${b.client || '-'}</p>
-                <p><strong>CNPJ/CPF:</strong> ${clientObj.doc || clientObj.cnpj || '-'}</p>
+                <p><strong>Nº Orçamento:</strong> ${escapeHTML(b.number || '-')}</p>
+                <p><strong>Data:</strong> ${escapeHTML(b.date || '-')}</p>
+                <p><strong>Cliente:</strong> ${escapeHTML(b.client || '-')}</p>
+                <p><strong>CNPJ/CPF:</strong> ${escapeHTML(clientObj.doc || clientObj.cnpj || '-')}</p>
               </div>
               <div>
-                <p><strong>Equipamento:</strong> ${b.equipment || '-'}</p>
-                <p><strong>Morada:</strong> ${clientObj.address || clientObj.morada || '-'}</p>
-                <p><strong>Contacto:</strong> ${clientObj.phone || clientObj.telefone || '-'}</p>
+                <p><strong>Equipamento:</strong> ${escapeHTML(b.equipment || '-')}</p>
+                <p><strong>Morada:</strong> ${escapeHTML(clientObj.address || clientObj.morada || '-')}</p>
+                <p><strong>Contacto:</strong> ${escapeHTML(clientObj.phone || clientObj.telefone || '-')}</p>
               </div>
             </div>
           </div>
 
           <div class="section-box">
             <div class="section-title">ESCOPO DOS SERVIÇOS</div>
-            <p style="white-space: pre-wrap; margin-top: 5px;">${b.desc || '-'}</p>
+            <p style="white-space: pre-wrap; margin-top: 5px;">${escapeHTML(b.desc || '-')}</p>
           </div>
 
           <div class="section-box">
-            <div class="section-title">CONDIÇÕES COMERCIAIS</div>
+            <div class="section-title">CONDIÇÕES COMERCIAIS & PAGAMENTO</div>
             ${termsList}
+            <hr style="border: 0; border-top: 1px solid #CBD5E1; margin: 6px 0;">
+            ${bancoInfoHtml}
           </div>
 
           <div class="section-box" style="text-align: right; background: #F1F5F9;">
-            <p style="font-size: 14px; font-weight: bold; color: var(--deep-navy);">VALOR TOTAL: R$ ${Number(b.total || 0).toFixed(2)}</p>
+            <p style="font-size: 14px; font-weight: bold; color: var(--deep-navy, #0B132B);">VALOR TOTAL: R$ ${Number(b.total || 0).toFixed(2)}</p>
           </div>
         </div>
       `;
@@ -513,7 +568,6 @@
       document.getElementById('loadingStatusOrc').textContent = '✅ Pronto';
       document.getElementById('budgetPreviewModal').style.display = 'flex';
 
-      // Aciona automaticamente a partilha logo após abrir o modal
       setTimeout(() => {
         compartilharPDFOrcamento();
       }, 400);
@@ -565,6 +619,16 @@
     window.closeModal = function() {
       document.getElementById('budgetPreviewModal').style.display = 'none';
     };
+
+    function escapeHTML(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
   </script>
 
 </body>

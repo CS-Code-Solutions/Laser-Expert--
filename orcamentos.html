@@ -556,21 +556,24 @@
       let nomeConta1 = config.nomeConta1 || 'Conta Bancária 1';
       let nomeConta2 = config.nomeConta2 || 'Conta Bancária 2';
 
+      // Define a chave PIX a usar priorizando a global de orçamentos, depois a da conta e por fim o email
+      const resolvedPixKey = (config.orcPixKey && config.orcPixKey.trim() !== '') 
+        ? config.orcPixKey.trim() 
+        : (opt === 'banco2' ? (config.pix2 || config.email) : (config.pix1 || config.email));
+
       if (opt === 'banco1') {
-        pixKeyToUse = config.pix1 || '';
         bancoInfoHtml = `
           <p><strong>Forma de Recebimento:</strong> Transferência / PIX (${escapeHTML(nomeConta1)})</p>
           <p><strong>Banco:</strong> ${escapeHTML(config.bank1 || '-')}</p>
           <p><strong>Agência:</strong> ${escapeHTML(config.agency1 || '-')} | <strong>Conta:</strong> ${escapeHTML(config.account1 || '-')}</p>
-          <p><strong>Chave PIX:</strong> ${escapeHTML(pixKeyToUse || '-')}</p>
+          <p><strong>Chave PIX:</strong> ${escapeHTML(resolvedPixKey)}</p>
         `;
       } else if (opt === 'banco2') {
-        pixKeyToUse = config.pix2 || '';
         bancoInfoHtml = `
           <p><strong>Forma de Recebimento:</strong> Transferência / PIX (${escapeHTML(nomeConta2)})</p>
           <p><strong>Banco:</strong> ${escapeHTML(config.bank2 || '-')}</p>
           <p><strong>Agência:</strong> ${escapeHTML(config.agency2 || '-')} | <strong>Conta:</strong> ${escapeHTML(config.account2 || '-')}</p>
-          <p><strong>Chave PIX:</strong> ${escapeHTML(pixKeyToUse || '-')}</p>
+          <p><strong>Chave PIX:</strong> ${escapeHTML(resolvedPixKey)}</p>
         `;
       } else {
         bancoInfoHtml = `
@@ -581,12 +584,9 @@
 
       let pixCopiaEColaHtml = '';
       const valorFormatado = Number(b.total || 0).toFixed(2);
-      
-      // Reconhece a chave PIX global de orçamentos cadastrada nas configurações (com fallback para o email)
-      const effectivePixKey = (config.orcPixKey && config.orcPixKey.trim() !== '') ? config.orcPixKey.trim() : (config.email || 'comercial@laserexpertbr.com.br');
 
       if (opt !== 'boleto' && b.includeQr !== false) {
-        activePixPayload = `00020126580014br.gov.bcb.pix0136${effectivePixKey}5204000053039865802BR5925${config.name}6009SaoLeopoldo62070303${b.number}6304`;
+        activePixPayload = `00020126580014br.gov.bcb.pix0136${resolvedPixKey}5204000053039865802BR5925${config.name}6009SaoLeopoldo62070303${b.number}6304`;
         activeQrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(activePixPayload)}`;
 
         pixCopiaEColaHtml = `
@@ -596,7 +596,7 @@
             <div style="background: #FFFFFF; border: 1px dashed #0D9488; padding: 6px; font-family: monospace; font-size: 8px; word-break: break-all; overflow-wrap: break-word; color: #0D9488; box-sizing: border-box; width: 100%; line-height: 1.2; margin-bottom: 4px;">
               ${escapeHTML(activePixPayload)}
             </div>
-            <p style="font-size: 9px; color: #64748B; margin: 2px 0 0 0;">Chave: <strong>${escapeHTML(effectivePixKey)}</strong> | Valor: <strong>R$ ${valorFormatado}</strong></p>
+            <p style="font-size: 9px; color: #64748B; margin: 2px 0 0 0;">Chave: <strong>${escapeHTML(resolvedPixKey)}</strong> | Valor: <strong>R$ ${valorFormatado}</strong></p>
           </div>
         `;
       } else {
@@ -802,14 +802,17 @@
       let banco = opt === 'banco2' ? config.bank2 : config.bank1;
       let ag = opt === 'banco2' ? config.agency2 : config.agency1;
       let cc = opt === 'banco2' ? config.account2 : config.account1;
-      let pix = opt === 'banco2' ? config.pix2 : config.pix1;
+      
+      const pdfResolvedPixKey = (config.orcPixKey && config.orcPixKey.trim() !== '') 
+        ? config.orcPixKey.trim() 
+        : (opt === 'banco2' ? (config.pix2 || config.email) : (config.pix1 || config.email));
 
       if (opt !== 'boleto') {
         docPDF.text(`• Recebimento: PIX / Transferência (${nomeConta})`, 22, y);
         y += 4;
         docPDF.text(`• Banco: ${banco || '-'} | Agência: ${ag || '-'} | Conta: ${cc || '-'}`, 22, y);
         y += 4;
-        docPDF.text(`• Chave PIX: ${pix || '-'}`, 22, y);
+        docPDF.text(`• Chave PIX: ${pdfResolvedPixKey}`, 22, y);
         y += 6;
       } else {
         docPDF.text(`• Recebimento: Boleto Bancário`, 22, y);

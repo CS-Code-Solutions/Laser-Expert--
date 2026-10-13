@@ -8,9 +8,6 @@
   <link rel="manifest" href="manifest.json">
   <link rel="stylesheet" href="style.css">
 
-  <!-- html2pdf CDN -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-
   <!-- Firebase SDKs Compat -->
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
@@ -28,6 +25,7 @@
   </script>
 
   <style>
+    /* Estilos de Impressão Nativa (Gera PDF perfeito e vetorial no telemóvel) */
     @media print {
       header, footer, .no-print, .action-toolbar, main { display: none !important; }
       body { background: white; color: black; padding: 0; margin: 0; }
@@ -68,7 +66,7 @@
       justify-content: center;
       align-items: center;
       overflow-y: auto;
-      padding: 15px;
+      padding: 10px;
     }
     .modal-content-wrapper {
       background: white;
@@ -94,9 +92,8 @@
       flex-shrink: 0;
     }
     .toolbar-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
-    .report-scroll-container { padding: 20px; overflow-y: auto; background: #FFF; flex-grow: 1; position: relative; }
+    .report-scroll-container { padding: 15px; overflow-y: auto; background: #FFF; flex-grow: 1; position: relative; }
 
-    /* Marca d'água padronizada idêntica à do Histórico de RS */
     .watermark {
       position: absolute; top: 50%; left: 50%;
       transform: translate(-50%, -50%) rotate(-30deg);
@@ -114,7 +111,7 @@
     .section-box { border: 1px solid #CBD5E1; padding: 10px; margin-bottom: 10px; border-radius: 6px; background: #F8FAFC; page-break-inside: avoid; box-sizing: border-box; }
     .section-title { font-weight: bold; font-size: 12px; color: #0B132B; margin-bottom: 6px; border-bottom: 1px solid #E2E8F0; padding-bottom: 3px; }
     
-    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     @media (max-width: 768px) { .grid-2 { grid-template-columns: 1fr; } }
     .print-body p { margin: 2px 0; }
   </style>
@@ -176,38 +173,56 @@
           <textarea id="orcDesc" rows="4" placeholder="Descreva os serviços..." style="width:100%; padding:8px; border:1px solid #CBD5E1; border-radius:4px; font-family:inherit; box-sizing: border-box;"></textarea>
         </div>
 
-        <div style="margin-bottom: 15px;">
-          <label for="orcTotal" style="display: block; font-weight: bold; margin-bottom: 4px; font-size: 13px;">Valor Total (R$):</label>
-          <input type="number" step="0.01" id="orcTotal" placeholder="0.00" class="form-control" required style="width:100%; padding:8px; border:1px solid #CBD5E1; border-radius:4px; box-sizing: border-box;">
+        <div class="grid-2" style="margin-bottom: 12px;">
+          <div>
+            <label for="orcPaymentOption" style="display: block; font-weight: bold; margin-bottom: 4px; font-size: 13px;">Forma de Recebimento / Conta:</label>
+            <select id="orcPaymentOption" class="form-control" required style="width:100%; padding:8px; border:1px solid #CBD5E1; border-radius:4px; background: #FFF; box-sizing: border-box;">
+              <option value="banco1" id="optionBank1Label">Conta Bancária 1</option>
+              <option value="banco2" id="optionBank2Label">Conta Bancária 2</option>
+              <option value="boleto">Boleto Bancário</option>
+            </select>
+          </div>
+          <div style="display: flex; align-items: flex-end;">
+            <div style="background: #FFF; border: 1px solid #CBD5E1; padding: 8px 12px; border-radius: 4px; width: 100%; display: flex; align-items: center; gap: 10px; height: 38px; box-sizing: border-box;">
+              <input type="checkbox" id="orcIncludeQr" checked style="width: 16px; height: 16px; cursor: pointer; flex-shrink: 0;">
+              <label for="orcIncludeQr" style="font-size: 12px; font-weight: bold; cursor: pointer; margin: 0; color: #0B132B;">Incluir PIX Copia e Cola no Orçamento</label>
+            </div>
+          </div>
         </div>
 
-        <div style="margin-bottom: 15px;">
-          <label style="margin-bottom: 4px; display: block; font-weight: bold; font-size: 13px;">Condições Comerciais (Opções Rápidas):</label>
-          <div style="background: #FFF; border: 1px solid #CBD5E1; padding: 12px; border-radius: 6px; margin-bottom: 8px; display: flex; flex-direction: column; gap: 10px;">
-            <label style="display: flex; align-items: center; gap: 10px; font-size: 12px; cursor: pointer; margin: 0;">
-              <input type="checkbox" class="term-check" value="Pagamento a combinar." checked style="width: 16px; height: 16px; flex-shrink: 0;" onchange="atualizarTermosCompletos()">
-              <span>Pagamento a combinar.</span>
-            </label>
-            <label style="display: flex; align-items: center; gap: 10px; font-size: 12px; cursor: pointer; margin: 0;">
-              <input type="checkbox" class="term-check" value="Impostos inclusos." checked style="width: 16px; height: 16px; flex-shrink: 0;" onchange="atualizarTermosCompletos()">
-              <span>Impostos inclusos.</span>
-            </label>
-            <label style="display: flex; align-items: center; gap: 10px; font-size: 12px; cursor: pointer; margin: 0;">
-              <input type="checkbox" class="term-check" value="Despesas com deslocamento, alimentação e hotel já incluso no orçamento." checked style="width: 16px; height: 16px; flex-shrink: 0;" onchange="atualizarTermosCompletos()">
-              <span>Despesas com deslocamento, alimentação e hotel já incluso no orçamento.</span>
-            </label>
+        <div class="grid-2" style="margin-bottom: 15px;">
+          <div>
+            <label for="orcTotal" style="display: block; font-weight: bold; margin-bottom: 4px; font-size: 13px;">Valor Total (R$):</label>
+            <input type="number" step="0.01" id="orcTotal" placeholder="0.00" class="form-control" required style="width:100%; padding:8px; border:1px solid #CBD5E1; border-radius:4px; box-sizing: border-box;">
           </div>
+          <div>
+            <label style="margin-bottom: 4px; display: block; font-weight: bold; font-size: 13px;">Condições Comerciais (Opções Rápidas):</label>
+            <div style="background: #FFF; border: 1px solid #CBD5E1; padding: 12px; border-radius: 6px; margin-bottom: 8px; display: flex; flex-direction: column; gap: 10px;">
+              <label style="display: flex; align-items: center; gap: 10px; font-size: 12px; cursor: pointer; margin: 0;">
+                <input type="checkbox" class="term-check" value="Pagamento a combinar." checked style="width: 16px; height: 16px; flex-shrink: 0;" onchange="atualizarTermosCompletos()">
+                <span>Pagamento a combinar.</span>
+              </label>
+              <label style="display: flex; align-items: center; gap: 10px; font-size: 12px; cursor: pointer; margin: 0;">
+                <input type="checkbox" class="term-check" value="Impostos inclusos." checked style="width: 16px; height: 16px; flex-shrink: 0;" onchange="atualizarTermosCompletos()">
+                <span>Impostos inclusos.</span>
+              </label>
+              <label style="display: flex; align-items: center; gap: 10px; font-size: 12px; cursor: pointer; margin: 0;">
+                <input type="checkbox" class="term-check" value="Despesas com deslocamento, alimentação e hotel já incluso no orçamento." checked style="width: 16px; height: 16px; flex-shrink: 0;" onchange="atualizarTermosCompletos()">
+                <span>Despesas com deslocamento, alimentação e hotel já incluso no orçamento.</span>
+              </label>
+            </div>
 
-          <div style="background: #FFF; border: 1px solid #CBD5E1; padding: 10px; border-radius: 6px; margin-bottom: 8px; display: flex; flex-direction: column; gap: 8px;">
-            <label style="display: flex; align-items: center; gap: 10px; font-size: 12px; cursor: pointer; margin: 0;">
-              <input type="checkbox" id="checkNotIncluded" checked style="width: 16px; height: 16px; flex-shrink: 0;" onchange="atualizarTermosCompletos()">
-              <span style="font-weight: bold;">Não estão inclusos:</span>
-            </label>
-            <textarea id="orcNotIncludedText" rows="2" class="form-control" placeholder="óleos, peças, espelhos" style="width:100%; padding:6px; border:1px solid #CBD5E1; border-radius:4px; font-family:inherit; font-size: 11px; box-sizing: border-box;" oninput="atualizarTermosCompletos()"></textarea>
+            <div style="background: #FFF; border: 1px solid #CBD5E1; padding: 10px; border-radius: 6px; margin-bottom: 8px; display: flex; flex-direction: column; gap: 8px;">
+              <label style="display: flex; align-items: center; gap: 10px; font-size: 12px; cursor: pointer; margin: 0;">
+                <input type="checkbox" id="checkNotIncluded" checked style="width: 16px; height: 16px; flex-shrink: 0;" onchange="atualizarTermosCompletos()">
+                <span style="font-weight: bold;">Não estão inclusos:</span>
+              </label>
+              <textarea id="orcNotIncludedText" rows="2" class="form-control" placeholder="óleos, peças, espelhos" style="width:100%; padding:6px; border:1px solid #CBD5E1; border-radius:4px; font-family:inherit; font-size: 11px; box-sizing: border-box;" oninput="atualizarTermosCompletos()"></textarea>
+            </div>
+
+            <label for="orcTerms" style="margin-top: 6px; display: block; font-size: 12px; font-weight: bold;">Resumo das Condições Comerciais:</label>
+            <textarea id="orcTerms" rows="4" class="form-control" style="width:100%; padding:8px; border:1px solid #CBD5E1; border-radius:4px; font-family:inherit; background: #FFF; box-sizing: border-box;"></textarea>
           </div>
-
-          <label for="orcTerms" style="margin-top: 6px; display: block; font-size: 12px; font-weight: bold;">Resumo das Condições Comerciais:</label>
-          <textarea id="orcTerms" rows="4" class="form-control" style="width:100%; padding:8px; border:1px solid #CBD5E1; border-radius:4px; font-family:inherit; background: #FFF; box-sizing: border-box;"></textarea>
         </div>
 
         <div style="display: flex; gap: 10px; flex-wrap: wrap;">
@@ -231,12 +246,12 @@
     <div class="modal-content-wrapper">
       <div class="action-toolbar">
         <div>
-          <strong id="modalTitleOrc" style="color: var(--electric-cyan, #00F5D4); font-size: 1rem;">Orçamento</strong>
-          <span id="loadingStatusOrc" style="font-size: 0.8rem; margin-left: 8px; color: #FCD34D;">⏳ A preparar...</span>
+          <strong id="modalTitleOrc" style="color: #00F5D4; font-size: 0.95rem;">Orçamento</strong>
+          <span id="loadingStatusOrc" style="font-size: 0.8rem; margin-left: 8px; color: #FCD34D;">⏳ Pronto</span>
         </div>
         <div class="toolbar-buttons">
-          <button class="btn" style="background-color: #00F5D4; color: #0B132B; font-weight: bold; padding: 6px 12px; font-size: 0.85rem;" onclick="compartilharPDF()">📤 Partilhar PDF</button>
-          <button class="btn" style="background-color: #EF4444; color: white; padding: 6px 12px; font-size: 0.85rem;" onclick="closeModal()">✖️ Fechar</button>
+          <button class="btn" style="background-color: #00F5D4; color: #0B132B; font-weight: bold; padding: 6px 12px; font-size: 0.85rem; border: none; border-radius: 4px; cursor: pointer;" onclick="compartilharPDFOrcamento()">📤 Gerar / Imprimir PDF</button>
+          <button class="btn" style="background-color: #dc3545; color: white; padding: 6px 12px; font-size: 0.85rem; border: none; border-radius: 4px; cursor: pointer;" onclick="closeModal()">✖ Fechar</button>
         </div>
       </div>
       <div class="report-scroll-container" id="budgetScrollContainer">
@@ -262,6 +277,18 @@
 
     let activeBudgetData = {};
     document.getElementById('orcDate').valueAsDate = new Date();
+
+    async function carregarApelidosContas() {
+      try {
+        const config = await DataSync.load('rg_config') || {};
+        const opt1 = document.getElementById('optionBank1Label');
+        const opt2 = document.getElementById('optionBank2Label');
+        if (opt1) opt1.textContent = config.nomeConta1 ? `PIX / Conta: ${config.nomeConta1}` : 'Conta Bancária 1';
+        if (opt2) opt2.textContent = config.nomeConta2 ? `PIX / Conta: ${config.nomeConta2}` : 'Conta Bancária 2';
+      } catch (e) {
+        console.error("Erro ao carregar apelidos dos bancos", e);
+      }
+    }
 
     function atualizarTermosCompletos() {
       const checkboxes = document.querySelectorAll('.term-check');
@@ -337,6 +364,7 @@
     }
 
     document.addEventListener("DOMContentLoaded", async () => {
+      await carregarApelidosContas();
       await loadClientsSelect();
       await renderBudgets();
       try {
@@ -349,6 +377,7 @@
 
       DataSync.listen('rg_orcamentos', () => renderBudgets());
       DataSync.listen('rg_clients', () => loadClientsSelect());
+      DataSync.listen('rg_config', () => carregarApelidosContas());
     });
 
     document.getElementById('budgetForm').addEventListener('submit', async (e) => {
@@ -361,6 +390,8 @@
         client: document.getElementById('orcClient').value.trim(),
         equipment: document.getElementById('orcEquipment').value.trim(),
         desc: document.getElementById('orcDesc').value.trim(),
+        paymentOption: document.getElementById('orcPaymentOption').value.trim(),
+        includeQr: document.getElementById('orcIncludeQr').checked,
         total: document.getElementById('orcTotal').value.trim(),
         terms: document.getElementById('orcTerms').value.trim()
       };
@@ -389,6 +420,7 @@
       document.getElementById('editIndex').value = '';
       document.getElementById('formTitle').textContent = 'Novo Orçamento';
       document.getElementById('orcDate').valueAsDate = new Date();
+      document.getElementById('orcIncludeQr').checked = true;
       document.querySelectorAll('.term-check').forEach(cb => cb.checked = true);
       document.getElementById('checkNotIncluded').checked = true;
       document.getElementById('orcNotIncludedText').value = "";
@@ -413,6 +445,8 @@
         document.getElementById('orcClient').value = b.client || '';
         document.getElementById('orcEquipment').value = b.equipment || '';
         document.getElementById('orcDesc').value = b.desc || '';
+        document.getElementById('orcPaymentOption').value = b.paymentOption || 'banco1';
+        document.getElementById('orcIncludeQr').checked = b.includeQr !== false;
         document.getElementById('orcTotal').value = b.total || '';
         document.getElementById('orcTerms').value = b.terms || '';
 
@@ -459,6 +493,10 @@
         email: 'comercial@laserexpertbr.com.br',
         contact: '+55 51 98144-1865',
         location: 'Rua Corte Real 487 – Scharlau – São Leopoldo – RS',
+        nomeConta1: 'Conta Principal',
+        pix1: 'comercial@laserexpertbr.com.br', bank1: '', agency1: '', account1: '',
+        nomeConta2: 'Conta Secundária',
+        pix2: '', bank2: '', agency2: '', account2: '',
         techSignature: ''
       };
 
@@ -471,6 +509,51 @@
       let clients = [];
       try { clients = await DataSync.load('rg_clients') || []; } catch (e) {}
       const clientObj = clients.find(c => c.name === b.client) || {};
+
+      let bancoInfoHtml = '';
+      const opt = b.paymentOption || 'banco1';
+      let pixKeyToUse = '';
+      let nomeConta1 = config.nomeConta1 || 'Conta Bancária 1';
+      let nomeConta2 = config.nomeConta2 || 'Conta Bancária 2';
+
+      if (opt === 'banco1') {
+        pixKeyToUse = config.pix1 || '';
+        bancoInfoHtml = `
+          <p><strong>Forma de Recebimento:</strong> Transferência / PIX (${escapeHTML(nomeConta1)})</p>
+          <p><strong>Banco:</strong> ${escapeHTML(config.bank1 || '-')}</p>
+          <p><strong>Agência:</strong> ${escapeHTML(config.agency1 || '-')} | <strong>Conta:</strong> ${escapeHTML(config.account1 || '-')}</p>
+          <p><strong>Chave PIX:</strong> ${escapeHTML(pixKeyToUse || '-')}</p>
+        `;
+      } else if (opt === 'banco2') {
+        pixKeyToUse = config.pix2 || '';
+        bancoInfoHtml = `
+          <p><strong>Forma de Recebimento:</strong> Transferência / PIX (${escapeHTML(nomeConta2)})</p>
+          <p><strong>Banco:</strong> ${escapeHTML(config.bank2 || '-')}</p>
+          <p><strong>Agência:</strong> ${escapeHTML(config.agency2 || '-')} | <strong>Conta:</strong> ${escapeHTML(config.account2 || '-')}</p>
+          <p><strong>Chave PIX:</strong> ${escapeHTML(pixKeyToUse || '-')}</p>
+        `;
+      } else {
+        bancoInfoHtml = `
+          <p><strong>Forma de Recebimento:</strong> Boleto Bancário</p>
+          <p><em>Instruções: O boleto será emitido e enviado conforme prazo comercial acordado.</em></p>
+        `;
+      }
+
+      let pixCopiaEColaHtml = '';
+      const valorFormatado = Number(b.total || 0).toFixed(2);
+      const effectivePixKey = (pixKeyToUse && pixKeyToUse.trim() !== '') ? pixKeyToUse : (config.email || 'comercial@laserexpertbr.com.br');
+
+      if (opt !== 'boleto' && b.includeQr !== false) {
+        pixCopiaEColaHtml = `
+          <div style="margin-top: 8px; padding: 8px; background: #F1F5F9; border: 1px solid #CBD5E1; border-radius: 4px; box-sizing: border-box; width: 100%;">
+            <p style="font-size: 10px; font-weight: bold; color: #0B132B; margin: 0 0 4px 0; text-align: center;">PIX COPIA E COLA (PAGAMENTO INSTANTÂNEO):</p>
+            <div style="background: #FFFFFF; border: 1px dashed #0D9488; padding: 8px; font-family: monospace; font-size: 8.5px; word-break: break-all; overflow-wrap: break-word; text-align: center; color: #0D9488; box-sizing: border-box; width: 100%; max-width: 100%; line-height: 1.2;">
+              00020126580014br.gov.bcb.pix0136${escapeHTML(effectivePixKey)}5204000053039865802BR5925${escapeHTML(config.name)}6009SaoLeopoldo62070303${escapeHTML(b.number)}6304
+            </div>
+            <p style="font-size: 9px; color: #64748B; margin: 4px 0 0 0; text-align: center;">Chave: <strong>${escapeHTML(effectivePixKey)}</strong> | Valor: <strong>R$ ${valorFormatado}</strong></p>
+          </div>
+        `;
+      }
 
       const techSignature = config.techSignature || '';
       const signatureAreaHtml = `
@@ -501,7 +584,7 @@
 
       const renderArea = document.getElementById('budgetRenderArea');
       renderArea.innerHTML = `
-        <div class="watermark">LASER EXPERT</div>
+        <div class="watermark">ORÇAMENTO</div>
         <div class="print-body" style="width: 100%; box-sizing: border-box;">
           <div class="print-header">
             <img src="logo.png" alt="Logo">
@@ -541,8 +624,11 @@
           </div>
 
           <div class="section-box">
-            <div class="section-title">CONDIÇÕES COMERCIAIS</div>
-            <p style="white-space: pre-wrap; font-size: 11px; margin-bottom: 4px;">${safeTerms}</p>
+            <div class="section-title">CONDIÇÕES COMERCIAIS & PAGAMENTO</div>
+            <p style="white-space: pre-wrap; font-size: 11px; margin-bottom: 8px;">${safeTerms}</p>
+            <hr style="border: 0; border-top: 1px solid #CBD5E1; margin: 6px 0;">
+            ${bancoInfoHtml}
+            ${pixCopiaEColaHtml}
           </div>
 
           <div class="section-box" style="text-align: right; background: #F1F5F9; border-color: #00F5D4;">
@@ -564,45 +650,9 @@
       document.getElementById('budgetPreviewModal').style.display = 'none';
     };
 
-    // Compartilhamento nativo via html2pdf idêntico ao histórico de RS
-    window.compartilharPDF = async function() {
-      const element = document.getElementById('budgetRenderArea');
-      const filename = `Orcamento_${activeBudgetData.number || 'ORC-0001'}.pdf`;
-      const opt = {
-        margin: 10,
-        filename: filename,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, allowTaint: true },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-      };
-
-      document.getElementById('loadingStatusOrc').textContent = 'A gerar PDF...';
-
-      try {
-        const worker = html2pdf().from(element).set(opt);
-        const pdfBlob = await worker.outputPdf('blob');
-        const file = new File([pdfBlob], filename, { type: 'application/pdf' });
-
-        if (navigator.canShare && navigator.canShare({ files: [file] })) {
-          await navigator.share({
-            files: [file],
-            title: `Orçamento ${activeBudgetData.number || ''}`,
-            text: `Segue em anexo o orçamento ${activeBudgetData.number || ''} para o cliente ${activeBudgetData.client || ''}.`
-          });
-          document.getElementById('loadingStatusOrc').textContent = 'Partilhado!';
-        } else {
-          worker.save();
-          document.getElementById('loadingStatusOrc').textContent = 'Guardado (Download)!';
-        }
-      } catch (err) {
-        console.error("Erro ou cancelamento na partilha:", err);
-        if (err.name !== 'AbortError') {
-          html2pdf().from(element).set(opt).save();
-          document.getElementById('loadingStatusOrc').textContent = 'Guardado (Download)!';
-        } else {
-          document.getElementById('loadingStatusOrc').textContent = 'Partilha cancelada.';
-        }
-      }
+    // Utiliza o motor nativo de impressão/PDF do telemóvel (100% fiável, sem ecrãs brancos)
+    window.compartilharPDFOrcamento = function () {
+      window.print();
     };
   </script>
 </body>

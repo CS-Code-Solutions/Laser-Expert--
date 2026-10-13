@@ -101,21 +101,10 @@
           <input type="number" id="configNextRs" value="1000">
         </div>
 
-        <h3 style="margin-top: 25px; color: #0D9488;">🎯 Chave PIX Padrão para Orçamentos (QR Code & Copia e Cola)</h3>
-        <div class="form-group" style="background: #F0FDFA; padding: 12px; border: 1px solid #CCFBF1; border-radius: 6px;">
-          <label for="configOrcPixKey" style="font-weight: bold; color: #0F766E;">Chave PIX Global para Orçamentos:</label>
-          <input type="text" id="configOrcPixKey" placeholder="Ex: comercial@laserexpertbr.com.br ou CNPJ/Telefone" style="background: #FFF;">
-          <small style="color: #64748B; display: block; margin-top: 4px;">Esta chave será utilizada exclusivamente para gerar o QR Code e o Pix Copia e Cola nos orçamentos.</small>
-        </div>
-
         <h3 style="margin-top: 25px;">💳 Dados Bancários - Conta 1</h3>
         <div class="form-group">
           <label for="configNomeConta1">Nome / Apelido da Conta 1:</label>
           <input type="text" id="configNomeConta1" placeholder="Ex: Conta Principal Nubank">
-        </div>
-        <div class="form-group">
-          <label for="configPix1">Chave PIX (Conta 1):</label>
-          <input type="text" id="configPix1" placeholder="Ex: comercial@laserexpertbr.com.br">
         </div>
         <div class="form-grid" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
           <div class="form-group">
@@ -136,10 +125,6 @@
         <div class="form-group">
           <label for="configNomeConta2">Nome / Apelido da Conta 2:</label>
           <input type="text" id="configNomeConta2" placeholder="Ex: Bradesco PJ">
-        </div>
-        <div class="form-group">
-          <label for="configPix2">Chave PIX (Conta 2):</label>
-          <input type="text" id="configPix2" placeholder="Ex: financeiro@laserexpertbr.com.br">
         </div>
         <div class="form-grid" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
           <div class="form-group">
@@ -256,16 +241,13 @@
         document.getElementById('configEmail').value = config.email || 'comercial@laserexpertbr.com.br';
         document.getElementById('configContact').value = config.contact || '+55 51 98144-1865';
         document.getElementById('configLocation').value = config.location || 'Rua Corte Real 487 – Scharlau – São Leopoldo – RS';
-        document.getElementById('configOrcPixKey').value = config.orcPixKey || 'comercial@laserexpertbr.com.br';
         
         document.getElementById('configNomeConta1').value = config.nomeConta1 || 'Conta Principal';
-        document.getElementById('configPix1').value = config.pix1 || '';
         document.getElementById('configBank1').value = config.bank1 || '';
         document.getElementById('configAgency1').value = config.agency1 || '';
         document.getElementById('configAccount1').value = config.account1 || '';
 
         document.getElementById('configNomeConta2').value = config.nomeConta2 || 'Conta Secundária';
-        document.getElementById('configPix2').value = config.pix2 || '';
         document.getElementById('configBank2').value = config.bank2 || '';
         document.getElementById('configAgency2').value = config.agency2 || '';
         document.getElementById('configAccount2').value = config.account2 || '';
@@ -293,14 +275,11 @@
           email: document.getElementById('configEmail').value,
           contact: document.getElementById('configContact').value,
           location: document.getElementById('configLocation').value,
-          orcPixKey: document.getElementById('configOrcPixKey').value,
           nomeConta1: document.getElementById('configNomeConta1').value,
-          pix1: document.getElementById('configPix1').value,
           bank1: document.getElementById('configBank1').value,
           agency1: document.getElementById('configAgency1').value,
           account1: document.getElementById('configAccount1').value,
           nomeConta2: document.getElementById('configNomeConta2').value,
-          pix2: document.getElementById('configPix2').value,
           bank2: document.getElementById('configBank2').value,
           agency2: document.getElementById('configAgency2').value,
           account2: document.getElementById('configAccount2').value,

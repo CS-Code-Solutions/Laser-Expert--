@@ -152,7 +152,6 @@
             </select>
           </div>
 
-          <!-- Bloco Atualizado com Data e Hora (datetime-local) -->
           <div id="boxHoraDetalhes" style="display: none; margin-bottom: 12px; background: #FFF; padding: 10px; border: 1px solid #CBD5E1; border-radius: 4px;">
             <div style="margin-bottom: 10px;">
               <label for="repValorHora"><strong>Valor da Hora (R$):</strong></label>
@@ -180,59 +179,28 @@
             </div>
           </div>
 
+          <!-- BLOCO DE HORA DE DESLOCAMENTO ATUALIZADO -->
           <div style="margin-bottom: 12px;">
-            <label for="selectKm"><strong>Cobrar Km Rodado?</strong></label>
-            <select id="selectKm" class="form-control" style="width:100%; padding:8px; border:1px solid #CBD5E1; border-radius:4px; background:#FFF; margin-top: 4px;" onchange="toggleKmSelect()">
+            <label for="selectDeslocamento"><strong>Cobrar Hora de Deslocamento?</strong></label>
+            <select id="selectDeslocamento" class="form-control" style="width:100%; padding:8px; border:1px solid #CBD5E1; border-radius:4px; background:#FFF; margin-top: 4px;" onchange="toggleDeslocamentoSelect()">
               <option value="nao">Não</option>
               <option value="sim">Sim</option>
             </select>
           </div>
 
-          <div id="boxKmDetalhes" style="display: none; margin-bottom: 12px; background: #FFF; padding: 10px; border: 1px solid #CBD5E1; border-radius: 4px;">
+          <div id="boxDeslocamentoDetalhes" style="display: none; margin-bottom: 12px; background: #FFF; padding: 10px; border: 1px solid #CBD5E1; border-radius: 4px;">
             <div style="margin-bottom: 8px;">
-              <label for="valorKm">Valor por Km (R$):</label>
-              <input type="number" step="0.01" id="valorKm" value="2.50" placeholder="Ex: 2.50" style="width:100%; padding:6px; border:1px solid #CBD5E1; border-radius:4px; margin-top: 2px;">
+              <label for="valorHoraDeslocamento">Valor da hora de deslocamento (R$):</label>
+              <input type="number" step="0.01" id="valorHoraDeslocamento" value="260.00" placeholder="Ex: 260" style="width:100%; padding:6px; border:1px solid #CBD5E1; border-radius:4px; margin-top: 2px;" oninput="calcularTotalDeslocamento()">
             </div>
             <div style="margin-bottom: 8px;">
-              <label for="kmIda">Km Ida:</label>
-              <input type="number" id="kmIda" value="0" placeholder="Ex: 50" style="width:100%; padding:6px; border:1px solid #CBD5E1; border-radius:4px; margin-top: 2px;">
+              <label for="tempoDeslocamentoHoras">Tempo de deslocamento ida e volta (hs):</label>
+              <input type="number" step="0.5" id="tempoDeslocamentoHoras" value="0" placeholder="Ex: 5" style="width:100%; padding:6px; border:1px solid #CBD5E1; border-radius:4px; margin-top: 2px;" oninput="calcularTotalDeslocamento()">
             </div>
             <div>
-              <label for="kmVolta">Km Volta:</label>
-              <input type="number" id="kmVolta" value="0" placeholder="Ex: 50" style="width:100%; padding:6px; border:1px solid #CBD5E1; border-radius:4px; margin-top: 2px;">
+              <label><strong>Total de deslocamento (R$):</strong></label>
+              <input type="text" id="totalDeslocamentoCalculado" value="0,00" readonly style="width:100%; padding:6px; border:1px solid #CBD5E1; border-radius:4px; background:#F1F5F9; font-weight:bold; color:#0D9488; margin-top: 2px;">
             </div>
-          </div>
-
-          <div style="margin-bottom: 12px;">
-            <label for="selectCombustivel"><strong>Adicionar Combustível?</strong></label>
-            <select id="selectCombustivel" class="form-control" style="width:100%; padding:8px; border:1px solid #CBD5E1; border-radius:4px; background:#FFF; margin-top: 4px;" onchange="toggleCombustivelSelect()">
-              <option value="nao">Não</option>
-              <option value="sim">Sim</option>
-            </select>
-          </div>
-
-          <div id="boxCombustivelDetalhes" style="display: none; margin-bottom: 12px; background: #FFF; padding: 10px; border: 1px solid #CBD5E1; border-radius: 4px;">
-            <div style="margin-bottom: 8px;">
-              <label for="valorLitro">Valor por Litro (R$):</label>
-              <input type="number" step="0.01" id="valorLitro" value="6.00" placeholder="Ex: 6.00" style="width:100%; padding:6px; border:1px solid #CBD5E1; border-radius:4px; margin-top: 2px;">
-            </div>
-            <div>
-              <label for="combustivelLitros">Quantidade (Litros):</label>
-              <input type="number" step="0.1" id="combustivelLitros" value="0" placeholder="Ex: 15.5" style="width:100%; padding:6px; border:1px solid #CBD5E1; border-radius:4px; margin-top: 2px;">
-            </div>
-          </div>
-
-          <div style="margin-bottom: 12px;">
-            <label for="selectPedagio"><strong>Adicionar Pedágio?</strong></label>
-            <select id="selectPedagio" class="form-control" style="width:100%; padding:8px; border:1px solid #CBD5E1; border-radius:4px; background:#FFF; margin-top: 4px;" onchange="togglePedagioSelect()">
-              <option value="nao">Não</option>
-              <option value="sim">Sim</option>
-            </select>
-          </div>
-
-          <div id="boxPedagioDetalhes" style="display: none; margin-bottom: 12px; background: #FFF; padding: 10px; border: 1px solid #CBD5E1; border-radius: 4px;">
-            <label for="valorPedagio">Valor do Pedágio (R$):</label>
-            <input type="number" step="0.01" id="valorPedagio" value="0.00" placeholder="Ex: 30.00" style="width:100%; padding:6px; border:1px solid #CBD5E1; border-radius:4px; margin-top: 2px;">
           </div>
 
           <div style="margin-bottom: 12px;">
@@ -333,17 +301,10 @@
       const val = document.getElementById('selectHora').value;
       document.getElementById('boxHoraDetalhes').style.display = (val === 'sim') ? 'block' : 'none';
     }
-    function toggleKmSelect() {
-      const val = document.getElementById('selectKm').value;
-      document.getElementById('boxKmDetalhes').style.display = (val === 'sim') ? 'block' : 'none';
-    }
-    function toggleCombustivelSelect() {
-      const val = document.getElementById('selectCombustivel').value;
-      document.getElementById('boxCombustivelDetalhes').style.display = (val === 'sim') ? 'block' : 'none';
-    }
-    function togglePedagioSelect() {
-      const val = document.getElementById('selectPedagio').value;
-      document.getElementById('boxPedagioDetalhes').style.display = (val === 'sim') ? 'block' : 'none';
+    function toggleDeslocamentoSelect() {
+      const val = document.getElementById('selectDeslocamento').value;
+      document.getElementById('boxDeslocamentoDetalhes').style.display = (val === 'sim') ? 'block' : 'none';
+      calcularTotalDeslocamento();
     }
     function toggleHospedagemSelect() {
       const val = document.getElementById('selectHospedagem').value;
@@ -352,6 +313,13 @@
     function toggleOutrasSelect() {
       const val = document.getElementById('selectOutras').value;
       document.getElementById('boxOutrasDetalhes').style.display = (val === 'sim') ? 'block' : 'none';
+    }
+
+    function calcularTotalDeslocamento() {
+      const valorHora = Number(document.getElementById('valorHoraDeslocamento').value) || 0;
+      const horas = Number(document.getElementById('tempoDeslocamentoHoras').value) || 0;
+      const total = valorHora * horas;
+      document.getElementById('totalDeslocamentoCalculado').value = total.toFixed(2).replace('.', ',');
     }
 
     function converterAnexo(event) {
@@ -383,7 +351,7 @@
       anexosList.forEach((a, idx) => {
         container.innerHTML += `
           <div style="display: flex; justify-content: space-between; align-items: center; background: #F8FAFC; border: 1px solid #CBD5E1; padding: 6px 10px; border-radius: 4px;">
-            <span><strong>${idx + 1}.</strong> ${a.titulo}</span>
+            <span><strong>${idx + 1}.</strong> ${escapeHTML(a.titulo)}</span>
             <button type="button" class="btn" style="background-color: #EF4444; padding: 2px 6px; font-size: 0.75rem;" onclick="removerAnexo(${idx})">Remover</button>
           </div>
         `;
@@ -396,7 +364,7 @@
       try {
         const clients = await DataSync.load('rg_clients') || [];
         select.innerHTML = '<option value="">Selecione um cliente...</option>';
-        clients.forEach(c => { select.innerHTML += `<option value="${c.name}">${c.name}</option>`; });
+        clients.forEach(c => { select.innerHTML += `<option value="${escapeHTML(c.name)}">${escapeHTML(c.name)}</option>`; });
       } catch (e) { console.error("Erro ao carregar clientes", e); }
     }
 
@@ -413,7 +381,7 @@
         clientMachines.forEach((m, idx) => {
           const eqName = m.equipment || m.nome || m.name || `Máquina ${idx+1}`;
           const isSelected = (eqName === selectedEquipment) ? 'selected' : '';
-          eqSelect.innerHTML += `<option value="${eqName}" data-index="${idx}" ${isSelected}>${eqName}</option>`;
+          eqSelect.innerHTML += `<option value="${escapeHTML(eqName)}" data-index="${idx}" ${isSelected}>${escapeHTML(eqName)}</option>`;
         });
       } catch (e) {
         console.error("Erro ao carregar máquinas do cliente", e);
@@ -491,34 +459,15 @@
               toggleHoraSelect();
             }
 
-            if (rep.temKm === 'sim') {
-              document.getElementById('selectKm').value = 'sim';
-              toggleKmSelect();
-              document.getElementById('kmIda').value = rep.kmIda || 0;
-              document.getElementById('kmVolta').value = rep.kmVolta || 0;
-              document.getElementById('valorKm').value = rep.valorKm || 2.50;
+            if (rep.temDeslocamento === 'sim') {
+              document.getElementById('selectDeslocamento').value = 'sim';
+              toggleDeslocamentoSelect();
+              document.getElementById('valorHoraDeslocamento').value = rep.valorHoraDeslocamento || 260.00;
+              document.getElementById('tempoDeslocamentoHoras').value = rep.tempoDeslocamentoHoras || 0;
+              calcularTotalDeslocamento();
             } else {
-              document.getElementById('selectKm').value = 'nao';
-              toggleKmSelect();
-            }
-
-            if (rep.temCombustivel === 'sim') {
-              document.getElementById('selectCombustivel').value = 'sim';
-              toggleCombustivelSelect();
-              document.getElementById('combustivelLitros').value = rep.combustivelLitros || 0;
-              document.getElementById('valorLitro').value = rep.valorLitro || 6.00;
-            } else {
-              document.getElementById('selectCombustivel').value = 'nao';
-              toggleCombustivelSelect();
-            }
-
-            if (rep.temPedagio === 'sim') {
-              document.getElementById('selectPedagio').value = 'sim';
-              togglePedagioSelect();
-              document.getElementById('valorPedagio').value = rep.valorPedagio || 0;
-            } else {
-              document.getElementById('selectPedagio').value = 'nao';
-              togglePedagioSelect();
+              document.getElementById('selectDeslocamento').value = 'nao';
+              toggleDeslocamentoSelect();
             }
 
             if (rep.temHospedagem === 'sim') {
@@ -608,17 +557,9 @@
         endTarde: document.getElementById('endTarde').value,
         valorHora: document.getElementById('repValorHora').value,
 
-        temKm: document.getElementById('selectKm').value,
-        kmIda: document.getElementById('kmIda').value,
-        kmVolta: document.getElementById('kmVolta').value,
-        valorKm: document.getElementById('valorKm').value,
-
-        temCombustivel: document.getElementById('selectCombustivel').value,
-        combustivelLitros: document.getElementById('combustivelLitros').value,
-        valorLitro: document.getElementById('valorLitro').value,
-
-        temPedagio: document.getElementById('selectPedagio').value,
-        valorPedagio: document.getElementById('valorPedagio').value,
+        temDeslocamento: document.getElementById('selectDeslocamento').value,
+        valorHoraDeslocamento: document.getElementById('valorHoraDeslocamento').value,
+        tempoDeslocamentoHoras: document.getElementById('tempoDeslocamentoHoras').value,
 
         temHospedagem: document.getElementById('selectHospedagem').value,
         valorHospedagem: document.getElementById('valorHospedagem').value,
@@ -661,15 +602,23 @@
       document.getElementById('repEquipment').innerHTML = '<option value="">Selecione primeiro um cliente...</option>';
       toggleEmpreitadaSelect();
       toggleHoraSelect();
-      toggleKmSelect();
-      toggleCombustivelSelect();
-      togglePedagioSelect();
+      toggleDeslocamentoSelect();
       toggleHospedagemSelect();
       toggleOutrasSelect();
       clientCtx.clearRect(0, 0, clientCanvas.width, clientCanvas.height);
       anexosList = [];
       renderizarAnexos();
     };
+
+    function escapeHTML(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
   </script>
 </body>
 </html>

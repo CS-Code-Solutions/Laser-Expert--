@@ -1,27 +1,19 @@
 <!DOCTYPE html>
 <html lang="pt-PT">
 <head>
-  <link rel="icon" href="ico.png" type="image/png">
+  <!-- Firebase SDKs e Sincronização -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="firebase-init.js"></script>
+  <script src="firebase-sync.js"></script>
+
+  <link rel="icon" href="img/ico1.png" type="image/png">
   <link rel="manifest" href="manifest.json">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Laser Expert - Gestão de Orçamentos</title>
   <link rel="stylesheet" href="style.css">
-  
-<!-- Firebase SDKs Compat -->
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-
-<!-- Inicialização do Firebase -->
-<script src="firebase-init.js"></script>
-<script src="firebase-sync.js"></script>
-  <script>
-    if (localStorage.getItem('rg_logged') !== 'true') {
-      window.location.href = 'login.html';
-    }
-  </script>
-
   <!-- html2pdf CDN -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <style>
@@ -54,7 +46,7 @@
       overflow: hidden;
     }
     .action-toolbar {
-      background: var(--deep-navy, #0B132B);
+      background: var(--deep-navy);
       color: white;
       padding: 12px 15px;
       display: flex;
@@ -62,19 +54,36 @@
       align-items: center;
       flex-wrap: wrap;
       gap: 10px;
-      border-bottom: 2px solid var(--electric-cyan, #00F5D4);
+      border-bottom: 2px solid var(--electric-cyan);
       flex-shrink: 0;
     }
-    .toolbar-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
-    .report-scroll-container { padding: 20px; overflow-y: auto; background: #FFF; flex-grow: 1; position: relative; }
+    .toolbar-buttons {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .report-scroll-container {
+      padding: 20px;
+      overflow-y: auto;
+      background: #FFF;
+      flex-grow: 1;
+      position: relative;
+    }
 
     .watermark {
-      position: absolute; top: 50%; left: 50%;
+      position: absolute;
+      top: 50%;
+      left: 50%;
       transform: translate(-50%, -50%) rotate(-30deg);
-      font-size: 85px; font-weight: bold;
+      font-size: 85px;
+      font-weight: bold;
       color: rgba(0, 245, 212, 0.025);
-      z-index: 0; pointer-events: none;
-      text-align: center; white-space: nowrap; text-transform: uppercase; width: 100%;
+      z-index: 0;
+      pointer-events: none;
+      text-align: center;
+      white-space: nowrap;
+      text-transform: uppercase;
+      width: 100%;
     }
 
     .print-body { font-family: Arial, sans-serif; color: #0B132B; line-height: 1.4; font-size: 11px; position: relative; z-index: 1; box-sizing: border-box; width: 100%; }
@@ -84,11 +93,14 @@
     .print-header-info h1 { font-size: 14px; color: #0B132B; margin: 0; font-weight: bold; }
     .section-box { border: 1px solid #CBD5E1; padding: 10px; margin-bottom: 10px; border-radius: 6px; background: #F8FAFC; page-break-inside: avoid; }
     .section-title { font-weight: bold; font-size: 12px; color: #0B132B; margin-bottom: 6px; border-bottom: 1px solid #E2E8F0; padding-bottom: 3px; }
-    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+    
+    /* Grelha Responsiva */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 768px) {
+      .grid-2 { grid-template-columns: 1fr; }
+    }
+
     .print-body p { margin: 2px 0; }
-    .signature-area { margin-top: 20px; display: flex; justify-content: center; align-items: flex-end; page-break-inside: avoid; }
-    .signature-box { text-align: center; width: 60%; }
-    .signature-box img { max-width: 180px; height: 50px; object-fit: contain; display: block; margin: 0 auto; }
   </style>
 </head>
 <body>
@@ -112,102 +124,112 @@
     </div>
   </header>
 
-  <main style="max-width: 900px; margin: 20px auto; padding: 0 15px;">
-    <!-- Formulário de Criação / Edição -->
-    <section class="card" style="margin-bottom: 20px;">
-      <h2 id="formTitle" style="color: #0B132B; font-size: 1.25rem; margin-top: 0; margin-bottom: 15px;">Novo Orçamento</h2>
-      
-      <form id="budgetForm" style="display: flex; flex-direction: column; gap: 12px;">
+  <main>
+    <section class="card no-print" style="margin-bottom: 20px;">
+      <h2 id="formTitle">Novo Orçamento</h2>
+      <form id="budgetForm">
         <input type="hidden" id="editIndex" value="">
-
-        <div class="grid-2">
+        <div class="grid-2" style="margin-bottom: 12px;">
           <div>
-            <label for="orcNumber" style="font-weight: bold; font-size: 0.9rem; color: #334155; display: block; margin-bottom: 4px;">Nº do Orçamento:</label>
-            <input type="text" id="orcNumber" class="form-control" value="ORC-0001" required style="width: 100%; padding: 8px; border: 1px solid #CBD5E1; border-radius: 4px; box-sizing: border-box;">
-          </div>
-          <div>
-            <label for="orcDate" style="font-weight: bold; font-size: 0.9rem; color: #334155; display: block; margin-bottom: 4px;">Data:</label>
-            <input type="date" id="orcDate" class="form-control" required style="width: 100%; padding: 8px; border: 1px solid #CBD5E1; border-radius: 4px; box-sizing: border-box;">
-          </div>
-        </div>
-
-        <div class="grid-2">
-          <div>
-            <label for="orcClient" style="font-weight: bold; font-size: 0.9rem; color: #334155; display: block; margin-bottom: 4px;">Cliente:</label>
-            <select id="orcClient" class="form-control" required style="width: 100%; padding: 8px; border: 1px solid #CBD5E1; border-radius: 4px; background: #fff; box-sizing: border-box;"></select>
+            <label for="orcNumber"><strong>Nº do Orçamento:</strong></label>
+            <input type="text" id="orcNumber" class="form-control" value="ORC-0001" required style="width:100%; padding:8px; border:1px solid #CBD5E1; border-radius:4px;">
           </div>
           <div>
-            <label for="orcEquipment" style="font-weight: bold; font-size: 0.9rem; color: #334155; display: block; margin-bottom: 4px;">Equipamento / Máquina:</label>
-            <input type="text" id="orcEquipment" placeholder="Ex: Laser Amada / SCM" class="form-control" style="width: 100%; padding: 8px; border: 1px solid #CBD5E1; border-radius: 4px; box-sizing: border-box;">
+            <label for="orcDate"><strong>Data:</strong></label>
+            <input type="date" id="orcDate" class="form-control" required style="width:100%; padding:8px; border:1px solid #CBD5E1; border-radius:4px;">
           </div>
         </div>
 
-        <div>
-          <label for="orcDesc" style="font-weight: bold; font-size: 0.9rem; color: #334155; display: block; margin-bottom: 4px;">Dados do Serviço / Escopo:</label>
-          <textarea id="orcDesc" rows="4" placeholder="Descreva os serviços..." class="form-control" style="width: 100%; padding: 8px; border: 1px solid #CBD5E1; border-radius: 4px; font-family: inherit; box-sizing: border-box;"></textarea>
-        </div>
-
-        <div>
-          <label for="orcTotal" style="font-weight: bold; font-size: 0.9rem; color: #334155; display: block; margin-bottom: 4px;">Valor Total (R$):</label>
-          <input type="number" step="0.01" id="orcTotal" placeholder="0.00" class="form-control" required style="width: 100%; padding: 8px; border: 1px solid #CBD5E1; border-radius: 4px; box-sizing: border-box;">
-        </div>
-
-        <div>
-          <label style="font-weight: bold; font-size: 0.9rem; color: #334155; display: block; margin-bottom: 4px;">Condições Comerciais (Opções Rápidas):</label>
-          <div style="background: #F8FAFC; border: 1px solid #CBD5E1; padding: 12px; border-radius: 6px; margin-bottom: 8px; display: flex; flex-direction: column; gap: 8px;">
-            <label style="display: flex; align-items: center; gap: 8px; font-size: 0.9rem; cursor: pointer;">
-              <input type="checkbox" class="term-check" value="Pagamento a combinar." checked style="width: 16px; height: 16px;" onchange="atualizarTermosCompletos()">
-              <span>Pagamento a combinar.</span>
-            </label>
-            <label style="display: flex; align-items: center; gap: 8px; font-size: 0.9rem; cursor: pointer;">
-              <input type="checkbox" class="term-check" value="Impostos inclusos." checked style="width: 16px; height: 16px;" onchange="atualizarTermosCompletos()">
-              <span>Impostos inclusos.</span>
-            </label>
-            <label style="display: flex; align-items: center; gap: 8px; font-size: 0.9rem; cursor: pointer;">
-              <input type="checkbox" class="term-check" value="Despesas com deslocamento, alimentação e hotel já incluso no orçamento." checked style="width: 16px; height: 16px;" onchange="atualizarTermosCompletos()">
-              <span>Despesas com deslocamento, alimentação e hotel já incluso no orçamento.</span>
-            </label>
+        <div class="grid-2" style="margin-bottom: 12px;">
+          <div>
+            <label for="orcClient"><strong>Cliente:</strong></label>
+            <select id="orcClient" class="form-control" required style="width:100%; padding:8px; border:1px solid #CBD5E1; border-radius:4px;"></select>
           </div>
-
-          <div style="background: #F8FAFC; border: 1px solid #CBD5E1; padding: 10px; border-radius: 6px; margin-bottom: 8px; display: flex; flex-direction: column; gap: 6px;">
-            <label style="display: flex; align-items: center; gap: 8px; font-size: 0.9rem; cursor: pointer;">
-              <input type="checkbox" id="checkNotIncluded" checked style="width: 16px; height: 16px;" onchange="atualizarTermosCompletos()">
-              <span style="font-weight: bold;">Não estão inclusos:</span>
-            </label>
-            <textarea id="orcNotIncludedText" rows="2" class="form-control" placeholder="óleos, peças, espelhos" style="width: 100%; padding: 6px; border: 1px solid #CBD5E1; border-radius: 4px; font-family: inherit; font-size: 0.85rem; box-sizing: border-box;" oninput="atualizarTermosCompletos()"></textarea>
+          <div>
+            <label for="orcEquipment"><strong>Equipamento / Máquina:</strong></label>
+            <input type="text" id="orcEquipment" placeholder="Ex: Laser Amada / SCM" class="form-control" style="width:100%; padding:8px; border:1px solid #CBD5E1; border-radius:4px;">
           </div>
-
-          <label for="orcTerms" style="font-weight: bold; font-size: 0.9rem; color: #334155; display: block; margin-top: 6px; margin-bottom: 4px;">Resumo das Condições Comerciais:</label>
-          <textarea id="orcTerms" rows="4" class="form-control" style="width: 100%; padding: 8px; border: 1px solid #CBD5E1; border-radius: 4px; font-family: inherit; background: #FFF; box-sizing: border-box;"></textarea>
         </div>
 
-        <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 5px;">
-          <button type="submit" class="btn" style="background-color: #22C55E; color: white; padding: 10px 20px; font-weight: bold; border: none; border-radius: 4px; cursor: pointer;">Guardar Orçamento</button>
-          <button type="button" class="btn" style="background-color: #64748B; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer;" onclick="resetForm()">Cancelar / Limpar</button>
+        <div style="margin-bottom: 12px;">
+          <label for="orcDesc"><strong>Dados do Serviço / Escopo:</strong></label>
+          <textarea id="orcDesc" rows="5" placeholder="Descreva os serviços..." style="width:100%; padding:8px; border:1px solid #CBD5E1; border-radius:4px; font-family:inherit;"></textarea>
+        </div>
+
+        <div class="grid-2" style="margin-bottom: 15px;">
+          <div>
+            <label for="orcTotal"><strong>Valor Total (R$):</strong></label>
+            <input type="number" step="0.01" id="orcTotal" placeholder="0.00" class="form-control" required style="width:100%; padding:8px; border:1px solid #CBD5E1; border-radius:4px; margin-top: 5px;">
+          </div>
+          <div>
+            <label style="margin-bottom: 5px; display: block;"><strong>Condições Comerciais (Opções Rápidas):</strong></label>
+            <div style="background: #F8FAFC; border: 1px solid #CBD5E1; padding: 12px; border-radius: 6px; margin-bottom: 8px; display: flex; flex-direction: column; gap: 10px;">
+              <label style="display: flex; align-items: flex-start; gap: 10px; font-size: 12px; cursor: pointer; margin: 0; line-height: 1.4;">
+                <input type="checkbox" class="term-check" value="Pagamento a combinar." checked style="margin-top: 2px; flex-shrink: 0; width: 16px; height: 16px;" onchange="atualizarTermosCompletos()">
+                <span>Pagamento a combinar.</span>
+              </label>
+              <label style="display: flex; align-items: flex-start; gap: 10px; font-size: 12px; cursor: pointer; margin: 0; line-height: 1.4;">
+                <input type="checkbox" class="term-check" value="Impostos inclusos." checked style="margin-top: 2px; flex-shrink: 0; width: 16px; height: 16px;" onchange="atualizarTermosCompletos()">
+                <span>Impostos inclusos.</span>
+              </label>
+              <label style="display: flex; align-items: flex-start; gap: 10px; font-size: 12px; cursor: pointer; margin: 0; line-height: 1.4;">
+                <input type="checkbox" class="term-check" value="Despesas com deslocamento, alimentação e hotel já incluso no orçamento." checked style="margin-top: 2px; flex-shrink: 0; width: 16px; height: 16px;" onchange="atualizarTermosCompletos()">
+                <span>Despesas com deslocamento, alimentação e hotel já incluso no orçamento.</span>
+              </label>
+            </div>
+
+            <div style="background: #F8FAFC; border: 1px solid #CBD5E1; padding: 12px; border-radius: 6px; margin-bottom: 8px; display: flex; flex-direction: column; gap: 8px;">
+              <label style="display: flex; align-items: flex-start; gap: 10px; font-size: 12px; cursor: pointer; margin: 0; line-height: 1.4;">
+                <input type="checkbox" id="checkNotIncluded" checked style="margin-top: 2px; flex-shrink: 0; width: 16px; height: 16px;" onchange="atualizarTermosCompletos()">
+                <span style="font-weight: bold;">Não estão inclusos:</span>
+              </label>
+              <textarea id="orcNotIncludedText" rows="2" class="form-control" placeholder="óleos, peças, espelhos" style="width:100%; padding:6px; border:1px solid #CBD5E1; border-radius:4px; font-family:inherit; font-size: 11px;" oninput="atualizarTermosCompletos()"></textarea>
+            </div>
+
+            <label for="orcTerms" style="margin-top: 8px; display: block;"><strong>Resumo das Condições Comerciais:</strong></label>
+            <textarea id="orcTerms" rows="4" class="form-control" placeholder="Pode editar livremente aqui..." style="width:100%; padding:8px; border:1px solid #CBD5E1; border-radius:4px; font-family:inherit; margin-top: 4px; background: #FFF;"></textarea>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 10px;">
+          <button type="submit" class="btn" style="background-color: #00F5D4; color: #0B132B; font-weight: bold; padding: 10px 20px;">Salvar Orçamento</button>
+          <button type="button" class="btn" style="background-color: #64748B; color: #FFF; padding: 10px 20px;" onclick="resetForm()">Cancelar / Limpar</button>
         </div>
       </form>
     </section>
 
-    <!-- Histórico de Orçamentos -->
     <section class="card">
-      <h2 style="color: #0B132B; font-size: 1.25rem; margin-top: 0; margin-bottom: 15px;">Histórico de Orçamentos</h2>
-      <div id="budgetCardsContainer" style="display: flex; flex-direction: column; gap: 12px;">
-        <p style="text-align: center; color: #64748B;">A carregar orçamentos da nuvem...</p>
+      <h2>Histórico de Orçamentos</h2>
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>Nº Orçamento</th>
+              <th>Data</th>
+              <th>Cliente</th>
+              <th>Equipamento</th>
+              <th>Valor Total</th>
+              <th class="no-print">Ações</th>
+            </tr>
+          </thead>
+          <tbody id="budgetTableBody">
+            <tr><td colspan="6" style="text-align: center; color: #64748B;">A carregar orçamentos da nuvem...</td></tr>
+          </tbody>
+        </table>
       </div>
     </section>
   </main>
 
-  <!-- Modal de Pré-visualização -->
   <div id="budgetPreviewModal">
     <div class="modal-content-wrapper">
       <div class="action-toolbar">
         <div>
           <strong id="modalTitleOrc" style="color: var(--electric-cyan); font-size: 1rem;">Orçamento</strong>
-          <span id="loadingStatusOrc" style="font-size: 0.8rem; margin-left: 8px; color: #FCD34D;">⏳ A preparar...</span>
+          <span id="loadingStatusOrc" style="font-size: 0.8rem; margin-left: 8px; color: #FCD34D;">⏳ A preparar partilha...</span>
         </div>
         <div class="toolbar-buttons">
-          <button class="btn" style="background-color: #00F5D4; color: #0B132B; font-weight: bold; padding: 6px 12px; font-size: 0.85rem;" onclick="compartilharPDF()">📤 Partilhar PDF</button>
-          <button class="btn" style="background-color: #EF4444; padding: 6px 12px; font-size: 0.85rem;" onclick="closeModal()">✖️ Fechar</button>
+          <button class="btn" style="background-color: #00F5D4; color: #0B132B; font-weight: bold; padding: 6px 12px; font-size: 0.85rem;" onclick="compartilharPDFOrcamento()">📤 Partilhar PDF</button>
+          <button class="btn" style="background-color: #EF4444; padding: 6px 12px; font-size: 0.85rem;" onclick="closeModal()">✖ Fechar</button>
         </div>
       </div>
       <div class="report-scroll-container" id="budgetScrollContainer">
@@ -221,23 +243,15 @@
   </footer>
 
   <script>
-    function escapeHTML(str) {
-      if (!str) return '';
-      return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
-    }
-
     let activeBudgetData = {};
     document.getElementById('orcDate').valueAsDate = new Date();
 
     function atualizarTermosCompletos() {
       const checkboxes = document.querySelectorAll('.term-check');
       let selecionados = [];
-      checkboxes.forEach(cb => { if (cb.checked) selecionados.push(cb.value); });
+      checkboxes.forEach(cb => {
+        if (cb.checked) selecionados.push(cb.value);
+      });
 
       const checkNotInc = document.getElementById('checkNotIncluded');
       const textNotInc = document.getElementById('orcNotIncludedText');
@@ -255,67 +269,64 @@
       try {
         const clients = await DataSync.load('rg_clients') || [];
         select.innerHTML = '<option value="">Selecione um cliente...</option>';
-        clients.forEach(c => { select.innerHTML += `<option value="${escapeHTML(c.name)}">${escapeHTML(c.name)}</option>`; });
-      } catch (e) { console.error("Erro ao carregar clientes", e); }
+        clients.forEach(c => {
+          select.innerHTML += `<option value="${c.name}">${c.name}</option>`;
+        });
+      } catch (e) {
+        console.error("Erro ao carregar clientes", e);
+      }
     }
 
     async function renderBudgets() {
-      const container = document.getElementById('budgetCardsContainer');
-      if (!container) return;
+      const tbody = document.getElementById('budgetTableBody');
+      if (!tbody) return;
 
       try {
         let budgets = await DataSync.load('rg_orcamentos') || [];
         if (!Array.isArray(budgets)) budgets = [];
 
-        container.innerHTML = '';
+        tbody.innerHTML = '';
         if (budgets.length === 0) {
-          container.innerHTML = '<p style="text-align: center; color: #64748B;">Nenhum orçamento registado.</p>';
+          tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #64748B;">Nenhum orçamento registado.</td></tr>';
           return;
         }
 
-        let htmlCards = '';
+        let htmlRows = '';
         for (let i = budgets.length - 1; i >= 0; i--) {
           const b = budgets[i];
           if (!b) continue;
-
-          const safeNumber = escapeHTML(b.number || 'ORC-0001');
-          const safeDate = escapeHTML(b.date || '-');
-          const safeClient = escapeHTML(b.client || '-');
-          const safeEquipment = escapeHTML(b.equipment || '-');
-          const safeTotal = Number(b.total || 0).toFixed(2);
-
-          htmlCards += `
-            <div style="border: 1px solid #CBD5E1; padding: 15px; border-radius: 6px; background: #F8FAFC; display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 10px;">
-              <div style="flex: 1; min-width: 220px;">
-                <strong style="font-size: 1.05rem; color: #0B132B;">${safeNumber}</strong> — <span style="color: #64748B; font-size: 0.9rem;">${safeDate}</span><br>
-                <span style="font-size: 0.9rem; color: #334155;"><strong>Cliente:</strong> ${safeClient}</span><br>
-                <span style="font-size: 0.9rem; color: #334155;"><strong>Equipamento:</strong> ${safeEquipment}</span><br>
-                <span style="font-size: 0.85rem; color: #0D9488;"><strong>Valor:</strong> R$ ${safeTotal}</span>
-              </div>
-              <div class="no-print" style="display: flex; gap: 6px; flex-wrap: wrap; align-items: center;">
-                <button class="btn" style="padding: 6px 12px; font-size: 0.85rem; background-color: #1D4ED8;" onclick="openBudgetPreview(${i})">Gerar Orçamento</button>
-                <button class="btn" style="padding: 6px 12px; font-size: 0.85rem; background-color: #F59E0B;" onclick="editBudget(${i})">Editar</button>
-                <button class="btn" style="padding: 6px 12px; font-size: 0.85rem; background-color: #EF4444;" onclick="deleteBudget(${i})">Excluir</button>
-              </div>
-            </div>
+          htmlRows += `
+            <tr>
+              <td><strong>${b.number || 'ORC-0001'}</strong></td>
+              <td>${b.date || '-'}</td>
+              <td>${b.client || '-'}</td>
+              <td>${b.equipment || '-'}</td>
+              <td>R$ ${Number(b.total || 0).toFixed(2)}</td>
+              <td class="no-print" style="display: flex; gap: 5px; flex-wrap: wrap;">
+                <button class="btn" style="padding: 4px 8px; font-size: 0.8rem; background-color: #1D4ED8;" onclick="openBudgetPreview(${i})">Gerar Orçamento</button>
+                <button class="btn" style="padding: 4px 8px; font-size: 0.8rem; background-color: #F59E0B;" onclick="editBudget(${i})">Editar</button>
+                <button class="btn" style="padding: 4px 8px; font-size: 0.8rem; background-color: #EF4444;" onclick="deleteBudget(${i})">Excluir</button>
+              </td>
+            </tr>
           `;
         }
-        container.innerHTML = htmlCards;
+        tbody.innerHTML = htmlRows;
       } catch (err) {
-        console.error(err);
-        container.innerHTML = `<p style="text-align: center; color: red;">Erro ao carregar dados dos orçamentos.</p>`;
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: red;">Erro ao carregar orçamentos.</td></tr>`;
       }
     }
 
     document.addEventListener("DOMContentLoaded", async () => {
       await loadClientsSelect();
       await renderBudgets();
+      
       try {
         let budgets = await DataSync.load('rg_orcamentos') || [];
         if (Array.isArray(budgets) && budgets.length > 0) {
           document.getElementById('orcNumber').value = `ORC-${String(budgets.length + 1).padStart(4, '0')}`;
         }
       } catch (e) {}
+
       atualizarTermosCompletos();
 
       DataSync.listen('rg_orcamentos', () => renderBudgets());
@@ -327,13 +338,13 @@
       const editIndex = document.getElementById('editIndex').value;
       
       const newBudget = {
-        number: document.getElementById('orcNumber').value.trim(),
-        date: document.getElementById('orcDate').value.trim(),
-        client: document.getElementById('orcClient').value.trim(),
-        equipment: document.getElementById('orcEquipment').value.trim(),
-        desc: document.getElementById('orcDesc').value.trim(),
-        total: document.getElementById('orcTotal').value.trim(),
-        terms: document.getElementById('orcTerms').value.trim()
+        number: document.getElementById('orcNumber').value,
+        date: document.getElementById('orcDate').value,
+        client: document.getElementById('orcClient').value,
+        equipment: document.getElementById('orcEquipment').value,
+        desc: document.getElementById('orcDesc').value,
+        total: document.getElementById('orcTotal').value,
+        terms: document.getElementById('orcTerms').value
       };
 
       try {
@@ -349,7 +360,7 @@
         await DataSync.save('rg_orcamentos', budgets);
         resetForm();
         renderBudgets();
-        alert('Orçamento salvo e sincronizado com sucesso na nuvem!');
+        alert('Orçamento salvo e sincronizado com sucesso!');
       } catch (err) {
         alert('Erro ao salvar orçamento: ' + err.message);
       }
@@ -360,6 +371,7 @@
       document.getElementById('editIndex').value = '';
       document.getElementById('formTitle').textContent = 'Novo Orçamento';
       document.getElementById('orcDate').valueAsDate = new Date();
+      
       document.querySelectorAll('.term-check').forEach(cb => cb.checked = true);
       document.getElementById('checkNotIncluded').checked = true;
       document.getElementById('orcNotIncludedText').value = "";
@@ -379,13 +391,13 @@
 
         document.getElementById('editIndex').value = index;
         document.getElementById('formTitle').textContent = `Editar Orçamento - ${b.number}`;
-        document.getElementById('orcNumber').value = b.number || '';
-        document.getElementById('orcDate').value = b.date || '';
-        document.getElementById('orcClient').value = b.client || '';
-        document.getElementById('orcEquipment').value = b.equipment || '';
-        document.getElementById('orcDesc').value = b.desc || '';
-        document.getElementById('orcTotal').value = b.total || '';
-        document.getElementById('orcTerms').value = b.terms || '';
+        document.getElementById('orcNumber').value = b.number;
+        document.getElementById('orcDate').value = b.date;
+        document.getElementById('orcClient').value = b.client;
+        document.getElementById('orcEquipment').value = b.equipment;
+        document.getElementById('orcDesc').value = b.desc;
+        document.getElementById('orcTotal').value = b.total;
+        document.getElementById('orcTerms').value = b.terms;
 
         const currentTerms = b.terms || '';
         document.querySelectorAll('.term-check').forEach(cb => {
@@ -395,12 +407,14 @@
         if (currentTerms.includes("Não estão inclusos:")) {
           document.getElementById('checkNotIncluded').checked = true;
           const parts = currentTerms.split("Não estão inclusos:");
-          if (parts[1]) document.getElementById('orcNotIncludedText').value = parts[1].trim();
+          if (parts[1]) {
+            document.getElementById('orcNotIncludedText').value = parts[1].trim();
+          }
         } else {
           document.getElementById('checkNotIncluded').checked = false;
           document.getElementById('orcNotIncludedText').value = "";
         }
-
+        
         window.scrollTo({ top: 0, behavior: 'smooth' });
       } catch (e) {
         alert('Erro ao carregar orçamento para edição.');
@@ -408,180 +422,150 @@
     };
 
     window.deleteBudget = async function(index) {
-      if(confirm('Deseja realmente excluir este orçamento?')) {
+      if (confirm('Deseja realmente excluir este orçamento?')) {
         try {
           let budgets = await DataSync.load('rg_orcamentos') || [];
           budgets.splice(index, 1);
           await DataSync.save('rg_orcamentos', budgets);
           renderBudgets();
-        } catch (e) { alert('Erro ao excluir orçamento.'); }
+        } catch (e) {
+          alert('Erro ao excluir orçamento.');
+        }
       }
     };
 
     window.openBudgetPreview = async function(index) {
+      let budgets = await DataSync.load('rg_orcamentos') || [];
+      const b = budgets[index];
+      if (!b) { alert("Orçamento não encontrado."); return; }
+
+      const defaultConfig = { 
+        name: 'LASER EXPERT SERVICO E COMERCIO DE PECAS LTDA', 
+        tech: 'Otávio Barbosa',
+        doc: '48.959.536/0001-65',
+        email: 'comercial@laserexpertbr.com.br',
+        contact: '+55 51 98144-1865',
+        location: 'Rua Corte Real 487 – Scharlau – São Leopoldo – RS'
+      };
+
+      let config = { ...defaultConfig };
       try {
-        let budgets = await DataSync.load('rg_orcamentos') || [];
-        const b = budgets[index];
-        if (!b) { alert("Orçamento não encontrado."); return; }
-        
-        const defaultConfig = { 
-          name: 'LASER EXPERT SERVICO E COMERCIO DE PECAS LTDA', 
-          tech: 'Otávio Barbosa',
-          doc: '48.959.536/0001-65',
-          email: 'comercial@laserexpertbr.com.br',
-          contact: '+55 51 98144-1865',
-          location: 'Rua Corte Real 487 – Scharlau – São Leopoldo – RS',
-          techSignature: ''
-        };
+        const savedCfg = await DataSync.load('rg_config');
+        if (savedCfg) config = { ...defaultConfig, ...savedCfg };
+      } catch (e) {}
 
-        let config = { ...defaultConfig };
-        try {
-          const savedCfg = await DataSync.load('rg_config');
-          if (savedCfg) config = { ...defaultConfig, ...savedCfg };
-        } catch (e) {}
+      let clients = await DataSync.load('rg_clients') || [];
+      const clientObj = clients.find(c => c.name === b.client) || {};
 
-        let clients = await DataSync.load('rg_clients') || [];
-        const clientObj = clients.find(c => c.name === b.client) || {};
+      activeBudgetData = b;
+      document.getElementById('modalTitleOrc').textContent = `Orçamento - ${b.number || 'ORC-0001'}`;
+      document.getElementById('loadingStatusOrc').textContent = '⏳ A preparar visualização...';
 
-        activeBudgetData = { number: b.number, client: b.client };
+      const termsList = (b.terms || '').split('\n').map(t => `<p>• ${t}</p>`).join('');
 
-        const techSignature = config.techSignature || '';
-        const signatureAreaHtml = `
-          <div class="signature-area">
-            <div class="signature-box">
-              ${techSignature ? `<img src="${techSignature}" alt="Assinatura Técnico">` : '<p style="height: 50px;"></p>'}
-              <p>________________________________________</p>
-              <p><strong>Responsável Técnico / Emissor:</strong> ${escapeHTML(config.tech || 'Otávio Barbosa')}</p>
+      const renderArea = document.getElementById('budgetRenderArea');
+      renderArea.innerHTML = `
+        <div class="print-body">
+          <div class="watermark">LASER EXPERT</div>
+          <div class="print-header">
+            <img src="logo.png" alt="Logo">
+            <div class="print-header-info">
+              <h1>${config.name}</h1>
+              <p>CNPJ: ${config.doc}</p>
+              <p>${config.location}</p>
+              <p>Email: ${config.email} | Tel: ${config.contact}</p>
             </div>
           </div>
-        `;
 
-        const safeNum = escapeHTML(b.number);
-        const safeDate = escapeHTML(b.date);
-        const safeCfgName = escapeHTML(config.name);
-        const safeCfgDoc = escapeHTML(config.doc);
-        const safeCfgEmail = escapeHTML(config.email || '-');
-        const safeCfgContact = escapeHTML(config.contact);
-        const safeCfgLocation = escapeHTML(config.location);
-        const safeClientName = escapeHTML(b.client);
-        const safeClientDoc = escapeHTML(clientObj.doc || clientObj.cnpj || '-');
-        const safeClientEmail = escapeHTML(clientObj.email || '-');
-        const safeClientAddress = escapeHTML(clientObj.address || '-');
-        const safeEquipment = escapeHTML(b.equipment || '-');
-        const safeDesc = escapeHTML(b.desc || '-');
-        const safeTerms = escapeHTML(b.terms || '-');
-        const safeTotal = Number(b.total || 0).toFixed(2);
-
-        const fullBudgetHtml = `
-          <div class="print-body" id="pdfContentToPrint">
-            <div class="watermark">LASER EXPERT</div>
-
-            <div class="print-header">
-              <img src="logo.png" alt="Logo">
-              <div class="print-header-info">
-                <h1>ORÇAMENTO DE SERVIÇO</h1>
-                <p><strong>Nº:</strong> ${safeNum} | <strong>Data:</strong> ${safeDate}</p>
+          <div class="section-box">
+            <div class="section-title">DADOS DO ORÇAMENTO E CLIENTE</div>
+            <div class="grid-2">
+              <div>
+                <p><strong>Nº Orçamento:</strong> ${b.number || '-'}</p>
+                <p><strong>Data:</strong> ${b.date || '-'}</p>
+                <p><strong>Cliente:</strong> ${b.client || '-'}</p>
+                <p><strong>CNPJ/CPF:</strong> ${clientObj.doc || clientObj.cnpj || '-'}</p>
+              </div>
+              <div>
+                <p><strong>Equipamento:</strong> ${b.equipment || '-'}</p>
+                <p><strong>Morada:</strong> ${clientObj.address || clientObj.morada || '-'}</p>
+                <p><strong>Contacto:</strong> ${clientObj.phone || clientObj.telefone || '-'}</p>
               </div>
             </div>
-
-            <div class="section-box">
-              <div class="section-title">Dados da Empresa / Prestador de Serviço</div>
-              <div class="grid-2">
-                <p><strong>Razão Social:</strong> ${safeCfgName}</p>
-                <p><strong>CNPJ:</strong> ${safeCfgDoc}</p>
-                <p><strong>E-mail:</strong> ${safeCfgEmail}</p>
-                <p><strong>Telefone / WhatsApp:</strong> ${safeCfgContact}</p>
-                <p style="grid-column: span 2;"><strong>Endereço:</strong> ${safeCfgLocation}</p>
-              </div>
-            </div>
-
-            <div class="section-box">
-              <div class="section-title">Dados do Cliente</div>
-              <div class="grid-2">
-                <p><strong>Nome / Razão Social:</strong> ${safeClientName}</p>
-                <p><strong>CPF / CNPJ:</strong> ${safeClientDoc}</p>
-                <p><strong>E-mail:</strong> ${safeClientEmail}</p>
-                <p><strong>Endereço:</strong> ${safeClientAddress}</p>
-              </div>
-            </div>
-
-            <div class="section-box">
-              <div class="section-title">Equipamento / Máquina</div>
-              <p><strong>Equipamento:</strong> ${safeEquipment}</p>
-            </div>
-
-            <div class="section-box">
-              <div class="section-title">Escopo dos Serviços</div>
-              <p style="white-space: pre-wrap; margin-top: 2px; background: #FFF; padding: 6px; border: 1px solid #E2E8F0; border-radius: 4px;">${safeDesc}</p>
-            </div>
-
-            <div class="section-box">
-              <div class="section-title">Condições Comerciais</div>
-              <p style="white-space: pre-wrap; font-size: 11px; margin-bottom: 6px;">${safeTerms}</p>
-            </div>
-
-            <div class="section-box" style="text-align: right; background: #F1F5F9; border-color: #00F5D4;">
-              <p style="font-size: 13px; font-weight: bold; color: #0B132B;">VALOR TOTAL DO ORÇAMENTO:</p>
-              <p style="font-size: 18px; font-weight: bold; color: #0D9488;">R$ ${safeTotal}</p>
-            </div>
-
-            ${signatureAreaHtml}
           </div>
-        `;
 
-        document.getElementById('budgetRenderArea').innerHTML = fullBudgetHtml;
-        document.getElementById('modalTitleOrc').textContent = `Orçamento - ${b.number} (${b.client})`;
-        document.getElementById('loadingStatusOrc').textContent = 'Pronto';
-        document.getElementById('budgetPreviewModal').style.display = 'flex';
+          <div class="section-box">
+            <div class="section-title">ESCOPO DOS SERVIÇOS</div>
+            <p style="white-space: pre-wrap; margin-top: 5px;">${b.desc || '-'}</p>
+          </div>
+
+          <div class="section-box">
+            <div class="section-title">CONDIÇÕES COMERCIAIS</div>
+            ${termsList}
+          </div>
+
+          <div class="section-box" style="text-align: right; background: #F1F5F9;">
+            <p style="font-size: 14px; font-weight: bold; color: var(--deep-navy);">VALOR TOTAL: R$ ${Number(b.total || 0).toFixed(2)}</p>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('loadingStatusOrc').textContent = '✅ Pronto';
+      document.getElementById('budgetPreviewModal').style.display = 'flex';
+
+      // Aciona automaticamente a partilha logo após abrir o modal
+      setTimeout(() => {
+        compartilharPDFOrcamento();
+      }, 400);
+    };
+
+    window.compartilharPDFOrcamento = async function() {
+      const element = document.getElementById('budgetRenderArea');
+      const statusSpan = document.getElementById('loadingStatusOrc');
+      statusSpan.textContent = '⏳ A gerar PDF...';
+
+      const opt = {
+        margin:       10,
+        filename:     `Orcamento_${activeBudgetData.number || '0001'}_${activeBudgetData.client || 'Cliente'}.pdf`,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, useCORS: true, letterRendering: true, scrollY: 0 },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+
+      try {
+        const pdfBlob = await html2pdf().from(element).set(opt).outputPdf('blob');
+        const fileName = `Orcamento_${activeBudgetData.number || '0001'}.pdf`;
+        const file = new File([pdfBlob], fileName, { type: 'application/pdf' });
+
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          statusSpan.textContent = '✅ Pronto a partilhar!';
+          await navigator.share({
+            files: [file],
+            title: `Orçamento ${activeBudgetData.number}`,
+            text: `Segue em anexo o orçamento ${activeBudgetData.number} para ${activeBudgetData.client}.`
+          });
+        } else {
+          const blobUrl = URL.createObjectURL(pdfBlob);
+          const link = document.createElement('a');
+          link.href = blobUrl;
+          link.download = fileName;
+          link.click();
+          statusSpan.textContent = '✅ PDF descarregado';
+        }
       } catch (err) {
-        console.error(err);
-        alert("Erro ao abrir pré-visualização do orçamento.");
+        if (err.name !== 'AbortError') {
+          console.error("Erro ao partilhar PDF:", err);
+          statusSpan.textContent = '❌ Erro';
+        } else {
+          statusSpan.textContent = '✅ Cancelado';
+        }
       }
     };
 
     window.closeModal = function() {
       document.getElementById('budgetPreviewModal').style.display = 'none';
     };
-
-    window.compartilharPDF = async function() {
-      const element = document.getElementById('budgetRenderArea');
-      const filename = `Orcamento_${activeBudgetData.number || 'ORC-0001'}.pdf`;
-      const opt = {
-        margin: 10,
-        filename: filename,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, allowTaint: true },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-      };
-
-      document.getElementById('loadingStatusOrc').textContent = 'A gerar PDF...';
-
-      try {
-        const worker = html2pdf().from(element).set(opt);
-        const pdfBlob = await worker.outputPdf('blob');
-        const file = new File([pdfBlob], filename, { type: 'application/pdf' });
-
-        if (navigator.canShare && navigator.canShare({ files: [file] })) {
-          await navigator.share({
-            files: [file],
-            title: `Orçamento ${activeBudgetData.number || ''}`,
-            text: `Segue em anexo o orçamento ${activeBudgetData.number || ''} para o cliente ${activeBudgetData.client || ''}.`
-          });
-          document.getElementById('loadingStatusOrc').textContent = 'Partilhado!';
-        } else {
-          worker.save();
-          document.getElementById('loadingStatusOrc').textContent = 'Guardado (Download)!';
-        }
-      } catch (err) {
-        console.error("Erro ou cancelamento na partilha:", err);
-        if (err.name !== 'AbortError') {
-          html2pdf().from(element).set(opt).save();
-          document.getElementById('loadingStatusOrc').textContent = 'Guardado (Download)!';
-        } else {
-          document.getElementById('loadingStatusOrc').textContent = 'Partilha cancelada.';
-        }
-      }
-    };
   </script>
+
 </body>
 </html>

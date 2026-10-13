@@ -528,6 +528,7 @@
         email: 'comercial@laserexpertbr.com.br',
         contact: '+55 51 98144-1865',
         location: 'Rua Corte Real 487 – Scharlau – São Leopoldo – RS',
+        orcPixKey: '',
         nomeConta1: 'Conta Principal',
         pix1: 'comercial@laserexpertbr.com.br', bank1: '', agency1: '', account1: '',
         nomeConta2: 'Conta Secundária',
@@ -580,7 +581,9 @@
 
       let pixCopiaEColaHtml = '';
       const valorFormatado = Number(b.total || 0).toFixed(2);
-      const effectivePixKey = (pixKeyToUse && pixKeyToUse.trim() !== '') ? pixKeyToUse : (config.email || 'comercial@laserexpertbr.com.br');
+      
+      // Reconhece a chave PIX global de orçamentos cadastrada nas configurações (com fallback para o email)
+      const effectivePixKey = (config.orcPixKey && config.orcPixKey.trim() !== '') ? config.orcPixKey.trim() : (config.email || 'comercial@laserexpertbr.com.br');
 
       if (opt !== 'boleto' && b.includeQr !== false) {
         activePixPayload = `00020126580014br.gov.bcb.pix0136${effectivePixKey}5204000053039865802BR5925${config.name}6009SaoLeopoldo62070303${b.number}6304`;
@@ -733,7 +736,6 @@
 
       let y = 22;
 
-      // Função auxiliar para desenhar barras de seção sem encavalar texto
       function desenharCabecalho(titulo) {
         y += 5;
         docPDF.setFillColor(240, 244, 248);
@@ -807,7 +809,7 @@
         y += 4;
         docPDF.text(`• Banco: ${banco || '-'} | Agência: ${ag || '-'} | Conta: ${cc || '-'}`, 22, y);
         y += 4;
-        docPDF.text(`• Chave PIX: ${pix || config.email || '-'}`, 22, y);
+        docPDF.text(`• Chave PIX: ${pix || '-'}`, 22, y);
         y += 6;
       } else {
         docPDF.text(`• Recebimento: Boleto Bancário`, 22, y);

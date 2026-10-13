@@ -527,7 +527,7 @@
         const safeTotal = Number(b.total || 0).toFixed(2);
 
         const fullBudgetHtml = `
-          <div class="print-body" id="pdfContentToPrint">
+          <div class="print-body" style="width: 100%; box-sizing: border-box; position: relative;">
             <div class="watermark">LASER EXPERT</div>
 
             <div class="print-header">
@@ -606,7 +606,7 @@
         margin: 10,
         filename: filename,
         image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, allowTaint: true },
+        html2canvas: { scale: 2, useCORS: true, allowTaint: true, windowWidth: 800 },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
       };
 

@@ -8,6 +8,9 @@
   <link rel="manifest" href="manifest.json">
   <link rel="stylesheet" href="style.css">
 
+  <!-- Biblioteca jsPDF para gerar o PDF e permitir compartilhamento nativo -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
   <!-- Firebase SDKs Compat -->
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
@@ -25,7 +28,6 @@
   </script>
 
   <style>
-    /* Estilos de Impressão Nativa (Gera PDF perfeito e vetorial no telemóvel) */
     @media print {
       header, footer, .no-print, .action-toolbar, main { display: none !important; }
       body { background: white; color: black; padding: 0; margin: 0; }
@@ -250,7 +252,7 @@
           <span id="loadingStatusOrc" style="font-size: 0.8rem; margin-left: 8px; color: #FCD34D;">⏳ Pronto</span>
         </div>
         <div class="toolbar-buttons">
-          <button class="btn" style="background-color: #00F5D4; color: #0B132B; font-weight: bold; padding: 6px 12px; font-size: 0.85rem; border: none; border-radius: 4px; cursor: pointer;" onclick="compartilharPDFOrcamento()">📤 Gerar / Imprimir PDF</button>
+          <button class="btn" style="background-color: #00F5D4; color: #0B132B; font-weight: bold; padding: 6px 12px; font-size: 0.85rem; border: none; border-radius: 4px; cursor: pointer;" onclick="compartilharPDFOrcamento()">📤 Gerar / Partilhar PDF</button>
           <button class="btn" style="background-color: #dc3545; color: white; padding: 6px 12px; font-size: 0.85rem; border: none; border-radius: 4px; cursor: pointer;" onclick="closeModal()">✖ Fechar</button>
         </div>
       </div>
@@ -275,7 +277,40 @@
         .replace(/'/g, '&#039;');
     }
 
+    // Auxiliar para converter imagens externas em Base64 para uso seguro no jsPDF
+    function getBase64ImageFromUrl(url) {
+      return new Promise((resolve) => {
+        if (!url) { resolve(null); return; }
+        const img = new Image();
+        img.crossOrigin = 'Anonymous';
+        img.onload = function() {
+          try {
+            const canvas = document.createElement('canvas');
+            canvas.width = img.width;
+            canvas.height = img.height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0);
+            resolve({
+              dataUrl: canvas.toDataURL('image/png'),
+              width: img.width,
+              height: img.height
+            });
+          } catch (e) {
+            console.warn("Erro ao converter imagem:", e);
+            resolve(null);
+          }
+        };
+        img.onerror = function() { resolve(null); };
+        img.src = url;
+      });
+    }
+
     let activeBudgetData = {};
+    let activeConfigData = {};
+    let activeClientData = {};
+    let activePixPayload = "";
+    let activeQrCodeUrl = "";
+
     document.getElementById('orcDate').valueAsDate = new Date();
 
     async function carregarApelidosContas() {
@@ -510,6 +545,10 @@
       try { clients = await DataSync.load('rg_clients') || []; } catch (e) {}
       const clientObj = clients.find(c => c.name === b.client) || {};
 
+      activeBudgetData = b;
+      activeConfigData = config;
+      activeClientData = clientObj;
+
       let bancoInfoHtml = '';
       const opt = b.paymentOption || 'banco1';
       let pixKeyToUse = '';
@@ -544,23 +583,22 @@
       const effectivePixKey = (pixKeyToUse && pixKeyToUse.trim() !== '') ? pixKeyToUse : (config.email || 'comercial@laserexpertbr.com.br');
 
       if (opt !== 'boleto' && b.includeQr !== false) {
-        // Payload Pix Copia e Cola estruturado para gerar o QR Code visual
-        const pixPayload = `00020126580014br.gov.bcb.pix0136${effectivePixKey}5204000053039865802BR5925${config.name}6009SaoLeopoldo62070303${b.number}6304`;
-        const qrCodeApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(pixPayload)}`;
+        activePixPayload = `00020126580014br.gov.bcb.pix0136${effectivePixKey}5204000053039865802BR5925${config.name}6009SaoLeopoldo62070303${b.number}6304`;
+        activeQrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(activePixPayload)}`;
 
         pixCopiaEColaHtml = `
           <div style="margin-top: 10px; padding: 10px; background: #F1F5F9; border: 1px solid #CBD5E1; border-radius: 4px; box-sizing: border-box; width: 100%; text-align: center;">
             <p style="font-size: 10px; font-weight: bold; color: #0B132B; margin: 0 0 6px 0;">QR CODE PIX & COPIA E COLA (PAGAMENTO INSTANTÂNEO):</p>
-            
-            <!-- Imagem do QR Code Visual -->
-            <img src="${qrCodeApiUrl}" alt="QR Code Pix" style="width: 110px; height: 110px; display: block; margin: 0 auto 6px auto; border: 1px solid #CBD5E1; background: #fff; padding: 4px; border-radius: 4px;">
-
+            <img src="${activeQrCodeUrl}" alt="QR Code Pix" style="width: 110px; height: 110px; display: block; margin: 0 auto 6px auto; border: 1px solid #CBD5E1; background: #fff; padding: 4px; border-radius: 4px;">
             <div style="background: #FFFFFF; border: 1px dashed #0D9488; padding: 6px; font-family: monospace; font-size: 8px; word-break: break-all; overflow-wrap: break-word; color: #0D9488; box-sizing: border-box; width: 100%; line-height: 1.2; margin-bottom: 4px;">
-              ${escapeHTML(pixPayload)}
+              ${escapeHTML(activePixPayload)}
             </div>
             <p style="font-size: 9px; color: #64748B; margin: 2px 0 0 0;">Chave: <strong>${escapeHTML(effectivePixKey)}</strong> | Valor: <strong>R$ ${valorFormatado}</strong></p>
           </div>
         `;
+      } else {
+        activePixPayload = "";
+        activeQrCodeUrl = "";
       }
 
       const techSignature = config.techSignature || '';
@@ -648,7 +686,6 @@
         </div>
       `;
 
-      activeBudgetData = b;
       document.getElementById('modalTitleOrc').textContent = `Orçamento - ${b.number} (${b.client})`;
       document.getElementById('loadingStatusOrc').textContent = 'Pronto';
       document.getElementById('budgetPreviewModal').style.display = 'flex';
@@ -658,9 +695,164 @@
       document.getElementById('budgetPreviewModal').style.display = 'none';
     };
 
-    // Aciona a impressão/PDF nativa do telemóvel com o QR Code visual integrado
-    window.compartilharPDFOrcamento = function () {
-      window.print();
+    // Gera PDF nativo com jsPDF e aciona o compartilhamento/download sem tela em branco
+    window.compartilharPDFOrcamento = async function () {
+      const b = activeBudgetData;
+      const config = activeConfigData;
+      const clientObj = activeClientData;
+
+      if (!b || !b.number) {
+        alert("Erro ao selecionar orçamento para o PDF.");
+        return;
+      }
+
+      const { jsPDF } = window.jspdf;
+      const docPDF = new jsPDF();
+
+      // Logótipo
+      const logoResult = await getBase64ImageFromUrl('logo.png');
+      if (logoResult) {
+        docPDF.addImage(logoResult.dataUrl, 'PNG', 20, 8, 28, 12);
+      }
+
+      docPDF.setFont("helvetica", "bold");
+      docPDF.setFontSize(11);
+      docPDF.text("ORÇAMENTO DE SERVIÇO", 52, 12);
+
+      docPDF.setFontSize(10);
+      docPDF.setTextColor(0, 180, 160);
+      docPDF.text(`N°: ${b.number || 'ORC-0001'}`, 150, 12);
+
+      docPDF.setTextColor(0, 0, 0);
+      docPDF.setFontSize(8);
+      docPDF.setFont("helvetica", "normal");
+      docPDF.text(`Data: ${b.date || '-'}`, 150, 16.5);
+
+      docPDF.setLineWidth(0.3);
+      docPDF.line(20, 20, 190, 20);
+
+      let y = 20;
+
+      function desenharCabecalho(titulo) {
+        y += 5;
+        docPDF.setFillColor(240, 244, 248);
+        docPDF.rect(20, y, 170, 5, 'F');
+        docPDF.setFont("helvetica", "bold");
+        docPDF.setFontSize(8.5);
+        docPDF.setTextColor(11, 19, 43);
+        docPDF.text(titulo, 22, y + 3.5);
+        y += 8;
+      }
+
+      desenharCabecalho("DADOS DA EMPRESA");
+      docPDF.setFont("helvetica", "normal");
+      docPDF.setFontSize(8);
+      docPDF.text(`Razão Social: ${config.name || '-'}`, 22, y);
+      docPDF.text(`CNPJ: ${config.doc || '-'}`, 110, y);
+      y += 4.5;
+      docPDF.text(`Contato: ${config.contact || '-'} | E-mail: ${config.email || '-'}`, 22, y);
+      y += 4.5;
+      docPDF.text(`Endereço: ${config.location || '-'}`, 22, y);
+
+      desenharCabecalho("CLIENTE & EQUIPAMENTO");
+      docPDF.setFont("helvetica", "normal");
+      docPDF.setFontSize(8);
+      docPDF.text(`Cliente: ${b.client || '-'}`, 22, y);
+      docPDF.text(`Equipamento: ${b.equipment || '-'}`, 110, y);
+      y += 4.5;
+      docPDF.text(`CNPJ/CPF: ${clientObj.doc || '-'}`, 22, y);
+      docPDF.text(`Endereço: ${clientObj.address || '-'}`, 110, y);
+
+      desenharCabecalho("ESCOPO DOS SERVIÇOS");
+      docPDF.setFont("helvetica", "normal");
+      docPDF.setFontSize(8);
+      const splitDesc = docPDF.splitTextToSize(b.desc || 'Nenhum detalhe informado.', 165);
+      docPDF.text(splitDesc, 22, y);
+      y += (splitDesc.length * 4);
+
+      desenharCabecalho("CONDIÇÕES COMERCIAIS & PAGAMENTO");
+      docPDF.setFont("helvetica", "normal");
+      docPDF.setFontSize(8);
+      const splitTerms = docPDF.splitTextToSize(b.terms || '-', 165);
+      docPDF.text(splitTerms, 22, y);
+      y += (splitTerms.length * 4);
+
+      const opt = b.paymentOption || 'banco1';
+      let nomeConta = opt === 'banco2' ? (config.nomeConta2 || 'Conta 2') : (config.nomeConta1 || 'Conta 1');
+      let banco = opt === 'banco2' ? config.bank2 : config.bank1;
+      let ag = opt === 'banco2' ? config.agency2 : config.agency1;
+      let cc = opt === 'banco2' ? config.account2 : config.account1;
+      let pix = opt === 'banco2' ? config.pix2 : config.pix1;
+
+      if (opt !== 'boleto') {
+        docPDF.text(`• Recebimento: PIX / Transferência (${nomeConta})`, 22, y);
+        y += 4;
+        docPDF.text(`• Banco: ${banco || '-'} | Agência: ${ag || '-'} | Conta: ${cc || '-'}`, 22, y);
+        y += 4;
+        docPDF.text(`• Chave PIX: ${pix || config.email || '-'}`, 22, y);
+        y += 4;
+      } else {
+        docPDF.text(`• Recebimento: Boleto Bancário`, 22, y);
+        y += 4;
+      }
+
+      // Adiciona QR Code Pix se aplicável
+      if (activeQrCodeUrl) {
+        const qrResult = await getBase64ImageFromUrl(activeQrCodeUrl);
+        if (qrResult) {
+          docPDF.addImage(qrResult.dataUrl, 'PNG', 155, y - 10, 22, 22);
+          docPDF.setFontSize(6);
+          docPDF.text("Escanear Pix", 157, y + 14);
+        }
+      }
+
+      desenharCabecalho("VALOR TOTAL DO ORÇAMENTO");
+      docPDF.setFont("helvetica", "bold");
+      docPDF.setFontSize(11);
+      docPDF.setTextColor(13, 148, 136);
+      docPDF.text(`TOTAL: R$ ${Number(b.total || 0).toFixed(2)}`, 22, y);
+
+      y += 20;
+
+      // Assinatura do Emissor
+      docPDF.setLineWidth(0.2);
+      docPDF.setDrawColor(0, 0, 0);
+      docPDF.line(65, y, 145, y);
+      docPDF.setFont("helvetica", "normal");
+      docPDF.setFontSize(8);
+      docPDF.setTextColor(0, 0, 0);
+      docPDF.text(`Responsável Técnico: ${config.tech || 'Otávio Barbosa'}`, 105, y + 4, { align: "center" });
+
+      if (config.techSignature) {
+        docPDF.addImage(config.techSignature, 'PNG', 85, y - 12, 40, 10);
+      }
+
+      const pdfBlob = docPDF.output('blob');
+      const safeClientName = (b.client || 'Cliente').replace(/[^a-zA-Z0-9]/g, "_");
+      const fileName = `Orcamento_${b.number}_${safeClientName}.pdf`;
+      const pdfFile = new File([pdfBlob], fileName, { type: 'application/pdf' });
+
+      if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
+        try {
+          await navigator.share({
+            title: `Orçamento ${b.number} - Laser Expert`,
+            text: `Segue o orçamento ${b.number} para ${b.client}.`,
+            files: [pdfFile],
+          });
+          return;
+        } catch (error) {
+          if (error.name === 'AbortError') return;
+        }
+      }
+
+      // Download fallback
+      const pdfUrl = URL.createObjectURL(pdfBlob);
+      const downloadLink = document.createElement('a');
+      downloadLink.href = pdfUrl;
+      downloadLink.download = fileName;
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      document.body.removeChild(downloadLink);
     };
   </script>
 </body>

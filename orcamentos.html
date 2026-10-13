@@ -87,14 +87,18 @@
     }
 
     .print-body { font-family: Arial, sans-serif; color: #0B132B; line-height: 1.4; font-size: 11px; position: relative; z-index: 1; box-sizing: border-box; width: 100%; }
-    .print-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #00F5D4; padding-bottom: 8px; margin-bottom: 12px; }
-    .print-header img { height: 45px; width: auto; }
-    .print-header-info { text-align: right; }
-    .print-header-info h1 { font-size: 14px; color: #0B132B; margin: 0; font-weight: bold; }
-    .section-box { border: 1px solid #CBD5E1; padding: 10px; margin-bottom: 10px; border-radius: 6px; background: #F8FAFC; page-break-inside: avoid; }
-    .section-title { font-weight: bold; font-size: 12px; color: #0B132B; margin-bottom: 6px; border-bottom: 1px solid #E2E8F0; padding-bottom: 3px; }
     
-    /* Grelha Responsiva */
+    /* Layout idêntico ao print de referência */
+    .print-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #CBD5E1; padding-bottom: 8px; margin-bottom: 12px; }
+    .print-header img { height: 40px; width: auto; }
+    .print-header-center h1 { font-size: 15px; color: #0B132B; margin: 0; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; }
+    .print-header-info { text-align: right; }
+    .print-header-info h2 { font-size: 13px; color: #0D9488; margin: 0; font-weight: bold; }
+    .print-header-info p { font-size: 11px; color: #334155; margin: 2px 0 0 0; }
+
+    .section-box { border: 1px solid #CBD5E1; padding: 10px; margin-bottom: 10px; border-radius: 4px; background: #F8FAFC; page-break-inside: avoid; }
+    .section-title { font-weight: bold; font-size: 11px; color: #0B132B; margin-bottom: 6px; border-bottom: 1px solid #E2E8F0; padding-bottom: 3px; background: #E2E8F0; padding: 4px 8px; margin: -10px -10px 8px -10px; border-top-left-radius: 3px; border-top-right-radius: 3px; }
+    
     .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     @media (max-width: 768px) {
       .grid-2 { grid-template-columns: 1fr; }
@@ -219,12 +223,12 @@
     <div class="modal-content-wrapper">
       <div class="action-toolbar">
         <div>
-          <strong id="modalTitleOrc" style="color: var(--electric-cyan); font-size: 1rem;">Orçamento</strong>
+          <strong id="modalTitleOrc" style="color: var(--electric-cyan, #00F5D4); font-size: 1rem;">Orçamento</strong>
           <span id="loadingStatusOrc" style="font-size: 0.8rem; margin-left: 8px; color: #FCD34D;">⏳ A preparar partilha...</span>
         </div>
         <div class="toolbar-buttons">
           <button class="btn" style="background-color: #00F5D4; color: #0B132B; font-weight: bold; padding: 6px 12px; font-size: 0.85rem;" onclick="compartilharPDFOrcamento()">📤 Partilhar PDF</button>
-          <button class="btn" style="background-color: #EF4444; padding: 6px 12px; font-size: 0.85rem;" onclick="closeModal()">✖ Fechar</button>
+          <button class="btn" style="background-color: #EF4444; color: white; padding: 6px 12px; font-size: 0.85rem;" onclick="closeModal()">✖ Fechar</button>
         </div>
       </div>
       <div class="report-scroll-container" id="budgetScrollContainer">
@@ -474,7 +478,8 @@
         nomeConta1: 'Conta Principal',
         bank1: '', agency1: '', account1: '',
         nomeConta2: 'Conta Secundária',
-        bank2: '', agency2: '', account2: ''
+        bank2: '', agency2: '', account2: '',
+        techSignature: ''
       };
 
       let config = { ...defaultConfig };
@@ -515,33 +520,43 @@
       }
 
       const termsList = (b.terms || '').split('\n').map(t => `<p>• ${escapeHTML(t)}</p>`).join('');
+      const techSignature = config.techSignature || '';
 
       const renderArea = document.getElementById('budgetRenderArea');
       renderArea.innerHTML = `
         <div class="print-body">
           <div class="watermark">LASER EXPERT</div>
+          
           <div class="print-header">
             <img src="logo.png" alt="Logo">
+            <div class="print-header-center">
+              <h1>ORÇAMENTO DE SERVIÇO</h1>
+            </div>
             <div class="print-header-info">
-              <h1>${escapeHTML(config.name)}</h1>
-              <p>CNPJ: ${escapeHTML(config.doc)}</p>
-              <p>${escapeHTML(config.location)}</p>
-              <p>Email: ${escapeHTML(config.email)} | Tel: ${escapeHTML(config.contact)}</p>
+              <h2>Nº: ${escapeHTML(b.number || 'ORC-0001')}</h2>
+              <p>Data: ${escapeHTML(b.date || '-')}</p>
             </div>
           </div>
 
           <div class="section-box">
-            <div class="section-title">DADOS DO ORÇAMENTO E CLIENTE</div>
+            <div class="section-title">DADOS DA EMPRESA</div>
+            <p><strong>Razão Social:</strong> ${escapeHTML(config.name)}</p>
+            <p><strong>CNPJ:</strong> ${escapeHTML(config.doc)}</p>
+            <p><strong>Contato:</strong> ${escapeHTML(config.contact)} | <strong>E-mail:</strong> ${escapeHTML(config.email)}</p>
+            <p><strong>Endereço:</strong> ${escapeHTML(config.location)}</p>
+          </div>
+
+          <div class="section-box">
+            <div class="section-title">CLIENTE & EQUIPAMENTO</div>
             <div class="grid-2">
               <div>
-                <p><strong>Nº Orçamento:</strong> ${escapeHTML(b.number || '-')}</p>
-                <p><strong>Data:</strong> ${escapeHTML(b.date || '-')}</p>
                 <p><strong>Cliente:</strong> ${escapeHTML(b.client || '-')}</p>
                 <p><strong>CNPJ/CPF:</strong> ${escapeHTML(clientObj.doc || clientObj.cnpj || '-')}</p>
+                <p><strong>E-mail:</strong> ${escapeHTML(clientObj.email || '-')}</p>
               </div>
               <div>
                 <p><strong>Equipamento:</strong> ${escapeHTML(b.equipment || '-')}</p>
-                <p><strong>Morada:</strong> ${escapeHTML(clientObj.address || clientObj.morada || '-')}</p>
+                <p><strong>Endereço:</strong> ${escapeHTML(clientObj.address || clientObj.morada || '-')}</p>
                 <p><strong>Contacto:</strong> ${escapeHTML(clientObj.phone || clientObj.telefone || '-')}</p>
               </div>
             </div>
@@ -559,8 +574,16 @@
             ${bancoInfoHtml}
           </div>
 
-          <div class="section-box" style="text-align: right; background: #F1F5F9;">
-            <p style="font-size: 14px; font-weight: bold; color: var(--deep-navy, #0B132B);">VALOR TOTAL: R$ ${Number(b.total || 0).toFixed(2)}</p>
+          <div class="section-box" style="text-align: right; background: #F1F5F9; border-color: #00F5D4;">
+            <p style="font-size: 14px; font-weight: bold; color: var(--deep-navy, #0B132B);">VALOR TOTAL DO ORÇAMENTO: R$ ${Number(b.total || 0).toFixed(2)}</p>
+          </div>
+
+          <div style="margin-top: 25px; display: flex; justify-content: center; page-break-inside: avoid;">
+            <div style="text-align: center; width: 60%;">
+              ${techSignature ? `<img src="${techSignature}" alt="Assinatura" style="max-width: 180px; height: 50px; object-fit: contain; display: block; margin: 0 auto;">` : '<div style="height: 50px;"></div>'}
+              <p style="margin: 2px 0;">________________________________________</p>
+              <p style="margin: 2px 0; font-size: 10px;"><strong>Responsável Técnico / Emissor:</strong> ${escapeHTML(config.tech || 'Otávio Barbosa')}</p>
+            </div>
           </div>
         </div>
       `;

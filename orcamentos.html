@@ -695,7 +695,7 @@
       document.getElementById('budgetPreviewModal').style.display = 'none';
     };
 
-    // Gera PDF nativo com jsPDF e aciona o compartilhamento/download sem tela em branco
+    // Gera PDF nativo com jsPDF e aciona o compartilhamento/download sem sobreposições
     window.compartilharPDFOrcamento = async function () {
       const b = activeBudgetData;
       const config = activeConfigData;
@@ -709,7 +709,7 @@
       const { jsPDF } = window.jspdf;
       const docPDF = new jsPDF();
 
-      // Logótipo
+      // 1. LOGÓTIPO & CABEÇALHO PRINCIPAL
       const logoResult = await getBase64ImageFromUrl('logo.png');
       if (logoResult) {
         docPDF.addImage(logoResult.dataUrl, 'PNG', 20, 8, 28, 12);
@@ -717,7 +717,7 @@
 
       docPDF.setFont("helvetica", "bold");
       docPDF.setFontSize(11);
-      docPDF.text("ORÇAMENTO DE SERVIÇO", 52, 12);
+      docPDF.text("ORÇAMENTO DE SERVIÇO", 52, 13);
 
       docPDF.setFontSize(10);
       docPDF.setTextColor(0, 180, 160);
@@ -729,10 +729,11 @@
       docPDF.text(`Data: ${b.date || '-'}`, 150, 16.5);
 
       docPDF.setLineWidth(0.3);
-      docPDF.line(20, 20, 190, 20);
+      docPDF.line(20, 22, 190, 22);
 
-      let y = 20;
+      let y = 22;
 
+      // Função auxiliar para desenhar barras de seção sem encavalar texto
       function desenharCabecalho(titulo) {
         y += 5;
         docPDF.setFillColor(240, 244, 248);
@@ -741,41 +742,58 @@
         docPDF.setFontSize(8.5);
         docPDF.setTextColor(11, 19, 43);
         docPDF.text(titulo, 22, y + 3.5);
-        y += 8;
+        y += 9;
       }
 
+      // 2. DADOS DA EMPRESA
       desenharCabecalho("DADOS DA EMPRESA");
       docPDF.setFont("helvetica", "normal");
       docPDF.setFontSize(8);
-      docPDF.text(`Razão Social: ${config.name || '-'}`, 22, y);
-      docPDF.text(`CNPJ: ${config.doc || '-'}`, 110, y);
-      y += 4.5;
+      
+      const splitRazao = docPDF.splitTextToSize(`Razão Social: ${config.name || '-'}`, 110);
+      docPDF.text(splitRazao, 22, y);
+      docPDF.text(`CNPJ: ${config.doc || '-'}`, 135, y);
+      y += (splitRazao.length * 4) + 1;
+
       docPDF.text(`Contato: ${config.contact || '-'} | E-mail: ${config.email || '-'}`, 22, y);
       y += 4.5;
       docPDF.text(`Endereço: ${config.location || '-'}`, 22, y);
+      y += 2;
 
+      // 3. CLIENTE & EQUIPAMENTO
       desenharCabecalho("CLIENTE & EQUIPAMENTO");
       docPDF.setFont("helvetica", "normal");
       docPDF.setFontSize(8);
-      docPDF.text(`Cliente: ${b.client || '-'}`, 22, y);
-      docPDF.text(`Equipamento: ${b.equipment || '-'}`, 110, y);
-      y += 4.5;
-      docPDF.text(`CNPJ/CPF: ${clientObj.doc || '-'}`, 22, y);
-      docPDF.text(`Endereço: ${clientObj.address || '-'}`, 110, y);
+      
+      const splitCliente = docPDF.splitTextToSize(`Cliente: ${b.client || '-'}`, 95);
+      docPDF.text(splitCliente, 22, y);
+      
+      const splitEq = docPDF.splitTextToSize(`Equipamento: ${b.equipment || '-'}`, 70);
+      docPDF.text(splitEq, 120, y);
+      
+      const alturaMax1 = Math.max(splitCliente.length, splitEq.length) * 4;
+      y += alturaMax1 + 1;
 
+      docPDF.text(`CNPJ/CPF: ${clientObj.doc || '-'}`, 22, y);
+      const splitEndClient = docPDF.splitTextToSize(`Endereço: ${clientObj.address || '-'}`, 70);
+      docPDF.text(splitEndClient, 120, y);
+      y += Math.max(1, splitEndClient.length) * 4 + 2;
+
+      // 4. ESCOPO DOS SERVIÇOS
       desenharCabecalho("ESCOPO DOS SERVIÇOS");
       docPDF.setFont("helvetica", "normal");
       docPDF.setFontSize(8);
       const splitDesc = docPDF.splitTextToSize(b.desc || 'Nenhum detalhe informado.', 165);
       docPDF.text(splitDesc, 22, y);
-      y += (splitDesc.length * 4);
+      y += (splitDesc.length * 4) + 2;
 
+      // 5. CONDIÇÕES COMERCIAIS & PAGAMENTO
       desenharCabecalho("CONDIÇÕES COMERCIAIS & PAGAMENTO");
       docPDF.setFont("helvetica", "normal");
       docPDF.setFontSize(8);
       const splitTerms = docPDF.splitTextToSize(b.terms || '-', 165);
       docPDF.text(splitTerms, 22, y);
-      y += (splitTerms.length * 4);
+      y += (splitTerms.length * 4) + 3;
 
       const opt = b.paymentOption || 'banco1';
       let nomeConta = opt === 'banco2' ? (config.nomeConta2 || 'Conta 2') : (config.nomeConta1 || 'Conta 1');
@@ -790,31 +808,53 @@
         docPDF.text(`• Banco: ${banco || '-'} | Agência: ${ag || '-'} | Conta: ${cc || '-'}`, 22, y);
         y += 4;
         docPDF.text(`• Chave PIX: ${pix || config.email || '-'}`, 22, y);
-        y += 4;
+        y += 6;
       } else {
         docPDF.text(`• Recebimento: Boleto Bancário`, 22, y);
-        y += 4;
+        y += 6;
       }
 
-      // Adiciona QR Code Pix se aplicável
-      if (activeQrCodeUrl) {
+      // 6. PIX COPIA E COLA & QR CODE
+      if (activeQrCodeUrl && activePixPayload) {
+        const qrY = y;
         const qrResult = await getBase64ImageFromUrl(activeQrCodeUrl);
+        
         if (qrResult) {
-          docPDF.addImage(qrResult.dataUrl, 'PNG', 155, y - 10, 22, 22);
-          docPDF.setFontSize(6);
-          docPDF.text("Escanear Pix", 157, y + 14);
+          docPDF.addImage(qrResult.dataUrl, 'PNG', 152, qrY, 28, 28);
+          docPDF.setFontSize(6.5);
+          docPDF.setFont("helvetica", "bold");
+          docPDF.text("Escanear Pix", 166, qrY + 31, { align: "center" });
         }
+
+        docPDF.setFontSize(7.5);
+        docPDF.setFont("helvetica", "bold");
+        docPDF.setTextColor(11, 19, 43);
+        docPDF.text("PIX COPIA E COLA (CÓDIGO DE PAGAMENTO):", 22, qrY + 3);
+
+        docPDF.setFillColor(248, 250, 252);
+        docPDF.rect(22, qrY + 5, 125, 18, 'F');
+        docPDF.setDrawColor(203, 213, 225);
+        docPDF.rect(22, qrY + 5, 125, 18, 'D');
+
+        docPDF.setFont("courier", "bold");
+        docPDF.setFontSize(6.5);
+        docPDF.setTextColor(13, 148, 136);
+        const splitPixCode = docPDF.splitTextToSize(activePixPayload, 121);
+        docPDF.text(splitPixCode, 24, qrY + 9);
+
+        y = qrY + 36;
       }
 
+      // 7. VALOR TOTAL DO ORÇAMENTO
       desenharCabecalho("VALOR TOTAL DO ORÇAMENTO");
       docPDF.setFont("helvetica", "bold");
-      docPDF.setFontSize(11);
+      docPDF.setFontSize(12);
       docPDF.setTextColor(13, 148, 136);
-      docPDF.text(`TOTAL: R$ ${Number(b.total || 0).toFixed(2)}`, 22, y);
+      docPDF.text(`TOTAL: R$ ${Number(b.total || 0).toFixed(2)}`, 22, y + 1);
 
-      y += 20;
+      y += 22;
 
-      // Assinatura do Emissor
+      // 8. ASSINATURA DO EMISSOR
       docPDF.setLineWidth(0.2);
       docPDF.setDrawColor(0, 0, 0);
       docPDF.line(65, y, 145, y);
@@ -827,6 +867,7 @@
         docPDF.addImage(config.techSignature, 'PNG', 85, y - 12, 40, 10);
       }
 
+      // 9. AÇÃO DE COMPARTILHAMENTO / DOWNLOAD
       const pdfBlob = docPDF.output('blob');
       const safeClientName = (b.client || 'Cliente').replace(/[^a-zA-Z0-9]/g, "_");
       const fileName = `Orcamento_${b.number}_${safeClientName}.pdf`;
@@ -845,7 +886,6 @@
         }
       }
 
-      // Download fallback
       const pdfUrl = URL.createObjectURL(pdfBlob);
       const downloadLink = document.createElement('a');
       downloadLink.href = pdfUrl;

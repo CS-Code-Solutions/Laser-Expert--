@@ -622,6 +622,8 @@
       `;
 
       activeBudgetData = b;
+      activeConfigData = config;
+      activeClientData = clientObj;
       document.getElementById('modalTitleOrc').textContent = `Orçamento - ${b.number} (${b.client})`;
       document.getElementById('loadingStatusOrc').textContent = 'Pronto';
       document.getElementById('budgetPreviewModal').style.display = 'flex';
@@ -631,7 +633,10 @@
       document.getElementById('budgetPreviewModal').style.display = 'none';
     };
 
-    // Geração vetorial pura com jsPDF e Partilha Automática via navigator.share
+    let activeConfigData = {};
+    let activeClientData = {};
+
+    // Geração vetorial completa com jsPDF e Partilha Automática via navigator.share
     window.compartilharPDFOrcamento = async function () {
       const status = document.getElementById('loadingStatusOrc');
       if (!activeBudgetData || !activeBudgetData.number) {
@@ -644,64 +649,118 @@
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF('p', 'mm', 'a4');
 
+        const b = activeBudgetData;
+        const cfg = activeConfigData;
+        const cli = activeClientData;
+
+        let currentY = 15;
+
         // Cabeçalho
         doc.setFont("Helvetica", "bold");
-        doc.setFontSize(14);
+        doc.setFontSize(13);
         doc.setTextColor(11, 19, 43);
-        doc.text("LASER EXPERT - ORÇAMENTO DE SERVIÇO", 15, 20);
+        doc.text("ORÇAMENTO DE SERVIÇO", 150, currentY, { align: 'right' });
 
-        doc.setFontSize(10);
+        doc.setFontSize(9);
         doc.setFont("Helvetica", "normal");
-        doc.text(`Nº do Orçamento: ${activeBudgetData.number}`, 15, 28);
-        doc.text(`Data: ${activeBudgetData.date || '-'}`, 15, 34);
+        doc.text(`Nº: ${b.number || '-'}`, 150, currentY + 5, { align: 'right' });
+        doc.text(`Data: ${b.date || '-'}`, 150, currentY + 10, { align: 'right' });
 
-        // Cliente & Equipamento
+        currentY += 18;
+
+        // Secção: Dados da Empresa
         doc.setDrawColor(203, 213, 225);
         doc.setFillColor(248, 250, 252);
-        doc.roundedRect(15, 40, 180, 25, 3, 3, 'FD');
+        doc.roundedRect(15, currentY, 180, 24, 3, 3, 'FD');
         doc.setFont("Helvetica", "bold");
-        doc.text("CLIENTE & EQUIPAMENTO", 18, 46);
+        doc.setFontSize(9.5);
+        doc.text("DADOS DA EMPRESA", 18, currentY + 5);
         doc.setFont("Helvetica", "normal");
-        doc.text(`Cliente: ${activeBudgetData.client || '-'}`, 18, 53);
-        doc.text(`Equipamento: ${activeBudgetData.equipment || '-'}`, 18, 59);
+        doc.setFontSize(9);
+        doc.text(`Razão Social: ${cfg.name || 'LASER EXPERT'}`, 18, currentY + 11);
+        doc.text(`CNPJ: ${cfg.doc || '-'}`, 18, currentY + 16);
+        doc.text(`Contato: ${cfg.contact || '-'} | E-mail: ${cfg.email || '-'}`, 18, currentY + 21);
 
-        // Escopo dos Serviços
+        currentY += 28;
+
+        // Secção: Cliente & Equipamento
+        doc.roundedRect(15, currentY, 180, 24, 3, 3, 'FD');
         doc.setFont("Helvetica", "bold");
-        doc.text("ESCOPO DOS SERVIÇOS:", 15, 75);
+        doc.setFontSize(9.5);
+        doc.text("CLIENTE & EQUIPAMENTO", 18, currentY + 5);
         doc.setFont("Helvetica", "normal");
-        const splitDesc = doc.splitTextToSize(activeBudgetData.desc || 'Nenhum detalhe informado.', 180);
-        doc.text(splitDesc, 15, 81);
+        doc.setFontSize(9);
+        doc.text(`Cliente: ${b.client || '-'}`, 18, currentY + 11);
+        doc.text(`E-mail: ${cli.email || '-'} | CNPJ/CPF: ${cli.doc || '-'}`, 18, currentY + 16);
+        doc.text(`Equipamento: ${b.equipment || '-'} | Endereço: ${cli.address || '-'}`, 18, currentY + 21);
 
-        let currentY = 81 + (splitDesc.length * 5) + 8;
+        currentY += 28;
 
-        // Condições Comerciais
+        // Secção: Escopo dos Serviços
         doc.setFont("Helvetica", "bold");
-        doc.text("CONDIÇÕES COMERCIAIS & PAGAMENTO:", 15, currentY);
+        doc.setFontSize(9.5);
+        doc.text("ESCOPO DOS SERVIÇOS", 15, currentY);
+        currentY += 4;
         doc.setFont("Helvetica", "normal");
-        const splitTerms = doc.splitTextToSize(activeBudgetData.terms || '-', 180);
-        doc.text(splitTerms, 15, currentY + 6);
+        doc.setFontSize(9);
+        const splitDesc = doc.splitTextToSize(b.desc || 'Nenhum detalhe informado.', 180);
+        doc.text(splitDesc, 15, currentY);
+        currentY += (splitDesc.length * 4.5) + 6;
 
-        currentY += 6 + (splitTerms.length * 5) + 10;
+        // Secção: Condições Comerciais & Pagamento
+        doc.setFont("Helvetica", "bold");
+        doc.setFontSize(9.5);
+        doc.text("CONDIÇÕES COMERCIAIS & PAGAMENTO", 15, currentY);
+        currentY += 4;
+        doc.setFont("Helvetica", "normal");
+        doc.setFontSize(9);
+        const splitTerms = doc.splitTextToSize(b.terms || '-', 180);
+        doc.text(splitTerms, 15, currentY);
+        currentY += (splitTerms.length * 4.5) + 6;
+
+        // Informações Bancárias
+        const opt = b.paymentOption || 'banco1';
+        let bancoTexto = '';
+        if (opt === 'banco1') {
+          bancoTexto = `Forma de Recebimento: Transferência / PIX (${cfg.nomeConta1 || 'Conta Principal'})\nBanco: ${cfg.bank1 || '-'}\nAgência: ${cfg.agency1 || '-'} | Conta: ${cfg.account1 || '-'}\nChave PIX: ${cfg.pix1 || cfg.email || '-'}`;
+        } else if (opt === 'banco2') {
+          bancoTexto = `Forma de Recebimento: Transferência / PIX (${cfg.nomeConta2 || 'Conta Secundária'})\nBanco: ${cfg.bank2 || '-'}\nAgência: ${cfg.agency2 || '-'} | Conta: ${cfg.account2 || '-'}\nChave PIX: ${cfg.pix2 || '-'}`;
+        } else {
+          bancoTexto = `Forma de Recebimento: Boleto Bancário\nO boleto será emitido e enviado conforme prazo comercial acordado.`;
+        }
+        const splitBanco = doc.splitTextToSize(bancoTexto, 180);
+        doc.text(splitBanco, 15, currentY);
+        currentY += (splitBanco.length * 4.5) + 8;
 
         // Valor Total
         doc.setFillColor(241, 245, 249);
-        doc.roundedRect(15, currentY, 180, 16, 2, 2, 'FD');
+        doc.roundedRect(15, currentY, 180, 14, 2, 2, 'FD');
         doc.setFont("Helvetica", "bold");
-        doc.setFontSize(12);
+        doc.setFontSize(11);
         doc.setTextColor(13, 148, 136);
-        doc.text(`VALOR TOTAL: R$ ${Number(activeBudgetData.total || 0).toFixed(2)}`, 18, currentY + 11);
+        doc.text(`VALOR TOTAL DO ORÇAMENTO: R$ ${Number(b.total || 0).toFixed(2)}`, 18, currentY + 9);
 
-        // Saída em Blob
+        currentY += 20;
+
+        // Assinatura do Técnico
+        if (currentY > 240) { doc.addPage(); currentY = 20; }
+        doc.setFont("Helvetica", "normal");
+        doc.setFontSize(8.5);
+        doc.setTextColor(11, 19, 43);
+        doc.text("________________________________________", 105, currentY, { align: 'center' });
+        doc.text(`Responsável Técnico / Emissor: ${cfg.tech || 'Otávio Barbosa'}`, 105, currentY + 5, { align: 'center' });
+
+        // Saída em Blob e Partilha
         const pdfBlob = doc.output('blob');
-        const filename = `Orcamento_${activeBudgetData.number}_${(activeBudgetData.client || 'Cliente').replace(/[^a-zA-Z0-9]/g, '_')}.pdf`;
+        const filename = `Orcamento_${b.number}_${(b.client || 'Cliente').replace(/[^a-zA-Z0-9]/g, '_')}.pdf`;
         const pdfFile = new File([pdfBlob], filename, { type: 'application/pdf' });
 
         if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
           status.textContent = 'A partilhar...';
           try {
             await navigator.share({
-              title: `Orçamento ${activeBudgetData.number}`,
-              text: `Segue o Orçamento ${activeBudgetData.number} (${activeBudgetData.client}).`,
+              title: `Orçamento ${b.number}`,
+              text: `Segue o Orçamento ${b.number} (${b.client}).`,
               files: [pdfFile]
             });
             status.textContent = 'Partilhado com sucesso!';
@@ -719,7 +778,7 @@
         }
 
       } catch (error) {
-        console.error('Erro ao gerar PDF vetorial:', error);
+        console.error('Erro ao gerar PDF vetorial completo:', error);
         status.textContent = 'Falha ao gerar PDF';
         alert('Não foi possível gerar o PDF. Tente novamente.');
       }

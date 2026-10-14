@@ -86,20 +86,19 @@
       width: 100%;
     }
 
-    .print-body { font-family: Arial, sans-serif; color: #0B132B; line-height: 1.4; font-size: 11px; position: relative; z-index: 1; box-sizing: border-box; width: 100%; }
+    .print-body { font-family: Arial, sans-serif; color: #0B132B; line-height: 1.35; font-size: 10.5px; position: relative; z-index: 1; box-sizing: border-box; width: 100%; }
     
-    /* Layout idêntico ao print de referência */
-    .print-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #CBD5E1; padding-bottom: 8px; margin-bottom: 12px; }
-    .print-header img { height: 40px; width: auto; }
-    .print-header-center h1 { font-size: 15px; color: #0B132B; margin: 0; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; }
+    .print-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #CBD5E1; padding-bottom: 6px; margin-bottom: 10px; }
+    .print-header img { height: 38px; width: auto; }
+    .print-header-center h1 { font-size: 14px; color: #0B132B; margin: 0; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; }
     .print-header-info { text-align: right; }
-    .print-header-info h2 { font-size: 13px; color: #0D9488; margin: 0; font-weight: bold; }
-    .print-header-info p { font-size: 11px; color: #334155; margin: 2px 0 0 0; }
+    .print-header-info h2 { font-size: 12px; color: #0D9488; margin: 0; font-weight: bold; }
+    .print-header-info p { font-size: 10.5px; color: #334155; margin: 1px 0 0 0; }
 
-    .section-box { border: 1px solid #CBD5E1; padding: 10px; margin-bottom: 10px; border-radius: 4px; background: #F8FAFC; page-break-inside: avoid; }
-    .section-title { font-weight: bold; font-size: 11px; color: #0B132B; margin-bottom: 6px; border-bottom: 1px solid #E2E8F0; padding-bottom: 3px; background: #E2E8F0; padding: 4px 8px; margin: -10px -10px 8px -10px; border-top-left-radius: 3px; border-top-right-radius: 3px; }
+    .section-box { border: 1px solid #CBD5E1; padding: 8px; margin-bottom: 8px; border-radius: 4px; background: #F8FAFC; page-break-inside: avoid; break-inside: avoid; }
+    .section-title { font-weight: bold; font-size: 10.5px; color: #0B132B; margin-bottom: 4px; border-bottom: 1px solid #E2E8F0; padding-bottom: 2px; background: #E2E8F0; padding: 3px 6px; margin: -8px -8px 6px -8px; border-top-left-radius: 3px; border-top-right-radius: 3px; }
     
-    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     @media (max-width: 768px) {
       .grid-2 { grid-template-columns: 1fr; }
     }
@@ -564,25 +563,25 @@
 
           <div class="section-box">
             <div class="section-title">ESCOPO DOS SERVIÇOS</div>
-            <p style="white-space: pre-wrap; margin-top: 5px;">${escapeHTML(b.desc || '-')}</p>
+            <p style="white-space: pre-wrap; margin-top: 3px;">${escapeHTML(b.desc || '-')}</p>
           </div>
 
           <div class="section-box">
             <div class="section-title">CONDIÇÕES COMERCIAIS & PAGAMENTO</div>
             ${termsList}
-            <hr style="border: 0; border-top: 1px solid #CBD5E1; margin: 6px 0;">
+            <hr style="border: 0; border-top: 1px solid #CBD5E1; margin: 4px 0;">
             ${bancoInfoHtml}
           </div>
 
           <div class="section-box" style="text-align: right; background: #F1F5F9; border-color: #00F5D4;">
-            <p style="font-size: 14px; font-weight: bold; color: var(--deep-navy, #0B132B);">VALOR TOTAL DO ORÇAMENTO: R$ ${Number(b.total || 0).toFixed(2)}</p>
+            <p style="font-size: 13px; font-weight: bold; color: var(--deep-navy, #0B132B);">VALOR TOTAL DO ORÇAMENTO: R$ ${Number(b.total || 0).toFixed(2)}</p>
           </div>
 
-          <div style="margin-top: 25px; display: flex; justify-content: center; page-break-inside: avoid;">
+          <div style="margin-top: 15px; display: flex; justify-content: center; page-break-inside: avoid;">
             <div style="text-align: center; width: 60%;">
-              ${techSignature ? `<img src="${techSignature}" alt="Assinatura" style="max-width: 180px; height: 50px; object-fit: contain; display: block; margin: 0 auto;">` : '<div style="height: 50px;"></div>'}
+              ${techSignature ? `<img src="${techSignature}" alt="Assinatura" style="max-width: 150px; height: 40px; object-fit: contain; display: block; margin: 0 auto;">` : '<div style="height: 40px;"></div>'}
               <p style="margin: 2px 0;">________________________________________</p>
-              <p style="margin: 2px 0; font-size: 10px;"><strong>Responsável Técnico / Emissor:</strong> ${escapeHTML(config.tech || 'Otávio Barbosa')}</p>
+              <p style="margin: 2px 0; font-size: 9.5px;"><strong>Responsável Técnico / Emissor:</strong> ${escapeHTML(config.tech || 'Otávio Barbosa')}</p>
             </div>
           </div>
         </div>
@@ -590,10 +589,6 @@
 
       document.getElementById('loadingStatusOrc').textContent = '✅ Pronto';
       document.getElementById('budgetPreviewModal').style.display = 'flex';
-
-      setTimeout(() => {
-        compartilharPDFOrcamento();
-      }, 400);
     };
 
     window.compartilharPDFOrcamento = async function() {
@@ -602,7 +597,7 @@
       statusSpan.textContent = '⏳ A gerar PDF...';
 
       const opt = {
-        margin:       10,
+        margin:       [8, 8, 10, 8],
         filename:     `Orcamento_${activeBudgetData.number || '0001'}_${activeBudgetData.client || 'Cliente'}.pdf`,
         image:        { type: 'jpeg', quality: 0.98 },
         html2canvas:  { scale: 2, useCORS: true, letterRendering: true, scrollY: 0 },

@@ -77,18 +77,18 @@
       text-align: center; white-space: nowrap; text-transform: uppercase; width: 100%;
     }
 
-    .print-body { font-family: Arial, sans-serif; color: #0B132B; line-height: 1.35; font-size: 10.5px; position: relative; z-index: 1; box-sizing: border-box; width: 100%; padding-bottom: 15px; }
-    .print-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #00F5D4; padding-bottom: 6px; margin-bottom: 10px; }
-    .print-header img { height: 40px; width: auto; }
+    .print-body { font-family: Arial, sans-serif; color: #0B132B; line-height: 1.25; font-size: 9.5px; position: relative; z-index: 1; box-sizing: border-box; width: 100%; padding-bottom: 10px; }
+    .print-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #00F5D4; padding-bottom: 5px; margin-bottom: 8px; }
+    .print-header img { height: 35px; width: auto; }
     .print-header-info { text-align: right; }
-    .print-header-info h1 { font-size: 13px; color: #0B132B; margin: 0; font-weight: bold; }
-    .section-box { border: 1px solid #CBD5E1; padding: 8px; margin-bottom: 8px; border-radius: 6px; background: #F8FAFC; page-break-inside: avoid; break-inside: avoid; }
-    .section-title { font-weight: bold; font-size: 11px; color: #0B132B; margin-bottom: 4px; border-bottom: 1px solid #E2E8F0; padding-bottom: 2px; }
+    .print-header-info h1 { font-size: 12px; color: #0B132B; margin: 0; font-weight: bold; }
+    .section-box { border: 1px solid #CBD5E1; padding: 6px 8px; margin-bottom: 6px; border-radius: 5px; background: #F8FAFC; page-break-inside: avoid; break-inside: avoid; }
+    .section-title { font-weight: bold; font-size: 10px; color: #0B132B; margin-bottom: 3px; border-bottom: 1px solid #E2E8F0; padding-bottom: 2px; }
     .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-    .print-body p { margin: 2px 0; }
-    .signature-area { margin-top: 10px; display: flex; justify-content: space-between; align-items: flex-end; page-break-inside: avoid; break-inside: avoid; }
+    .print-body p { margin: 1px 0; }
+    .signature-area { margin-top: 8px; display: flex; justify-content: space-between; align-items: flex-end; page-break-inside: avoid; break-inside: avoid; }
     .signature-box { text-align: center; width: 45%; }
-    .signature-box img { max-width: 160px; height: 45px; object-fit: contain; display: block; margin: 0 auto; }
+    .signature-box img { max-width: 140px; height: 38px; object-fit: contain; display: block; margin: 0 auto; }
     .page-break { page-break-before: always; }
   </style>
 </head>
@@ -238,7 +238,7 @@
               minutosTotais += minDia;
               const hExata = Math.floor(minDia / 60);
               const mRest = Math.round(minDia % 60);
-              detalhesDiasHtml += `<span style="display: block; margin-left: 10px;">• Dia ${idx + 1}: ${d.inicio.replace('T', ' ')} até ${d.fim.replace('T', ' ')} (${hExata}h ${mRest}m)</span>`;
+              detalhesDiasHtml += `<span style="display: block; margin-left: 8px;">• Dia ${idx + 1}: ${d.inicio.replace('T', ' ')} até ${d.fim.replace('T', ' ')} (${hExata}h ${mRest}m)</span>`;
             }
           }
         });
@@ -335,12 +335,12 @@
         const signatureAreaHtml = `
           <div class="signature-area">
             <div class="signature-box">
-              ${techSignature ? `<img src="${techSignature}" alt="Assinatura Técnico">` : '<p style="height: 40px;"></p>'}
+              ${techSignature ? `<img src="${techSignature}" alt="Assinatura Técnico">` : '<p style="height: 35px;"></p>'}
               <p>________________________________________</p>
               <p><strong>Técnico Responsável:</strong> ${escapeHTML(config.tech || 'Otávio Barbosa')}</p>
             </div>
             <div class="signature-box">
-              ${clientSignature ? `<img src="${clientSignature}" alt="Assinatura Cliente">` : '<p style="height: 40px;"></p>'}
+              ${clientSignature ? `<img src="${clientSignature}" alt="Assinatura Cliente">` : '<p style="height: 35px;"></p>'}
               <p>________________________________________</p>
               <p><strong>Assinatura do Cliente</strong></p>
             </div>
@@ -352,10 +352,10 @@
           let itemsHtml = '';
           rep.anexos.forEach(anexo => {
             itemsHtml += `
-              <div class="section-box" style="text-align: center; page-break-inside: avoid; margin-top: 10px;">
+              <div class="section-box" style="text-align: center; page-break-inside: avoid; margin-top: 8px;">
                 <div class="watermark">LASER EXPERT</div>
                 <div class="section-title" style="text-align: left;">${escapeHTML(anexo.titulo || 'Foto do Equipamento')}</div>
-                <img src="${anexo.imagem}" alt="${escapeHTML(anexo.titulo || '')}" style="max-width: 100%; max-height: 280px; height: auto; object-fit: contain; border-radius: 4px; border: 1px solid #CBD5E1; display: block; margin: 0 auto;">
+                <img src="${anexo.imagem}" alt="${escapeHTML(anexo.titulo || '')}" style="max-width: 100%; max-height: 250px; height: auto; object-fit: contain; border-radius: 4px; border: 1px solid #CBD5E1; display: block; margin: 0 auto;">
               </div>
             `;
           });
@@ -368,7 +368,7 @@
                 <p><strong>RS Nº:</strong> ${escapeHTML(rep.number)} | <strong>Cliente:</strong> ${escapeHTML(rep.client)}</p>
               </div>
             </div>
-            <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 5px;">
+            <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 5px;">
               ${itemsHtml}
             </div>
           `;
@@ -438,24 +438,24 @@
 
             <div class="section-box">
               <div class="section-title">Registro do Serviço Realizado</div>
-              <div class="grid-2" style="margin-bottom: 3px;">
+              <div class="grid-2" style="margin-bottom: 2px;">
                 <p><strong>Tipo de Manutenção:</strong> ${safeServiceNature}</p>
                 <p><strong>Área de Serviço:</strong> ${safeServiceArea}</p>
               </div>
               <p><strong>Descrição Detalhada:</strong></p>
-              <p style="white-space: pre-wrap; margin-top: 2px; background: #FFF; padding: 5px; border: 1px solid #E2E8F0; border-radius: 4px;">${safeDesc}</p>
+              <p style="white-space: pre-wrap; margin-top: 1px; background: #FFF; padding: 4px; border: 1px solid #E2E8F0; border-radius: 4px;">${safeDesc}</p>
             </div>
 
             <div class="section-box">
               <div class="section-title">Critérios de Cobrança e Valor Total</div>
-              <div style="font-size: 10px; margin-bottom: 4px;">
+              <div style="font-size: 9.5px; margin-bottom: 3px;">
                 ${rep.temHora === 'sim' ? `<p>• <strong>Serviço / Horas:</strong> ${textoHoras}</p>${detalhesDiasHtml}` : ''}
                 ${deslocamentoHtml}
                 ${hospedagemHtml}
                 ${outrasHtml}
                 ${rep.temEmpreitada === 'sim' ? `<p>• <strong>Regime de Empreitada:</strong> ${textoHoras}</p>` : ''}
               </div>
-              <p style="font-size: 10.5px; font-weight: bold; color: #0D9488; border-top: 1px solid #CBD5E1; padding-top: 3px; margin-top: 3px;">Valor Total Estimado: R$ ${valorTotalStr}</p>
+              <p style="font-size: 10px; font-weight: bold; color: #0D9488; border-top: 1px solid #CBD5E1; padding-top: 2px; margin-top: 2px;">Valor Total Estimado: R$ ${valorTotalStr}</p>
             </div>
 
             ${signatureAreaHtml}
@@ -481,7 +481,7 @@
       const element = document.getElementById('reportRenderArea');
       const filename = `Relatorio_RS_${activeReportData.number || 'RS-1000'}.pdf`;
       const opt = {
-        margin: [8, 8, 10, 8],
+        margin: [6, 6, 8, 6],
         filename: filename,
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true, allowTaint: true },

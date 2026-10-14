@@ -86,19 +86,19 @@
       width: 100%;
     }
 
-    .print-body { font-family: Arial, sans-serif; color: #0B132B; line-height: 1.25; font-size: 9.5px; position: relative; z-index: 1; box-sizing: border-box; width: 100%; }
+    .print-body { font-family: Arial, sans-serif; color: #0B132B; line-height: 1.15; font-size: 9px; position: relative; z-index: 1; box-sizing: border-box; width: 100%; }
     
-    .print-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #CBD5E1; padding-bottom: 5px; margin-bottom: 8px; }
-    .print-header img { height: 35px; width: auto; }
-    .print-header-center h1 { font-size: 13px; color: #0B132B; margin: 0; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; }
+    .print-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #CBD5E1; padding-bottom: 4px; margin-bottom: 6px; }
+    .print-header img { height: 32px; width: auto; }
+    .print-header-center h1 { font-size: 12px; color: #0B132B; margin: 0; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; }
     .print-header-info { text-align: right; }
-    .print-header-info h2 { font-size: 11px; color: #0D9488; margin: 0; font-weight: bold; }
-    .print-header-info p { font-size: 9.5px; color: #334155; margin: 1px 0 0 0; }
+    .print-header-info h2 { font-size: 10.5px; color: #0D9488; margin: 0; font-weight: bold; }
+    .print-header-info p { font-size: 9px; color: #334155; margin: 1px 0 0 0; }
 
-    .section-box { border: 1px solid #CBD5E1; padding: 6px 8px; margin-bottom: 6px; border-radius: 4px; background: #F8FAFC; page-break-inside: avoid; break-inside: avoid; }
-    .section-title { font-weight: bold; font-size: 10px; color: #0B132B; margin-bottom: 3px; border-bottom: 1px solid #E2E8F0; padding-bottom: 2px; background: #E2E8F0; padding: 3px 6px; margin: -6px -8px 5px -8px; border-top-left-radius: 3px; border-top-right-radius: 3px; }
+    .section-box { border: 1px solid #CBD5E1; padding: 5px 7px; margin-bottom: 5px; border-radius: 4px; background: #F8FAFC; page-break-inside: avoid; break-inside: avoid; }
+    .section-title { font-weight: bold; font-size: 9.5px; color: #0B132B; margin-bottom: 2px; border-bottom: 1px solid #E2E8F0; padding-bottom: 2px; background: #E2E8F0; padding: 3px 6px; margin: -5px -7px 4px -7px; border-top-left-radius: 3px; border-top-right-radius: 3px; }
     
-    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
     @media (max-width: 768px) {
       .grid-2 { grid-template-columns: 1fr; }
     }
@@ -227,6 +227,7 @@
         </div>
         <div class="toolbar-buttons">
           <button class="btn" style="background-color: #00F5D4; color: #0B132B; font-weight: bold; padding: 6px 12px; font-size: 0.85rem;" onclick="compartilharPDFOrcamento()">📤 Partilhar PDF</button>
+          <button class="btn" style="background-color: #22C55E; color: white; font-weight: bold; padding: 6px 12px; font-size: 0.85rem;" onclick="descarregarPDFOrcamento()">📥 Descarregar PDF</button>
           <button class="btn" style="background-color: #EF4444; color: white; padding: 6px 12px; font-size: 0.85rem;" onclick="closeModal()">✖ Fechar</button>
         </div>
       </div>
@@ -563,25 +564,25 @@
 
           <div class="section-box">
             <div class="section-title">ESCOPO DOS SERVIÇOS</div>
-            <p style="white-space: pre-wrap; margin-top: 2px;">${escapeHTML(b.desc || '-')}</p>
+            <p style="white-space: pre-wrap; margin-top: 1px;">${escapeHTML(b.desc || '-')}</p>
           </div>
 
           <div class="section-box">
             <div class="section-title">CONDIÇÕES COMERCIAIS & PAGAMENTO</div>
             ${termsList}
-            <hr style="border: 0; border-top: 1px solid #CBD5E1; margin: 3px 0;">
+            <hr style="border: 0; border-top: 1px solid #CBD5E1; margin: 2px 0;">
             ${bancoInfoHtml}
           </div>
 
           <div class="section-box" style="text-align: right; background: #F1F5F9; border-color: #00F5D4;">
-            <p style="font-size: 12px; font-weight: bold; color: var(--deep-navy, #0B132B);">VALOR TOTAL DO ORÇAMENTO: R$ ${Number(b.total || 0).toFixed(2)}</p>
+            <p style="font-size: 11px; font-weight: bold; color: var(--deep-navy, #0B132B);">VALOR TOTAL DO ORÇAMENTO: R$ ${Number(b.total || 0).toFixed(2)}</p>
           </div>
 
-          <div style="margin-top: 10px; display: flex; justify-content: center; page-break-inside: avoid;">
+          <div style="margin-top: 6px; display: flex; justify-content: center; page-break-inside: avoid;">
             <div style="text-align: center; width: 60%;">
-              ${techSignature ? `<img src="${techSignature}" alt="Assinatura" style="max-width: 130px; height: 35px; object-fit: contain; display: block; margin: 0 auto;">` : '<div style="height: 35px;"></div>'}
+              ${techSignature ? `<img src="${techSignature}" alt="Assinatura" style="max-width: 110px; height: 30px; object-fit: contain; display: block; margin: 0 auto;">` : '<div style="height: 30px;"></div>'}
               <p style="margin: 1px 0;">________________________________________</p>
-              <p style="margin: 1px 0; font-size: 9px;"><strong>Responsável Técnico / Emissor:</strong> ${escapeHTML(config.tech || 'Otávio Barbosa')}</p>
+              <p style="margin: 1px 0; font-size: 8.5px;"><strong>Responsável Técnico / Emissor:</strong> ${escapeHTML(config.tech || 'Otávio Barbosa')}</p>
             </div>
           </div>
         </div>
@@ -597,7 +598,7 @@
       statusSpan.textContent = '⏳ A gerar PDF...';
 
       const opt = {
-        margin:       [6, 6, 8, 6],
+        margin:       [4, 4, 6, 4],
         filename:     `Orcamento_${activeBudgetData.number || '0001'}_${activeBudgetData.client || 'Cliente'}.pdf`,
         image:        { type: 'jpeg', quality: 0.98 },
         html2canvas:  { scale: 2, useCORS: true, letterRendering: true, scrollY: 0 },
@@ -632,6 +633,25 @@
           statusSpan.textContent = '✅ Cancelado';
         }
       }
+    };
+
+    window.descarregarPDFOrcamento = function() {
+      const element = document.getElementById('budgetRenderArea');
+      const filename = `Orcamento_${activeBudgetData.number || '0001'}_${activeBudgetData.client || 'Cliente'}.pdf`;
+      const statusSpan = document.getElementById('loadingStatusOrc');
+      statusSpan.textContent = '⏳ A descarregar...';
+
+      const opt = {
+        margin:       [4, 4, 6, 4],
+        filename:     filename,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, useCORS: true, letterRendering: true, scrollY: 0 },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+
+      html2pdf().from(element).set(opt).save().then(() => {
+        statusSpan.textContent = '✅ Descarregado!';
+      });
     };
 
     window.closeModal = function() {

@@ -291,8 +291,8 @@
       
       for(let i=0; i<atuaisInicio.length; i++) {
         valoresAtuais.push({
-          inicio: atuaisInicio[i].value,
-          fim: atuaisFim[i].value
+          inicio: String(atuaisInicio[i].value || ''),
+          fim: String(atuaisFim[i].value || '')
         });
       }
 
@@ -361,7 +361,7 @@
     window.adicionarAnexo = function() {
       const titulo = document.getElementById('anexoTitulo').value;
       if (!tempAnexoBase64) { alert('Selecione uma imagem primeiro.'); return; }
-      anexosList.push({ titulo: titulo || 'Foto do Equipamento', imagem: tempAnexoBase64 });
+      anexosList.push({ titulo: String(titulo || 'Foto do Equipamento'), imagem: String(tempAnexoBase64) });
       document.getElementById('anexoTitulo').value = '';
       document.getElementById('anexoFile').value = '';
       tempAnexoBase64 = '';
@@ -569,42 +569,55 @@
       const fins = document.querySelectorAll('.dia-fim');
       for (let i = 0; i < inicios.length; i++) {
         diasTrabalhoArray.push({
-          inicio: inicios[i].value,
-          fim: fins[i].value
+          inicio: String(inicios[i].value || ''),
+          fim: String(fins[i].value || '')
+        });
+      }
+
+      // Converte anexos garantindo que seja um array plano de objetos simples
+      let cleanAnexos = [];
+      if (Array.isArray(anexosList)) {
+        anexosList.forEach(a => {
+          if (a && typeof a === 'object') {
+            cleanAnexos.push({
+              titulo: String(a.titulo || 'Foto'),
+              imagem: String(a.imagem || '')
+            });
+          }
         });
       }
 
       const reportData = {
-        number: numRsStr,
-        date: document.getElementById('repDate').value,
-        client: document.getElementById('repClient').value,
-        equipment: document.getElementById('repEquipment').value,
-        brand: document.getElementById('repBrand').value,
-        model: document.getElementById('repModel').value,
-        serialNumber: document.getElementById('repSerialNumber').value,
-        serviceNature: document.getElementById('repServiceNature').value,
-        serviceArea: document.getElementById('repServiceArea').value,
-        desc: document.getElementById('repDesc').value,
+        number: String(numRsStr || ''),
+        date: String(document.getElementById('repDate').value || ''),
+        client: String(document.getElementById('repClient').value || ''),
+        equipment: String(document.getElementById('repEquipment').value || ''),
+        brand: String(document.getElementById('repBrand').value || ''),
+        model: String(document.getElementById('repModel').value || ''),
+        serialNumber: String(document.getElementById('repSerialNumber').value || ''),
+        serviceNature: String(document.getElementById('repServiceNature').value || ''),
+        serviceArea: String(document.getElementById('repServiceArea').value || ''),
+        desc: String(document.getElementById('repDesc').value || ''),
         
-        temEmpreitada: document.getElementById('selectEmpreitada').value,
-        valorEmpreitada: document.getElementById('repValorEmpreitada').value,
+        temEmpreitada: String(document.getElementById('selectEmpreitada').value || 'nao'),
+        valorEmpreitada: String(document.getElementById('repValorEmpreitada').value || '0'),
 
-        temHora: document.getElementById('selectHora').value,
+        temHora: String(document.getElementById('selectHora').value || 'nao'),
         diasTrabalho: diasTrabalhoArray,
-        valorHora: document.getElementById('repValorHora').value,
+        valorHora: String(document.getElementById('repValorHora').value || '200'),
 
-        temDeslocamento: document.getElementById('selectDeslocamento').value,
-        valorHoraDeslocamento: document.getElementById('valorHoraDeslocamento').value,
-        tempoDeslocamentoHoras: document.getElementById('tempoDeslocamentoHoras').value,
+        temDeslocamento: String(document.getElementById('selectDeslocamento').value || 'nao'),
+        valorHoraDeslocamento: String(document.getElementById('valorHoraDeslocamento').value || '260'),
+        tempoDeslocamentoHoras: String(document.getElementById('tempoDeslocamentoHoras').value || '0'),
 
-        temHospedagem: document.getElementById('selectHospedagem').value,
-        valorHospedagem: document.getElementById('valorHospedagem').value,
+        temHospedagem: String(document.getElementById('selectHospedagem').value || 'nao'),
+        valorHospedagem: String(document.getElementById('valorHospedagem').value || '0'),
 
-        temOutras: document.getElementById('selectOutras').value,
-        valorOutras: document.getElementById('valorOutras').value,
+        temOutras: String(document.getElementById('selectOutras').value || 'nao'),
+        valorOutras: String(document.getElementById('valorOutras').value || '0'),
 
-        signature: clientSigData,
-        anexos: anexosList
+        signature: String(clientSigData || ''),
+        anexos: cleanAnexos
       };
 
       try {

@@ -159,14 +159,8 @@
             </div>
 
             <div style="margin-bottom: 10px;">
-              <label for="numDiasTrabalho"><strong>Número de Dias de Atendimento:</strong></label>
-              <select id="numDiasTrabalho" style="width:100%; padding:8px; border:1px solid #CBD5E1; border-radius:4px; background:#FFF; margin-top: 2px;" onchange="gerarCamposDias()">
-                <option value="1">1 Dia</option>
-                <option value="2">2 Dias</option>
-                <option value="3">3 Dias</option>
-                <option value="4">4 Dias</option>
-                <option value="5">5 Dias</option>
-              </select>
+              <label for="numDiasTrabalho"><strong>Quantidade de Dias de Atendimento:</strong></label>
+              <input type="number" id="numDiasTrabalho" min="1" max="30" value="1" style="width:100%; padding:6px; border:1px solid #CBD5E1; border-radius:4px; margin-top: 2px;" oninput="gerarCamposDias()">
             </div>
             
             <div id="containerDiasHorarios" style="display: flex; flex-direction: column; gap: 10px;"></div>
@@ -286,12 +280,26 @@
     };
 
     function gerarCamposDias(dadosSalvos = []) {
-      const qtd = parseInt(document.getElementById('numDiasTrabalho').value) || 1;
+      let qtd = parseInt(document.getElementById('numDiasTrabalho').value) || 1;
+      if (qtd < 1) qtd = 1;
+      if (qtd > 30) qtd = 30;
+      
       const container = document.getElementById('containerDiasHorarios');
+      const valoresAtuais = [];
+      const atuaisInicio = container.querySelectorAll('.dia-inicio');
+      const atuaisFim = container.querySelectorAll('.dia-fim');
+      
+      for(let i=0; i<atuaisInicio.length; i++) {
+        valoresAtuais.push({
+          inicio: atuaisInicio[i].value,
+          fim: atuaisFim[i].value
+        });
+      }
+
       container.innerHTML = '';
 
       for (let i = 0; i < qtd; i++) {
-        const d = dadosSalvos[i] || {};
+        const d = dadosSalvos[i] || valoresAtuais[i] || {};
         container.innerHTML += `
           <div style="background: #FFF; border: 1px solid #CBD5E1; padding: 8px; border-radius: 4px;">
             <p style="font-weight: bold; font-size: 0.9rem; color: #0B132B; margin-bottom: 4px;">Dia ${i + 1}</p>

@@ -77,18 +77,18 @@
       text-align: center; white-space: nowrap; text-transform: uppercase; width: 100%;
     }
 
-    .print-body { font-family: Arial, sans-serif; color: #0B132B; line-height: 1.4; font-size: 11px; position: relative; z-index: 1; box-sizing: border-box; width: 100%; padding-bottom: 20px; }
-    .print-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #00F5D4; padding-bottom: 8px; margin-bottom: 12px; }
-    .print-header img { height: 45px; width: auto; }
+    .print-body { font-family: Arial, sans-serif; color: #0B132B; line-height: 1.35; font-size: 10.5px; position: relative; z-index: 1; box-sizing: border-box; width: 100%; padding-bottom: 15px; }
+    .print-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #00F5D4; padding-bottom: 6px; margin-bottom: 10px; }
+    .print-header img { height: 40px; width: auto; }
     .print-header-info { text-align: right; }
-    .print-header-info h1 { font-size: 14px; color: #0B132B; margin: 0; font-weight: bold; }
-    .section-box { border: 1px solid #CBD5E1; padding: 10px; margin-bottom: 10px; border-radius: 6px; background: #F8FAFC; page-break-inside: avoid; break-inside: avoid; }
-    .section-title { font-weight: bold; font-size: 12px; color: #0B132B; margin-bottom: 6px; border-bottom: 1px solid #E2E8F0; padding-bottom: 3px; }
+    .print-header-info h1 { font-size: 13px; color: #0B132B; margin: 0; font-weight: bold; }
+    .section-box { border: 1px solid #CBD5E1; padding: 8px; margin-bottom: 8px; border-radius: 6px; background: #F8FAFC; page-break-inside: avoid; break-inside: avoid; }
+    .section-title { font-weight: bold; font-size: 11px; color: #0B132B; margin-bottom: 4px; border-bottom: 1px solid #E2E8F0; padding-bottom: 2px; }
     .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
     .print-body p { margin: 2px 0; }
-    .signature-area { margin-top: 15px; display: flex; justify-content: space-between; align-items: flex-end; page-break-inside: avoid; break-inside: avoid; }
+    .signature-area { margin-top: 10px; display: flex; justify-content: space-between; align-items: flex-end; page-break-inside: avoid; break-inside: avoid; }
     .signature-box { text-align: center; width: 45%; }
-    .signature-box img { max-width: 180px; height: 50px; object-fit: contain; display: block; margin: 0 auto; }
+    .signature-box img { max-width: 160px; height: 45px; object-fit: contain; display: block; margin: 0 auto; }
     .page-break { page-break-before: always; }
   </style>
 </head>
@@ -225,25 +225,35 @@
       window.location.href = `novo-relatorio.html?edit=${index}`;
     };
 
-    function calcularMinutosTrabalhados(startM, endM, startT, endT, valorHoraFixo = 200.00) {
-        let minutosTotais = 0;
-        if (startM && endM) {
-            const diffM = new Date(endM) - new Date(startM);
-            if (diffM > 0) minutosTotais += diffM / (1000 * 60);
-        }
-        if (startT && endT) {
-            const diffT = new Date(endT) - new Date(startT);
-            if (diffT > 0) minutosTotais += diffT / (1000 * 60);
-        }
-        if (minutosTotais < 0) minutosTotais = 0;
-        const horasDecimais = minutosTotais / 60;
-        const valorHorasTotal = horasDecimais * Number(valorHoraFixo);
-        const horasExatas = Math.floor(minutosTotais / 60);
-        const minutosRestantes = Math.round(minutosTotais % 60);
-        return {
-            totalHoursText: `${horasExatas}h ${minutosRestantes}m`,
-            valorHorasTotal: valorHorasTotal
-        };
+    function calcularMinutosDiasTrabalho(diasArray, valorHoraFixo = 200.00) {
+      let minutosTotais = 0;
+      let detalhesDiasHtml = '';
+
+      if (Array.isArray(diasArray)) {
+        diasArray.forEach((d, idx) => {
+          if (d.inicio && d.fim) {
+            const diff = new Date(d.fim) - new Date(d.inicio);
+            if (diff > 0) {
+              const minDia = diff / (1000 * 60);
+              minutosTotais += minDia;
+              const hExata = Math.floor(minDia / 60);
+              const mRest = Math.round(minDia % 60);
+              detalhesDiasHtml += `<span style="display: block; margin-left: 10px;">• Dia ${idx + 1}: ${d.inicio.replace('T', ' ')} até ${d.fim.replace('T', ' ')} (${hExata}h ${mRest}m)</span>`;
+            }
+          }
+        });
+      }
+
+      const horasDecimais = minutosTotais / 60;
+      const valorHorasTotal = horasDecimais * Number(valorHoraFixo);
+      const horasExatas = Math.floor(minutosTotais / 60);
+      const minutosRestantes = Math.round(minutosTotais % 60);
+
+      return {
+        totalHoursText: `${horasExatas}h ${minutosRestantes}m`,
+        valorHorasTotal: valorHorasTotal,
+        detalhesDiasHtml: detalhesDiasHtml
+      };
     }
 
     window.openReportPreview = async function(index) {
@@ -274,6 +284,7 @@
         let valorTotal = 0;
         let textoHoras = "Não cobrado";
         let valorHorasTotal = 0;
+        let detalhesDiasHtml = "";
 
         if (rep.temEmpreitada === 'sim') {
             valorTotal = Number(rep.valorEmpreitada) || 0;
@@ -281,9 +292,14 @@
         } else {
             if (rep.temHora === 'sim') {
                 const valorHora = Number(rep.valorHora) || 200.00;
-                const horasCalc = calcularMinutosTrabalhados(rep.startManha, rep.endManha, rep.startTarde, rep.endTarde, valorHora);
-                valorHorasTotal = horasCalc.valorHorasTotal;
-                textoHoras = `${horasCalc.totalHoursText} (R$ ${valorHorasTotal.toFixed(2)})`;
+                let diasArr = rep.diasTrabalho;
+                if (!diasArr && rep.startManha) {
+                  diasArr = [{ inicio: rep.startManha, fim: rep.endManha || rep.endTarde }];
+                }
+                const calc = calcularMinutosDiasTrabalho(diasArr, valorHora);
+                valorHorasTotal = calc.valorHorasTotal;
+                textoHoras = `${calc.totalHoursText} (R$ ${valorHorasTotal.toFixed(2)})`;
+                detalhesDiasHtml = calc.detalhesDiasHtml;
             }
             
             let valorDeslocamentoTotal = 0;
@@ -319,12 +335,12 @@
         const signatureAreaHtml = `
           <div class="signature-area">
             <div class="signature-box">
-              ${techSignature ? `<img src="${techSignature}" alt="Assinatura Técnico">` : '<p style="height: 50px;"></p>'}
+              ${techSignature ? `<img src="${techSignature}" alt="Assinatura Técnico">` : '<p style="height: 40px;"></p>'}
               <p>________________________________________</p>
               <p><strong>Técnico Responsável:</strong> ${escapeHTML(config.tech || 'Otávio Barbosa')}</p>
             </div>
             <div class="signature-box">
-              ${clientSignature ? `<img src="${clientSignature}" alt="Assinatura Cliente">` : '<p style="height: 50px;"></p>'}
+              ${clientSignature ? `<img src="${clientSignature}" alt="Assinatura Cliente">` : '<p style="height: 40px;"></p>'}
               <p>________________________________________</p>
               <p><strong>Assinatura do Cliente</strong></p>
             </div>
@@ -336,23 +352,23 @@
           let itemsHtml = '';
           rep.anexos.forEach(anexo => {
             itemsHtml += `
-              <div class="section-box" style="text-align: center; page-break-inside: avoid; margin-top: 15px;">
+              <div class="section-box" style="text-align: center; page-break-inside: avoid; margin-top: 10px;">
                 <div class="watermark">LASER EXPERT</div>
                 <div class="section-title" style="text-align: left;">${escapeHTML(anexo.titulo || 'Foto do Equipamento')}</div>
-                <img src="${anexo.imagem}" alt="${escapeHTML(anexo.titulo || '')}" style="max-width: 100%; max-height: 350px; height: auto; object-fit: contain; border-radius: 4px; border: 1px solid #CBD5E1; display: block; margin: 0 auto;">
+                <img src="${anexo.imagem}" alt="${escapeHTML(anexo.titulo || '')}" style="max-width: 100%; max-height: 280px; height: auto; object-fit: contain; border-radius: 4px; border: 1px solid #CBD5E1; display: block; margin: 0 auto;">
               </div>
             `;
           });
           anexosHtml = `
             <div class="page-break"></div>
-            <div class="print-header" style="margin-top: 10px;">
+            <div class="print-header" style="margin-top: 5px;">
               <img src="logo.png" alt="Logo">
               <div class="print-header-info">
                 <h1>ANEXOS / FOTOGRAFIAS DO EQUIPAMENTO</h1>
                 <p><strong>RS Nº:</strong> ${escapeHTML(rep.number)} | <strong>Cliente:</strong> ${escapeHTML(rep.client)}</p>
               </div>
             </div>
-            <div style="display: flex; flex-direction: column; gap: 15px; margin-top: 10px;">
+            <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 5px;">
               ${itemsHtml}
             </div>
           `;
@@ -422,24 +438,24 @@
 
             <div class="section-box">
               <div class="section-title">Registro do Serviço Realizado</div>
-              <div class="grid-2" style="margin-bottom: 4px;">
+              <div class="grid-2" style="margin-bottom: 3px;">
                 <p><strong>Tipo de Manutenção:</strong> ${safeServiceNature}</p>
                 <p><strong>Área de Serviço:</strong> ${safeServiceArea}</p>
               </div>
               <p><strong>Descrição Detalhada:</strong></p>
-              <p style="white-space: pre-wrap; margin-top: 2px; background: #FFF; padding: 6px; border: 1px solid #E2E8F0; border-radius: 4px;">${safeDesc}</p>
+              <p style="white-space: pre-wrap; margin-top: 2px; background: #FFF; padding: 5px; border: 1px solid #E2E8F0; border-radius: 4px;">${safeDesc}</p>
             </div>
 
             <div class="section-box">
               <div class="section-title">Critérios de Cobrança e Valor Total</div>
-              <div style="font-size: 10px; margin-bottom: 6px;">
-                ${rep.temHora === 'sim' ? `<p>• <strong>Serviço / Horas:</strong> ${textoHoras}</p>` : ''}
+              <div style="font-size: 10px; margin-bottom: 4px;">
+                ${rep.temHora === 'sim' ? `<p>• <strong>Serviço / Horas:</strong> ${textoHoras}</p>${detalhesDiasHtml}` : ''}
                 ${deslocamentoHtml}
                 ${hospedagemHtml}
                 ${outrasHtml}
                 ${rep.temEmpreitada === 'sim' ? `<p>• <strong>Regime de Empreitada:</strong> ${textoHoras}</p>` : ''}
               </div>
-              <p style="font-size: 11px; font-weight: bold; color: #0D9488; border-top: 1px solid #CBD5E1; padding-top: 4px; margin-top: 4px;">Valor Total Estimado: R$ ${valorTotalStr}</p>
+              <p style="font-size: 10.5px; font-weight: bold; color: #0D9488; border-top: 1px solid #CBD5E1; padding-top: 3px; margin-top: 3px;">Valor Total Estimado: R$ ${valorTotalStr}</p>
             </div>
 
             ${signatureAreaHtml}
@@ -465,7 +481,7 @@
       const element = document.getElementById('reportRenderArea');
       const filename = `Relatorio_RS_${activeReportData.number || 'RS-1000'}.pdf`;
       const opt = {
-        margin: [10, 10, 15, 10],
+        margin: [8, 8, 10, 8],
         filename: filename,
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true, allowTaint: true },

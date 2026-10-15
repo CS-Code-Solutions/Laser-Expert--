@@ -34,6 +34,17 @@
       display: block;
       margin-bottom: 5px;
     }
+    /* Layout responsivo para os horários de início e fim */
+    .grid-horarios {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+    @media (max-width: 768px) {
+      .grid-horarios {
+        grid-template-columns: 1fr;
+      }
+    }
   </style>
 </head>
 <body>
@@ -303,7 +314,7 @@
         container.innerHTML += `
           <div style="background: #FFF; border: 1px solid #CBD5E1; padding: 8px; border-radius: 4px;">
             <p style="font-weight: bold; font-size: 0.9rem; color: #0B132B; margin-bottom: 4px;">Dia ${i + 1}</p>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+            <div class="grid-horarios">
               <div>
                 <label style="font-size: 0.8rem;">Início:</label>
                 <input type="datetime-local" class="dia-inicio" step="1800" value="${d.inicio || ''}" style="width:100%; padding:4px; border:1px solid #CBD5E1; border-radius:4px;">
@@ -613,7 +624,7 @@
         valorHospedagem: String(document.getElementById('valorHospedagem').value || '0'),
 
         temOutras: String(document.getElementById('selectOutras').value || 'nao'),
-        valorOutras: String(document.getElementById('valorOutras').value || '0'),
+        valorOutras: String(document.getElementById('repValorOutras') ? document.getElementById('repValorOutras').value : (document.getElementById('valorOutras').value || '0')),
 
         signature: String(clientSigData || ''),
         anexos: cleanAnexos

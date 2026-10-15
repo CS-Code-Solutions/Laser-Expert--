@@ -34,6 +34,31 @@
       display: block;
       margin-bottom: 5px;
     }
+    
+    /* Layout Flutuante Elegante para as Datas e Horas */
+    .dia-card-flutuante {
+      background: #FFFFFF;
+      border: 1px solid #E2E8F0;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 10px;
+      box-shadow: 0 4px 12px rgba(11, 19, 43, 0.05);
+      transition: all 0.2s ease;
+    }
+    .dia-card-flutuante:hover {
+      box-shadow: 0 6px 16px rgba(11, 19, 43, 0.08);
+      border-color: #CBD5E1;
+    }
+    .grid-data-hora {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    @media (max-width: 768px) {
+      .grid-data-hora {
+        grid-template-columns: 1fr;
+      }
+    }
   </style>
 </head>
 <body>
@@ -163,7 +188,7 @@
               <input type="number" id="numDiasTrabalho" min="1" max="30" value="1" style="width:100%; padding:6px; border:1px solid #CBD5E1; border-radius:4px; margin-top: 2px;" oninput="gerarCamposDias()">
             </div>
             
-            <div id="containerDiasHorarios" style="display: flex; flex-direction: column; gap: 10px;"></div>
+            <div id="containerDiasHorarios" style="display: flex; flex-direction: column; gap: 8px;"></div>
           </div>
 
           <div style="margin-bottom: 12px;">
@@ -279,6 +304,21 @@
       clientCtx.clearRect(0, 0, clientCanvas.width, clientCanvas.height);
     };
 
+    // Gerador das opções de horários de 30 em 30 minutos (01:00, 01:30, 02:00...)
+    function gerarOpcoesHoras(selecionado = '08:00') {
+      let html = '';
+      for (let h = 0; h < 24; h++) {
+        for (let m = 0; m < 60; m += 30) {
+          let hs = String(h).padStart(2, '0');
+          let ms = String(m).padStart(2, '0');
+          let val = `${hs}:${ms}`;
+          let sel = (val === selecionado) ? 'selected' : '';
+          html += `<option value="${val}" ${sel}>${hs}:${ms}</option>`;
+        }
+      }
+      return html;
+    }
+
     function gerarCamposDias(dadosSalvos = []) {
       let qtd = parseInt(document.getElementById('numDiasTrabalho').value) || 1;
       if (qtd < 1) qtd = 1;
@@ -286,31 +326,53 @@
       
       const container = document.getElementById('containerDiasHorarios');
       const valoresAtuais = [];
-      const atuaisInicio = container.querySelectorAll('.dia-inicio');
-      const atuaisFim = container.querySelectorAll('.dia-fim');
+      const atuaisDataIni = container.querySelectorAll('.dia-data-ini');
+      const atuaisHoraIni = container.querySelectorAll('.dia-hora-ini');
+      const atuaisDataFim = container.querySelectorAll('.dia-data-fim');
+      const atuaisHoraFim = container.querySelectorAll('.dia-hora-fim');
       
-      for(let i=0; i<atuaisInicio.length; i++) {
+      for(let i=0; i<atuaisDataIni.length; i++) {
         valoresAtuais.push({
-          inicio: String(atuaisInicio[i].value || ''),
-          fim: String(atuaisFim[i].value || '')
+          inicio: atuaisDataIni[i] && atuaisHoraIni[i] && atuaisDataIni[i].value ? `${atuaisDataIni[i].value}T${atuaisHoraIni[i].value}` : '',
+          fim: atuaisDataFim[i] && atuaisHoraFim[i] && atuaisDataFim[i].value ? `${atuaisDataFim[i].value}T${atuaisHoraFim[i].value}` : ''
         });
       }
 
       container.innerHTML = '';
 
+      let hojeStr = new Date().toISOString().split('T')[0];
+
       for (let i = 0; i < qtd; i++) {
         const d = dadosSalvos[i] || valoresAtuais[i] || {};
+        let partsIni = (d.inicio || '').split('T');
+        let dataIniVal = partsIni[0] || hojeStr;
+        let horaIniVal = partsIni[1] || '08:00';
+
+        let partsFim = (d.fim || '').split('T');
+        let dataFimVal = partsFim[0] || hojeStr;
+        let horaFimVal = partsFim[1] || '17:00';
+
         container.innerHTML += `
-          <div style="background: #FFF; border: 1px solid #CBD5E1; padding: 8px; border-radius: 4px;">
-            <p style="font-weight: bold; font-size: 0.9rem; color: #0B132B; margin-bottom: 4px;">Dia ${i + 1}</p>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
-              <div>
-                <label style="font-size: 0.8rem;">Início:</label>
-                <input type="datetime-local" class="dia-inicio" value="${d.inicio || ''}" style="width:100%; padding:4px; border:1px solid #CBD5E1; border-radius:4px;">
+          <div class="dia-card-flutuante">
+            <p style="font-weight: bold; font-size: 0.9rem; color: #0B132B; margin-bottom: 8px; border-bottom: 1px solid #E2E8F0; padding-bottom: 4px;">📅 Dia ${i + 1}</p>
+            
+            <div style="margin-bottom: 8px;">
+              <label style="font-size: 0.8rem; font-weight: bold; color: #475569; display: block; margin-bottom: 2px;">Início (Data e Hora):</label>
+              <div class="grid-data-hora">
+                <input type="date" class="dia-data-ini" value="${dataIniVal}" style="width:100%; padding:6px; border:1px solid #CBD5E1; border-radius:4px; background:#FFF;">
+                <select class="dia-hora-ini" style="width:100%; padding:6px; border:1px solid #CBD5E1; border-radius:4px; background:#FFF;">
+                  ${gerarOpcoesHoras(horaIniVal)}
+                </select>
               </div>
-              <div>
-                <label style="font-size: 0.8rem;">Final:</label>
-                <input type="datetime-local" class="dia-fim" value="${d.fim || ''}" style="width:100%; padding:4px; border:1px solid #CBD5E1; border-radius:4px;">
+            </div>
+
+            <div>
+              <label style="font-size: 0.8rem; font-weight: bold; color: #475569; display: block; margin-bottom: 2px;">Final (Data e Hora):</label>
+              <div class="grid-data-hora">
+                <input type="date" class="dia-data-fim" value="${dataFimVal}" style="width:100%; padding:6px; border:1px solid #CBD5E1; border-radius:4px; background:#FFF;">
+                <select class="dia-hora-fim" style="width:100%; padding:6px; border:1px solid #CBD5E1; border-radius:4px; background:#FFF;">
+                  ${gerarOpcoesHoras(horaFimVal)}
+                </select>
               </div>
             </div>
           </div>
@@ -565,16 +627,23 @@
       const numRsStr = document.getElementById('repNumber').value;
 
       let diasTrabalhoArray = [];
-      const inicios = document.querySelectorAll('.dia-inicio');
-      const fins = document.querySelectorAll('.dia-fim');
-      for (let i = 0; i < inicios.length; i++) {
+      const dataInis = document.querySelectorAll('.dia-data-ini');
+      const horaInis = document.querySelectorAll('.dia-hora-ini');
+      const dataFims = document.querySelectorAll('.dia-data-fim');
+      const horaFims = document.querySelectorAll('.dia-hora-fim');
+
+      for (let i = 0; i < dataInis.length; i++) {
+        let dIni = dataInis[i] ? dataInis[i].value : '';
+        let hIni = horaInis[i] ? horaInis[i].value : '08:00';
+        let dFim = dataFims[i] ? dataFims[i].value : '';
+        let hFim = horaFims[i] ? horaFims[i].value : '17:00';
+
         diasTrabalhoArray.push({
-          inicio: String(inicios[i].value || ''),
-          fim: String(fins[i].value || '')
+          inicio: dIni ? `${dIni}T${hIni}` : '',
+          fim: dFim ? `${dFim}T${hFim}` : ''
         });
       }
 
-      // Converte anexos garantindo que seja um array plano de objetos simples
       let cleanAnexos = [];
       if (Array.isArray(anexosList)) {
         anexosList.forEach(a => {

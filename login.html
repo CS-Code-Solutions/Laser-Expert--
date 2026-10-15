@@ -31,6 +31,14 @@
       overflow: hidden;
       perspective: 1000px;
     }
+
+    /* Imagem de fundo específica para telemóveis */
+    @media (max-width: 768px) {
+      body {
+        background-image: url('mobilaser.png');
+      }
+    }
+
     .login-card {
       background: rgba(11, 19, 43, 0.85); /* Vidro escuro combinando com a imagem */
       backdrop-filter: blur(12px);

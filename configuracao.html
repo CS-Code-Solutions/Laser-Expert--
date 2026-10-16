@@ -47,6 +47,13 @@
     <section class="card">
       <h2>Configurações & Administração</h2>
       
+      <!-- Botão de Instalação PWA -->
+      <div id="installContainer" style="margin-bottom: 20px; display: none;">
+        <button id="btnInstall" class="btn" style="background-color: #00F5D4; color: #0B132B; font-weight: bold; padding: 12px 20px; width: 100%; font-size: 1rem; box-shadow: 0 4px 12px rgba(0, 245, 212, 0.3);">
+          📲 Instalar a Página Agora
+        </button>
+      </div>
+
       <div id="systemStatusBox" style="padding: 10px; background: #F8FAFC; border: 1px solid #CBD5E1; border-radius: 6px; margin-bottom: 20px;">
         <strong>Status do Sistema:</strong> 
         <span id="statusText" style="color: #10B981; font-weight: bold;">🟢 A verificar ligação à nuvem...</span>
@@ -172,6 +179,39 @@
   </footer>
 
   <script>
+    // Registo do Service Worker para PWA
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+          .then((reg) => console.log('Service Worker registado:', reg.scope))
+          .catch((err) => console.log('Falha ao registar Service Worker:', err));
+      });
+    }
+
+    // Gestão do botão de instalação PWA
+    let deferredPrompt;
+    const installContainer = document.getElementById('installContainer');
+    const btnInstall = document.getElementById('btnInstall');
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      if (installContainer) {
+        installContainer.style.display = 'block';
+      }
+    });
+
+    if (btnInstall) {
+      btnInstall.addEventListener('click', async () => {
+        if (!deferredPrompt) return;
+        installContainer.style.display = 'none';
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        console.log(`Resultado da instalação: ${outcome}`);
+        deferredPrompt = null;
+      });
+    }
+
     const canvas = document.getElementById('techSignatureCanvas');
     const ctx = canvas.getContext('2d');
     let painting = false;

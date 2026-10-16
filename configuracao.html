@@ -47,9 +47,9 @@
     <section class="card">
       <h2>Configurações & Administração</h2>
       
-      <!-- Botão de Instalação PWA -->
-      <div id="installContainer" style="margin-bottom: 20px; display: none;">
-        <button id="btnInstall" class="btn" style="background-color: #00F5D4; color: #0B132B; font-weight: bold; padding: 12px 20px; width: 100%; font-size: 1rem; box-shadow: 0 4px 12px rgba(0, 245, 212, 0.3);">
+      <!-- Botão de Instalação PWA (Sempre Visível) -->
+      <div id="installContainer" style="margin-bottom: 20px;">
+        <button id="btnInstall" type="button" class="btn" style="background-color: #00F5D4; color: #0B132B; font-weight: bold; padding: 12px 20px; width: 100%; font-size: 1rem; box-shadow: 0 4px 12px rgba(0, 245, 212, 0.3); cursor: pointer;">
           📲 Instalar a Página Agora
         </button>
       </div>
@@ -190,25 +190,23 @@
 
     // Gestão do botão de instalação PWA
     let deferredPrompt;
-    const installContainer = document.getElementById('installContainer');
     const btnInstall = document.getElementById('btnInstall');
 
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
       deferredPrompt = e;
-      if (installContainer) {
-        installContainer.style.display = 'block';
-      }
     });
 
     if (btnInstall) {
       btnInstall.addEventListener('click', async () => {
-        if (!deferredPrompt) return;
-        installContainer.style.display = 'none';
-        deferredPrompt.prompt();
-        const { outcome } = await deferredPrompt.userChoice;
-        console.log(`Resultado da instalação: ${outcome}`);
-        deferredPrompt = null;
+        if (deferredPrompt) {
+          deferredPrompt.prompt();
+          const { outcome } = await deferredPrompt.userChoice;
+          console.log(`Resultado da instalação: ${outcome}`);
+          deferredPrompt = null;
+        } else {
+          alert('Para instalar a aplicação no seu dispositivo:\n\n1. Toque nos 3 pontos (menu) no canto superior direito do seu navegador.\n2. Selecione "Adicionar ao ecrã principal" ou "Instalar aplicação".');
+        }
       });
     }
 

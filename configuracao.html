@@ -47,13 +47,6 @@
     <section class="card">
       <h2>Configurações & Administração</h2>
       
-      <!-- Botão de Instalação PWA (Sempre Visível) -->
-      <div id="installContainer" style="margin-bottom: 20px;">
-        <button id="btnInstall" type="button" class="btn" style="background-color: #00F5D4; color: #0B132B; font-weight: bold; padding: 12px 20px; width: 100%; font-size: 1rem; box-shadow: 0 4px 12px rgba(0, 245, 212, 0.3); cursor: pointer;">
-          📲 Instalar a Página Agora
-        </button>
-      </div>
-
       <div id="systemStatusBox" style="padding: 10px; background: #F8FAFC; border: 1px solid #CBD5E1; border-radius: 6px; margin-bottom: 20px;">
         <strong>Status do Sistema:</strong> 
         <span id="statusText" style="color: #10B981; font-weight: bold;">🟢 A verificar ligação à nuvem...</span>
@@ -155,6 +148,13 @@
 
       <hr style="border: 0; border-top: 1px solid #CBD5E1; margin: 35px 0;">
 
+      <!-- Botão de Instalação PWA posicionado logo acima do Backup -->
+      <div id="installContainer" style="margin-bottom: 25px;">
+        <button id="btnInstall" type="button" class="btn" style="background-color: #00F5D4; color: #0B132B; font-weight: bold; padding: 14px 20px; width: 100%; font-size: 1.05rem; box-shadow: 0 4px 12px rgba(0, 245, 212, 0.3); cursor: pointer;">
+          📲 Instalar a Página Agora
+        </button>
+      </div>
+
       <div>
         <h3 style="color: var(--deep-navy); margin-bottom: 10px; font-size: 1.2rem;">💾 Backup e Segurança de Dados</h3>
         <div style="display: flex; gap: 15px; flex-wrap: wrap;">
@@ -188,7 +188,7 @@
       });
     }
 
-    // Gestão do botão de instalação PWA
+    // Gestão do botão de instalação PWA com acionamento direto
     let deferredPrompt;
     const btnInstall = document.getElementById('btnInstall');
 

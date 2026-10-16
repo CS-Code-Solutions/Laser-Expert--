@@ -82,8 +82,11 @@
     .print-header img { height: 30px; width: auto; max-width: 120px; object-fit: contain; }
     .print-header-info { text-align: right; flex-shrink: 0; }
     .print-header-info h1 { font-size: 11px; color: #0B132B; margin: 0; font-weight: bold; white-space: nowrap; }
-    .section-box { border: 1px solid #CBD5E1; padding: 5px 7px; margin-bottom: 5px; border-radius: 4px; background: #F8FAFC; page-break-inside: avoid; break-inside: avoid; }
-    .section-title { font-weight: bold; font-size: 9.5px; color: #0B132B; margin-bottom: 2px; border-bottom: 1px solid #E2E8F0; padding-bottom: 2px; }
+    
+    /* Fundo totalmente branco e limpo nas caixas do PDF */
+    .section-box { border: 1px solid #CBD5E1; padding: 5px 7px; margin-bottom: 5px; border-radius: 4px; background: #FFFFFF !important; page-break-inside: avoid; break-inside: avoid; }
+    .section-title { font-weight: bold; font-size: 9.5px; color: #0B132B; margin-bottom: 2px; border-bottom: 1px solid #CBD5E1; padding-bottom: 2px; background: #FFFFFF !important; }
+    
     .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
     .print-body p { margin: 1px 0; }
     .signature-area { margin-top: 6px; display: flex; justify-content: space-between; align-items: flex-end; page-break-inside: avoid; break-inside: avoid; }

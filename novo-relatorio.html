@@ -35,7 +35,6 @@
       margin-bottom: 5px;
     }
     
-    /* Layout Flutuante Elegante para as Datas e Horas */
     .dia-card-flutuante {
       background: #FFFFFF;
       border: 1px solid #E2E8F0;
@@ -270,6 +269,12 @@
   </footer>
 
   <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js').catch(err => console.log(err));
+      });
+    }
+
     let anexosList = [];
     let clientMachines = [];
     let clientCanvas = document.getElementById('clientCanvas');
@@ -304,7 +309,6 @@
       clientCtx.clearRect(0, 0, clientCanvas.width, clientCanvas.height);
     };
 
-    // Gerador das opções de horários de 30 em 30 minutos (01:00, 01:30, 02:00...)
     function gerarOpcoesHoras(selecionado = '08:00') {
       let html = '';
       for (let h = 0; h < 24; h++) {
@@ -339,7 +343,6 @@
       }
 
       container.innerHTML = '';
-
       let hojeStr = new Date().toISOString().split('T')[0];
 
       for (let i = 0; i < qtd; i++) {

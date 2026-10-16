@@ -83,7 +83,6 @@
     .print-header-info { text-align: right; flex-shrink: 0; }
     .print-header-info h1 { font-size: 11px; color: #0B132B; margin: 0; font-weight: bold; white-space: nowrap; }
     
-    /* Fundo totalmente branco e limpo nas caixas do PDF */
     .section-box { border: 1px solid #CBD5E1; padding: 5px 7px; margin-bottom: 5px; border-radius: 4px; background: #FFFFFF !important; page-break-inside: avoid; break-inside: avoid; }
     .section-title { font-weight: bold; font-size: 9.5px; color: #0B132B; margin-bottom: 2px; border-bottom: 1px solid #CBD5E1; padding-bottom: 2px; background: #FFFFFF !important; }
     
@@ -149,6 +148,12 @@
   </footer>
 
  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js').catch(err => console.log(err));
+      });
+    }
+
     function escapeHTML(str) {
       if (!str) return '';
       return String(str)

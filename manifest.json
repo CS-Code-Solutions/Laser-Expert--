@@ -1,14 +1,19 @@
 {
-  "name": "RG Sol Tec Ltda",
-  "short_name": "RG Sol Tec",
+  "name": "Laser Expert",
+  "short_name": "LaserExpert",
   "start_url": "index.html",
   "display": "standalone",
   "background_color": "#0B132B",
-  "theme_color": "#0B132B",
+  "theme_color": "#00F5D4",
   "icons": [
     {
-      "src": "icon.png",
+      "src": "img/ico.png",
       "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "img/ico.png",
+      "sizes": "512x512",
       "type": "image/png"
     }
   ]
